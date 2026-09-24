@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SOFT / HOME</string>
+    <string name="launcher_role_name">SOFT / HOME</string>
+
+    <!-- Search / cards -->
+    <string name="mic_search">Voice search</string>
+    <string name="search_apps">Search apps</string>
+
+    <!-- Drawer -->
+    <string name="all_apps">All apps</string>
+    <string name="drawer_label">APP DRAWER</string>
+    <string name="swipe_up_hint">Swipe up from the mic bar to open all apps</string>
+    <string name="no_apps_found">No apps match that search.</string>
+    <string name="drawer_a11y_open">Open all apps</string>
+    <string name="drawer_a11y_close">Close all apps</string>
+
+    <!-- Home -->
+    <string name="page_indicator_a11y">Page %1$d of %2$d</string>
+
+    <!-- Set default -->
+    <string name="set_default_launcher">Set as default launcher</string>
+    <string name="default_launcher_body">Make SOFT / HOME your Home app. You can change this any time in Settings.</string>
+
+    <!-- Weather (static in P1, per docs/04 #7) -->
+    <string name="weather_condition">Soft light &#183; 72%% humidity</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack_title">Icon pack</string>
+    <string name="icon_pack_apply">Apply</string>
+    <string name="icon_pack_applied">Applied</string>
+    <string name="icon_pack_none">System icons</string>
+    <string name="icon_pack_corrupt">That icon pack could not be read. Apps will use system icons.</string>
+    <string name="icon_pack_missing_appfilter">This pack has no appfilter.xml; unsupported apps will be masked.</string>
+</resources>

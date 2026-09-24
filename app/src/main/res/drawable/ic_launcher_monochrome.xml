@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Black-on-transparent house silhouette for themed / AutoMask monochrome. -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M54,40 L72,56 L72,72 L36,72 L36,56 Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M48,72 h12 v-14 h-12 Z" />
+</vector>

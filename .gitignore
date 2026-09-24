@@ -1,0 +1,31 @@
+# --- Gradle / build outputs ---
+.gradle/
+.kotlin/
+build/
+*/build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# --- Local machine config (SDK paths) ---
+local.properties
+
+# --- IDE ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# --- OS noise ---
+Thumbs.db
+.DS_Store
+
+# --- Signing / secrets ---
+*.jks
+*.keystore
+keystore.properties
+
+# --- App-private test artifacts pulled from device ---
+*.preferences_pb

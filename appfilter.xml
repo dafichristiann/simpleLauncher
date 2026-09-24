@@ -1,0 +1,17 @@
+<resources>
+  <item component="ComponentInfo{com.android.camera2/com.android.camera.CameraLauncher}" drawable="pack_camera"/>
+  <item component="ComponentInfo{com.android.chrome/com.google.android.apps.chrome.Main}" drawable="pack_chrome"/>
+  <item component="ComponentInfo{com.android.settings/.Settings}" drawable="pack_settings"/>
+  <item component="ComponentInfo{com.google.android.apps.docs/.app.NewMainProxyActivity}" drawable="pack_drive"/>
+  <item component="ComponentInfo{com.google.android.apps.maps/com.google.android.maps.MapsActivity}" drawable="pack_maps"/>
+  <item component="ComponentInfo{com.google.android.apps.messaging/.ui.ConversationListActivity}" drawable="pack_messages"/>
+  <item component="ComponentInfo{com.google.android.apps.photos/.home.HomeActivity}" drawable="pack_photos"/>
+  <item component="ComponentInfo{com.google.android.apps.youtube.music/.activities.MusicActivity}" drawable="pack_music"/>
+  <item component="ComponentInfo{com.google.android.calendar/com.android.calendar.AllInOneActivity}" drawable="pack_calendar"/>
+  <item component="ComponentInfo{com.google.android.contacts/com.android.contacts.activities.PeopleActivity}" drawable="pack_contacts"/>
+  <item component="ComponentInfo{com.google.android.deskclock/com.android.deskclock.DeskClock}" drawable="pack_clock"/>
+  <item component="ComponentInfo{com.google.android.dialer/.extensions.GoogleDialtactsActivity}" drawable="pack_phone"/>
+  <item component="ComponentInfo{com.google.android.gm/.ConversationListActivityGmail}" drawable="pack_gmail"/>
+  <item component="ComponentInfo{com.google.android.youtube/.app.hitched.MainActivity}" drawable="pack_youtube"/>
+  <item component="ComponentInfo{com.google.android.apps.youtube/.app.hitched.MainActivity}" drawable="pack_youtube"/>
+</resources>

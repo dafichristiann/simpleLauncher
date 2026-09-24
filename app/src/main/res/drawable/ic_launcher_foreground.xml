@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Transparent canvas + cream house silhouette (safe for adaptive foreground
+         AND for the monochrome layer — no full-bleed fill that SRC_IN would flatten
+         into a solid cream square). -->
+    <path
+        android:fillColor="#E8DFD0"
+        android:pathData="M54,40 L72,56 L72,72 L36,72 L36,56 Z" />
+    <path
+        android:fillColor="#E8DFD0"
+        android:pathData="M48,72 h12 v-14 h-12 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#E8DFD0"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M38,56 L54,42 L70,56" />
+</vector>
