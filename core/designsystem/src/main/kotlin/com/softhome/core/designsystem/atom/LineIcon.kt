@@ -80,7 +80,16 @@ enum class LineIcon(val resId: Int) {
 
     // --- P2 additions (widget rows + folder) ---
     Battery(R.drawable.battery),
-    HardDrive(R.drawable.hard_drive);
+    HardDrive(R.drawable.hard_drive),
+
+    // --- P3 additions (context menu + settings) ---
+    Info(R.drawable.info),
+    Trash2(R.drawable.trash_2),
+    ChevronRight(R.drawable.chevron_right),
+    ArrowUp(R.drawable.arrow_up),
+    ArrowDown(R.drawable.arrow_down),
+    X(R.drawable.x),
+    ExternalLink(R.drawable.external_link);
 
     companion object {
         /** Safe lookup by enum name (used by the icon-masker heuristics). */

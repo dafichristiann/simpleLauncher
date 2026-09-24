@@ -41,4 +41,14 @@ object Dimens {
     val folderMiniIcon = 22.dp        // mini icon inside the 2x2 preview
     val folderPopupRadius = 24.dp     // popup card (Shape.large)
     val widgetProgressHeight = 5.dp   // row progress bar (matches progressHeight / pvQO0)
+
+    // --- P3: context menu + settings rows (tokens, not inline values) ---
+    val menuRadius = 24.dp            // long-press context menu card (Shape.large)
+    val menuRowMinHeight = 48.dp      // menu row tap target
+    val menuIcon = 20.dp              // leading line icon in a menu row
+    val menuScrim = 0.53f             // dim scrim alpha behind the menu (#87000000)
+    val settingsRowRadius = 18.dp     // settings row (Shape.medium)
+    val settingsRowMinHeight = 52.dp  // settings row tap target
+    val settingsChevron = 18.dp       // trailing chevron glyph
+    val moveButton = 28.dp            // inline up/down reorder button (Q5)
 }

@@ -34,6 +34,9 @@ data class SoftColors(
     val drawerStroke: Color,    // drawer search pill border
     val progressTrack: Color,   // music progress track
     val indexActive: Color,     // alphabet rail active letter
+    // --- P3 semantic fields (system UI + settings) ---
+    val destructive: Color,     // uninstall / remove emphasis (warm clay, no red)
+    val disabled: Color,        // greyed rows (system app, unavailable action)
     val isLight: Boolean,
 ) {
     /** Shadow color used behind tiles/cards in the current theme. */
@@ -64,6 +67,8 @@ val LightSoftColors = SoftColors(
     drawerStroke = SoftDrawerStroke,
     progressTrack = SoftProgressTrack,
     indexActive = SoftIndexActive,
+    destructive = SoftDestructive,
+    disabled = SoftDisabled,
     isLight = true,
 )
 
@@ -91,6 +96,8 @@ val DarkSoftColors = SoftColors(
     drawerStroke = DarkDrawerStroke,
     progressTrack = DarkProgressTrack,
     indexActive = DarkIndexActive,
+    destructive = DarkDestructive,
+    disabled = DarkDisabled,
     isLight = false,
 )
 

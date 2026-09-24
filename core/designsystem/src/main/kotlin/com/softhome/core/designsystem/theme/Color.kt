@@ -77,6 +77,15 @@ val DrawerTintAmber = Color(0xFFD19B62)
 val DrawerTintPine = Color(0xFF5F7A72)
 val DrawerTintSage = Color(0xFF6E8B86)
 
+// --- P3 (System UI + Settings) semantic tokens ---
+// The warm palette has no red by design (docs/00); "destructive" (uninstall) is a
+// deep clay accent, and unavailable rows are a muted warm grey (disabled). See P3
+// spec section 4.12.
+val SoftDestructive = Color(0xFF9A4B33) // deep clay -- uninstall / remove emphasis
+val SoftDisabled = Color(0xFFAFA493)    // muted warm grey -- greyed (system app) rows
+val DarkDestructive = Color(0xFFD08A6A)
+val DarkDisabled = Color(0xFF7C7468)
+
 // --- Shadow colors (outer only, no borders) -- from .pen effect tokens ---
 val ShadowMockup = Color(0xFFC7B9A8)
 val ShadowTile = Color(0xFFC7B9A8)

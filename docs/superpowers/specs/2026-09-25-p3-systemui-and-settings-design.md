@@ -518,36 +518,29 @@ the previous phase's exit criteria pass.
 
 ---
 
-## 10. Open questions (need user confirmation)
+## 10. Resolved questions (user-confirmed 2026-09-25)
 
-1. **Settings entry point.** The rail already has a `panel-left` → *Settings* shortcut
-   (D-020) that currently fires the **system** Settings intent. Should P3 **repoint** the
-   rail's `panel-left` icon to open **our** settings panel instead? My recommendation:
-   **yes** — repoint it to our panel (the brief's G1 implies an in-app settings surface),
-   and keep a "System settings" row inside our panel for the OS screen.
-   - Alt: keep the rail firing the OS settings and add a separate in-app entry (drawer
-     header or a "Settings" row).
+All five were confirmed with the recommended option. These are **locked**:
 
-2. **"Remove" semantics (drawer).** Does "Remove" mean **hide the app from the drawer**
-   (reversible via a settings "hidden apps" list) or **only remove from a folder**? My
-   recommendation: **hide from drawer** (persist a hidden-apps set in `LauncherPrefs`),
-   since folders already handle removal-from-folder. Confirm — this adds a
-   `hiddenApps: Set<String>` field + a tiny hidden-apps management row.
+| # | Question | Decision |
+|---|---|---|
+| **Q1** | Settings entry point | **Repoint** the rail's `panel-left` icon to open **our** in-app settings panel, and keep a **"System settings" row** inside it that fires the OS Settings intent. |
+| **Q2** | "Remove" semantics (drawer) | **Hide the app from the drawer** (reversible). Persist `hiddenApps: Set<String>` in `LauncherPrefs` + a small **"Hidden apps"** management row in Widgets/Appearance so a hidden app can be restored. |
+| **Q3** | Spacing values | **Multiplier**, not dp presets: **Compact ×0.88 / Normal ×1.0 / Roomy ×1.12**, applied to drawer grid gaps + home row vertical padding. |
+| **Q4** | Edit Icon depth | P3 = **pick from the active pack's drawables** for the app (writes `iconOverrides`). Rich editor (upload / crop / single-icon import) **deferred to P4**. |
+| **Q5** | Move-buttons placement | **Inline** on each Widgets row (↑/↓ next to the toggle). No separate reorder sub-panel. |
 
-3. **Spacing values.** Proposed stepper: **Compact / Normal / Roomy** mapping to a
-   multiplier (×0.88 / ×1.0 / ×1.12) on drawer grid gaps + home row vertical padding.
-   Confirm the three labels and that a simple multiplier is acceptable (vs exact dp
-   presets).
+### Spec deltas from these answers (folded into §4)
 
-4. **Edit Icon flow depth.** "Edit Icon" for a tile: P3 minimal = **pick from the active
-   pack's drawables** for that app (writes `iconOverrides`). A richer editor (crop/tint/
-   import single icon) is **P4**. Confirm the minimal scope.
-
-5. **Move-buttons placement.** Up/down move buttons sit **inline on each Widgets row**
-   (right side, next to the toggle) — compact, but busy. Alternative: a **separate
-   "Reorder" sub-panel** listing rows with drag handles (but drag is deferred, so it'd be
-   up/down buttons there too). Recommendation: **inline** for P3. Confirm.
+- `LauncherPrefs` gains **`hiddenApps: Set<String>`** in addition to `homeRows`
+  (Q2). `PrefsRepository` persists it; a "Hidden apps" row lives in the settings panel.
+- `LauncherPrefs` gains **`spacingScale: SpacingScale { Compact, Normal, Roomy }`**
+  (Q3); pure mapping `SpacingScale.factor` (0.88 / 1.0 / 1.12).
+- Widgets section rows show **toggle + inline ↑/↓** (Q5).
+- Appearance section gains a **"Hidden apps"** entry (Q2).
+- F3 rail `panel-left` long-press/tap opens our settings; the panel's **"System
+  settings"** row opens the OS Settings screen (Q1).
 
 ---
 
-*End of P3 spec. Awaiting user review before implementation.*
+*End of P3 spec. Approved — implementation proceeds phase by phase (Phase 0 → Phase 9).*
