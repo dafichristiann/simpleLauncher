@@ -4,10 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
 import com.softhome.core.designsystem.theme.SoftHomeTheme
 import com.softhome.core.model.DeviceStatusSnapshot
 import com.softhome.feature.home.HomeScreen
 import com.softhome.feature.home.HomeUiState
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -73,5 +77,36 @@ class HomeScreenTest {
         setHome(HomeUiState(notes = "remember the milk"))
         composeRule.onNodeWithContentDescription("Quick notes").assertExists()
         composeRule.onNodeWithText("remember the milk").assertExists()
+    }
+
+    // --- P3 (F1/F2/F3) --------------------------------------------------------
+
+    @Test
+    fun tapping_the_settings_rail_icon_opens_settings() {
+        var opened = false
+        composeRule.setContent {
+            SoftHomeTheme {
+                HomeScreen(
+                    onOpenDrawer = {},
+                    onVoiceSearch = {},
+                    state = HomeUiState(),
+                    onOpenSettings = { opened = true },
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        assertTrue("panel-left rail icon must open settings (Q1)", opened)
+    }
+
+    @Test
+    fun long_pressing_a_rail_icon_opens_the_context_menu() {
+        composeRule.setContent {
+            SoftHomeTheme {
+                HomeScreen(onOpenDrawer = {}, onVoiceSearch = {}, state = HomeUiState())
+            }
+        }
+        composeRule.onNodeWithContentDescription("Settings").performTouchInput { longClick() }
+        // The row-style menu appears with an "App Info" row.
+        composeRule.onNodeWithText("App Info").assertExists()
     }
 }

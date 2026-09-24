@@ -11,16 +11,19 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -35,10 +38,13 @@ import dagger.hilt.android.AndroidEntryPoint
 /**
  * HOME intent target -- the real launcher entry point.
  *
- * Behavior in P1:
+ * Behavior:
  *  - renders the home screen (feature:home)
  *  - swipe up opens the app drawer (feature:appdrawer) as an overlay
  *  - "set as default launcher" is wired via [LauncherRole] (stub-friendly)
+ *  - P3 (F1/F2): status-bar icons follow the theme; the nav bar hides under gesture
+ *    navigation. The app theme itself follows [com.softhome.core.model.ThemeMode]
+ *    from settings (wired in Phase 6).
  */
 @AndroidEntryPoint
 class HomeActivity : ComponentActivity() {
@@ -63,6 +69,20 @@ class HomeActivity : ComponentActivity() {
 private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
     var drawerOpen by remember { mutableStateOf(false) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val darkTheme = isSystemInDarkTheme()
+    val context = LocalContext.current
+
+    // F1/F2: adapt the status/nav bar icon color to the theme and hide the nav bar
+    // under gesture navigation. Re-applied on every recomposition of this host.
+    SideEffect {
+        val activity = context as? ComponentActivity ?: return@SideEffect
+        SystemBarAppearance.makeBarsTransparent(activity)
+        SystemBarAppearance.apply(
+            activity = activity,
+            darkTheme = darkTheme,
+            hideNavBar = SystemBarAppearance.isGestureNavigation(activity),
+        )
+    }
 
     // Re-read real battery/storage whenever home resumes (decision P2-3, #55).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -95,9 +115,10 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
 
         HomeScreen(
             onOpenDrawer = { drawerOpen = true },
-            onVoiceSearch = { /* TODO: STUB - wire real voice search later */ },
+            onVoiceSearch = { /* STUB - wire real voice search later */ },
             state = state,
             onNotesChange = viewModel::setNotes,
+            onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
         )
 
         AnimatedVisibility(

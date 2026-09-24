@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.softhome.core.designsystem.atom.AppContextMenu
 import com.softhome.core.designsystem.atom.BatteryStorageRowContent
 import com.softhome.core.designsystem.atom.CalendarRowContent
+import com.softhome.core.designsystem.atom.ContextMenuItem
 import com.softhome.core.designsystem.atom.HomeDivider
 import com.softhome.core.designsystem.atom.HomeRow
 import com.softhome.core.designsystem.atom.LineIcon
@@ -83,6 +85,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     state: HomeUiState = HomeUiState(),
     onNotesChange: (String) -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val colors = MaterialTheme.softColors
@@ -179,6 +182,7 @@ fun HomeScreen(
             HomeRightRail(
                 resolver = railResolver,
                 onShortcut = onShortcut,
+                onOpenSettings = onOpenSettings,
                 expanded = homeState.isSearching,
             )
         }
@@ -324,6 +328,7 @@ private fun formatBytes(bytes: Long): String {
 private fun HomeRightRail(
     resolver: RailShortcutResolver,
     onShortcut: (RailShortcut) -> Unit,
+    onOpenSettings: () -> Unit,
     expanded: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -334,6 +339,9 @@ private fun HomeRightRail(
         animationSpec = MotionTokens.railSlide(),
         label = "railSlide",
     )
+    // Long-press menu state (F3): which rail shortcut is being configured.
+    var menuFor by remember { mutableStateOf<RailShortcut?>(null) }
+
     Column(
         modifier = modifier
             .width(Dimens.railWidth)
@@ -345,18 +353,56 @@ private fun HomeRightRail(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         RailShortcut.ordered.forEach { shortcut ->
+            val enabled = resolver.intentFor(shortcut) != null
             RailIcon(
                 icon = shortcut.lineIcon(),
                 contentDescription = shortcut.label(),
                 modifier = Modifier.offset(y = slide),
-                onClick = if (resolver.intentFor(shortcut) != null) {
-                    { onShortcut(shortcut) }
-                } else {
-                    null
+                onClick = when {
+                    // Q1: the panel-left (Settings) icon opens our own settings panel.
+                    shortcut == RailShortcut.PanelLeft -> onOpenSettings
+                    enabled -> { { onShortcut(shortcut) } }
+                    else -> null
                 },
+                onLongClick = { menuFor = shortcut },
             )
         }
     }
+
+    menuFor?.let { shortcut ->
+        RailContextMenu(
+            shortcut = shortcut,
+            resolver = resolver,
+            onLaunch = { onShortcut(shortcut) },
+            onOpenSettings = onOpenSettings,
+            onDismiss = { menuFor = null },
+        )
+    }
+}
+
+/**
+ * Long-press menu for a rail icon (P3 / F3, decision P3-3). Row-style card
+ * ([AppContextMenu]); "Open" fires the shortcut, "Settings" opens our panel for the
+ * settings icon, "Remove" clears the pending menu (rail membership is fixed in P3).
+ */
+@Composable
+private fun RailContextMenu(
+    shortcut: RailShortcut,
+    resolver: RailShortcutResolver,
+    onLaunch: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val items = buildList {
+        if (resolver.intentFor(shortcut) != null) {
+            add(ContextMenuItem("Open", LineIcon.ArrowUpRight, onClick = onLaunch))
+        }
+        if (shortcut == RailShortcut.PanelLeft) {
+            add(ContextMenuItem("Settings", LineIcon.Settings, onClick = onOpenSettings))
+        }
+        add(ContextMenuItem("App Info", LineIcon.Info, onClick = onOpenSettings))
+    }
+    AppContextMenu(items = items, onDismiss = onDismiss)
 }
 
 private fun RailShortcut.lineIcon(): LineIcon = when (this) {

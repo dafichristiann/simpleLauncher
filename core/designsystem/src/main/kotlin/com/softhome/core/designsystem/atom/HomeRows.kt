@@ -2,6 +2,7 @@ package com.softhome.core.designsystem.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,6 +84,7 @@ fun HomeDivider(modifier: Modifier = Modifier) {
  * A right-rail icon button. 20dp line icon on the rail background.
  * Node `hrsLU` / `B6633e`: 20x20 lucide icons, `#2B2B2B`.
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RailIcon(
     icon: LineIcon,
@@ -90,11 +92,26 @@ fun RailIcon(
     modifier: Modifier = Modifier,
     tint: Color = MaterialTheme.softColors.textPrimary,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
 ) {
     Box(
         modifier = modifier
             .size(Dimens.railIcon)
-            .then(if (onClick != null) Modifier.clip(CircleShape).clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null || onLongClick != null) {
+                    Modifier
+                        .clip(CircleShape)
+                        .combinedClickable(
+                            role = Role.Button,
+                            onClickLabel = contentDescription,
+                            onClick = { onClick?.invoke() },
+                            onLongClickLabel = "Options",
+                            onLongClick = onLongClick,
+                        )
+                } else {
+                    Modifier
+                },
+            )
             .semantics { this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center,
     ) {
