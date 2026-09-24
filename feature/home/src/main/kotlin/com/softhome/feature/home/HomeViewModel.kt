@@ -9,10 +9,15 @@ import com.softhome.core.data.repository.PrefsRepository
 import com.softhome.core.model.AppInfo
 import com.softhome.core.model.DeviceStatusSnapshot
 import com.softhome.core.model.GridConfig
+import com.softhome.core.model.HomeRowKind
+import com.softhome.core.model.HomeRowLogic
+import com.softhome.core.model.HomeRowPref
 import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconSource
 import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.ResolvedIcon
+import com.softhome.core.model.SpacingScale
+import com.softhome.core.model.ThemeMode
 import com.softhome.feature.iconpack.data.IconPackDrawableLoader
 import com.softhome.feature.iconpack.data.IconPackRepository
 import com.softhome.feature.iconpack.domain.IconBitmapProvider
@@ -45,7 +50,16 @@ data class HomeUiState(
     val notes: String = "",
     /** P2 / E4: real device status (battery + storage). */
     val deviceStatus: DeviceStatusSnapshot = DeviceStatusSnapshot.EMPTY,
-)
+    /** P3 (G/Widgets): which home rows show and in what order. */
+    val homeRows: List<HomeRowPref> = HomeRowLogic.default(),
+    /** P3 (G/Appearance): drawer + row spacing preset (Q3). */
+    val spacing: SpacingScale = SpacingScale.Normal,
+    /** P3 (G/Appearance): theme mode (Light/Dark/System). */
+    val themeMode: ThemeMode = ThemeMode.System,
+) {
+    /** Rows the home should render, in order (locked rows always included). */
+    val visibleRows: List<HomeRowKind> get() = HomeRowLogic.visibleInOrder(homeRows)
+}
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -83,6 +97,9 @@ class HomeViewModel @Inject constructor(
                 activePackName = core.pack?.name,
                 notes = notes.body,
                 deviceStatus = status,
+                homeRows = core.prefs.homeRows,
+                spacing = core.prefs.spacing,
+                themeMode = core.prefs.darkTheme,
             )
         }
         .stateIn(
@@ -114,6 +131,39 @@ class HomeViewModel @Inject constructor(
     /** Persist the quick-notes body (decision P2-2). */
     fun setNotes(body: String) {
         viewModelScope.launch { notesRepository.setBody(body) }
+    }
+
+    // --- P3 (G): settings-backed setters --------------------------------------
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { prefsRepository.setDarkTheme(mode) }
+    }
+
+    fun setSpacing(scale: SpacingScale) {
+        viewModelScope.launch { prefsRepository.setSpacing(scale) }
+    }
+
+    fun setHomeRows(rows: List<HomeRowPref>) {
+        viewModelScope.launch { prefsRepository.setHomeRows(rows) }
+    }
+
+    fun toggleHomeRow(kind: HomeRowKind) {
+        viewModelScope.launch {
+            val current = uiState.value.homeRows
+            prefsRepository.setHomeRows(HomeRowLogic.toggle(current, kind))
+        }
+    }
+
+    fun moveHomeRowUp(kind: HomeRowKind) {
+        viewModelScope.launch {
+            prefsRepository.setHomeRows(HomeRowLogic.moveUp(uiState.value.homeRows, kind))
+        }
+    }
+
+    fun moveHomeRowDown(kind: HomeRowKind) {
+        viewModelScope.launch {
+            prefsRepository.setHomeRows(HomeRowLogic.moveDown(uiState.value.homeRows, kind))
+        }
     }
 
     fun launchApp(app: AppInfo) = appRepository.launchApp(app)

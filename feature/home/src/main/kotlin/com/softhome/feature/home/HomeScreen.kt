@@ -59,6 +59,7 @@ import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.TweakLabel
 import com.softhome.core.designsystem.theme.TweakLabelLean
 import com.softhome.core.designsystem.theme.softColors
+import com.softhome.core.model.HomeRowKind
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -142,41 +143,22 @@ fun HomeScreen(
                         bottom = Spacing.sm,
                     ),
             ) {
-                TimeRow(time)
-                HomeDivider()
-                DateRow(date)
-                HomeDivider()
-                WeatherRow()
-                HomeDivider()
-                SearchRow(
-                    focused = homeState.isSearching,
-                    onClick = { homeState = homeState.onTapRow(HomeRowId.Search) },
-                )
-                HomeDivider()
-                MusicRow(
-                    expanded = homeState.isMusicOpen,
-                    onToggle = { homeState = homeState.onTapRow(HomeRowId.Music) },
-                )
-                HomeDivider()
-                CalendarRowContent(
-                    dayOfMonth = date.day,
-                    weekday = date.weekday,
-                    month = date.month,
-                    events = emptyList(),
-                )
-                HomeDivider()
-                BatteryStorageRowContent(
-                    batteryPercent = state.deviceStatus.batteryPercent,
-                    storageUsedPercent = state.deviceStatus.storageUsedPercent,
-                    storageFreeLabel = state.deviceStatus.storageFreeBytes?.let(::formatBytes),
-                )
-                HomeDivider()
-                NotesRow(
-                    text = state.notes,
-                    expanded = homeState.isNotesOpen,
-                    onTextChange = onNotesChange,
-                    onToggle = { homeState = homeState.onTapRow(HomeRowId.Notes) },
-                )
+                // P3 (G/Widgets): the row list is user-configurable (visibility +
+                // order). `visibleRows` already includes the locked set + ordering;
+                // dividers are rendered only between visible rows.
+                val rows = state.visibleRows
+                rows.forEachIndexed { index, kind ->
+                    HomeRowSlot(
+                        kind = kind,
+                        time = time,
+                        date = date,
+                        state = state,
+                        homeState = homeState,
+                        onNotesChange = onNotesChange,
+                        onTapRow = { homeState = homeState.onTapRow(it) },
+                    )
+                    if (index != rows.lastIndex) HomeDivider()
+                }
             }
 
             HomeRightRail(
@@ -186,6 +168,52 @@ fun HomeScreen(
                 expanded = homeState.isSearching,
             )
         }
+    }
+}
+
+/**
+ * Renders the single home row for [kind], wired to [homeState] / [state]. Extracted
+ * so the row list is data-driven (P3 / G Widgets section: visibility + order).
+ */
+@Composable
+private fun HomeRowSlot(
+    kind: HomeRowKind,
+    time: String,
+    date: HomeDate,
+    state: HomeUiState,
+    homeState: HomeState,
+    onNotesChange: (String) -> Unit,
+    onTapRow: (HomeRowId) -> Unit,
+) {
+    when (kind) {
+        HomeRowKind.Time -> TimeRow(time)
+        HomeRowKind.Date -> DateRow(date)
+        HomeRowKind.Weather -> WeatherRow()
+        HomeRowKind.Search -> SearchRow(
+            focused = homeState.isSearching,
+            onClick = { onTapRow(HomeRowId.Search) },
+        )
+        HomeRowKind.Music -> MusicRow(
+            expanded = homeState.isMusicOpen,
+            onToggle = { onTapRow(HomeRowId.Music) },
+        )
+        HomeRowKind.Calendar -> CalendarRowContent(
+            dayOfMonth = date.day,
+            weekday = date.weekday,
+            month = date.month,
+            events = emptyList(),
+        )
+        HomeRowKind.BatteryStorage -> BatteryStorageRowContent(
+            batteryPercent = state.deviceStatus.batteryPercent,
+            storageUsedPercent = state.deviceStatus.storageUsedPercent,
+            storageFreeLabel = state.deviceStatus.storageFreeBytes?.let(::formatBytes),
+        )
+        HomeRowKind.Notes -> NotesRow(
+            text = state.notes,
+            expanded = homeState.isNotesOpen,
+            onTextChange = onNotesChange,
+            onToggle = { onTapRow(HomeRowId.Notes) },
+        )
     }
 }
 

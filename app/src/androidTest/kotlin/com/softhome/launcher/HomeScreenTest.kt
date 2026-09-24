@@ -9,6 +9,8 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
 import com.softhome.core.designsystem.theme.SoftHomeTheme
 import com.softhome.core.model.DeviceStatusSnapshot
+import com.softhome.core.model.HomeRowKind
+import com.softhome.core.model.HomeRowLogic
 import com.softhome.feature.home.HomeScreen
 import com.softhome.feature.home.HomeUiState
 import org.junit.Assert.assertTrue
@@ -108,5 +110,29 @@ class HomeScreenTest {
         composeRule.onNodeWithContentDescription("Settings").performTouchInput { longClick() }
         // The row-style menu appears with an "App Info" row.
         composeRule.onNodeWithText("App Info").assertExists()
+    }
+
+    // --- P3 (G/Widgets): row visibility + order -------------------------------
+
+    @Test
+    fun hidden_row_is_not_rendered() {
+        val rows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Music)
+        setHome(HomeUiState(homeRows = rows))
+        // Music row hidden -> its static title is gone; notes still present.
+        composeRule.onNodeWithText("play music.").assertDoesNotExist()
+        composeRule.onNodeWithText("No upcoming events").assertExists()
+    }
+
+    @Test
+    fun locked_rows_render_even_when_all_toggleable_rows_hidden() {
+        var rows = HomeRowLogic.default()
+        listOf(
+            HomeRowKind.Search, HomeRowKind.Music, HomeRowKind.Calendar,
+            HomeRowKind.BatteryStorage, HomeRowKind.Notes,
+        ).forEach { rows = HomeRowLogic.toggle(rows, it) }
+        setHome(HomeUiState(homeRows = rows))
+        // Weather (locked) still renders; music (hidden) does not.
+        composeRule.onNodeWithText("Current 8\u00B0C").assertExists()
+        composeRule.onNodeWithText("play music.").assertDoesNotExist()
     }
 }

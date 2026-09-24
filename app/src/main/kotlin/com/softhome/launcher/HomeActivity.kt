@@ -30,6 +30,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.softhome.core.designsystem.theme.SoftHomeTheme
+import com.softhome.core.model.ThemeMode
 import com.softhome.feature.appdrawer.AppDrawerScreen
 import com.softhome.feature.home.HomeScreen
 import com.softhome.feature.home.HomeViewModel
@@ -53,9 +54,7 @@ class HomeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SoftHomeTheme {
-                LauncherRoot()
-            }
+            LauncherRoot()
         }
     }
 
@@ -69,7 +68,13 @@ class HomeActivity : ComponentActivity() {
 private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
     var drawerOpen by remember { mutableStateOf(false) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val darkTheme = isSystemInDarkTheme()
+    val systemDark = isSystemInDarkTheme()
+    // P3 (G): the app theme follows ThemeMode from settings (Light/Dark/System).
+    val darkTheme = when (state.themeMode) {
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+        ThemeMode.System -> systemDark
+    }
     val context = LocalContext.current
 
     // F1/F2: adapt the status/nav bar icon color to the theme and hide the nav bar
@@ -94,39 +99,41 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Swipe-up layer (BEHIND the home content): opening the drawer. The home row
-        // list scrolls; this layer still receives drags in the area the content does
-        // not consume (and the row list's own scroll region forwards leftover drags).
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    var total = 0f
-                    detectVerticalDragGestures(
-                        onDragStart = { total = 0f },
-                        onVerticalDrag = { _, delta -> total += delta },
-                        onDragEnd = {
-                            if (total < -60f) drawerOpen = true
-                        },
-                    )
-                },
-        )
+    SoftHomeTheme(darkTheme = darkTheme) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Swipe-up layer (BEHIND the home content): opening the drawer. The home row
+            // list scrolls; this layer still receives drags in the area the content does
+            // not consume (and the row list's own scroll region forwards leftover drags).
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        var total = 0f
+                        detectVerticalDragGestures(
+                            onDragStart = { total = 0f },
+                            onVerticalDrag = { _, delta -> total += delta },
+                            onDragEnd = {
+                                if (total < -60f) drawerOpen = true
+                            },
+                        )
+                    },
+            )
 
-        HomeScreen(
-            onOpenDrawer = { drawerOpen = true },
-            onVoiceSearch = { /* STUB - wire real voice search later */ },
-            state = state,
-            onNotesChange = viewModel::setNotes,
-            onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
-        )
+            HomeScreen(
+                onOpenDrawer = { drawerOpen = true },
+                onVoiceSearch = { /* STUB - wire real voice search later */ },
+                state = state,
+                onNotesChange = viewModel::setNotes,
+                onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
+            )
 
-        AnimatedVisibility(
-            visible = drawerOpen,
-            enter = slideInVertically(tween(220)) { it } + fadeIn(tween(220)),
-            exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(180)),
-        ) {
-            AppDrawerScreen(onAppLaunched = { drawerOpen = false })
+            AnimatedVisibility(
+                visible = drawerOpen,
+                enter = slideInVertically(tween(220)) { it } + fadeIn(tween(220)),
+                exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(180)),
+            ) {
+                AppDrawerScreen(onAppLaunched = { drawerOpen = false })
+            }
         }
     }
 }

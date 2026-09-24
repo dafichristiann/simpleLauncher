@@ -41,7 +41,8 @@
             </intent-filter>
         </activity>
 
-        <!-- Settings shell (stub in P1, full in P3) -->
+        <!-- Settings panel (P3 / G): Appearance / Widgets / Wallpaper / Gestures.
+             Opened from the home rail's settings shortcut (Q1). -->
         <activity
             android:name=".SettingsStubActivity"
             android:exported="false"
