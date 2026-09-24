@@ -5,6 +5,124 @@ Append-only.
 
 ---
 
+### D-042 - Backup/restore is SAF + one versioned JSON document (P4d)
+- **What:** Backup & Restore (the last P4 sub-phase, G4) exports/imports the whole
+  launcher user state as **one JSON file** with a schema envelope
+  (`{ "app":"SOFT_HOME", "version":1, "exportedAt":…, "prefs":{…}, "folders":"…", "notes":"…" }`),
+  transported through the **Storage Access Framework** (`CreateDocument` / `OpenDocument`,
+  MIME `application/json`). A restore **replaces** state wholesale, behind an inline
+  confirm. Failure is total + non-destructive: a foreign/corrupt/newer file returns a
+  typed result and changes nothing.
+- **Why:** every persisted field already has a typed model + a pure codec + a typed
+  setter, so P4d is "one serializer + one apply" -- no new storage engine. SAF (the same
+  pattern as the P1.5 icon-pack zip) needs no storage permission on any API level and
+  works on both emulator and a physical device.
+- **Impact:** new `BackupDocument` (`core:model`), `BackupCodec` +
+  `BackupRepository`/`Impl` (`core:data`), `PrefsRepository.applyAll` (one atomic write),
+  and a "Backup & restore" section in the P3 settings panel. The active icon pack is
+  backed up as an **id reference** only (rehydrated via the P3-5 cold-start path); the
+  pack's bytes, the wallpaper, and the installed-app list are **not** backed up.
+
+---
+
+### D-041 - Restore replaces state and is gated behind a confirm (P4d)
+- **What:** an import **replaces** all persisted launcher state (rows, spacing, hidden
+  apps, icon overrides, folders, notes, theme, active pack id). It is preceded by a
+  confirmation step (the file is decoded first; only a valid SOFT / HOME backup offers
+  "Replace all current settings with this backup?"). A foreign file shows a message and
+  changes nothing.
+- **Why:** the point of a backup is to reproduce a known state; a partial merge would be
+  surprising. But restore is destructive to the current state, so it must be explicit and
+  reversible (restore an older file). Mirrors the P4a-10 "predictable, non-destructive
+  until confirmed" principle.
+- **Impact:** `SettingsViewModel.confirmRestore/cancelRestore` + `pendingRestore` state;
+  the settings panel renders the confirm row + Restore/Cancel pills.
+
+---
+
+### D-040 - Backup format is a versioned JSON document (P4d)
+- **What:** the on-disk backup is a single JSON object carrying an `app` marker
+  (`"SOFT_HOME"`), an integer `version` (`CURRENT_VERSION = 1`), and the three state
+  sections. Nested structured values (`homeRows`, `iconOverrides`, `folders`) are stored
+  as the **strings their own codecs already produce**, so each sub-shape has exactly one
+  encoder.
+- **Why:** a marker + version make a foreign or future file *refuseable* instead of
+  silently mis-decoded (P4d-4/P4d-10). Reusing the item codecs prevents a second, drifting
+  encoding of the same data.
+- **Impact:** `BackupCodec.decode` is total -- `Ok` | `NotABackup` | `UnsupportedVersion`
+  | `Malformed` -- and never throws. `BackupCodecTest` pins round-trip + every failure
+  path.
+
+---
+
+### D-039 - Dark mode is the `KkPN3` "Dark Editorial" named palette (P4c)
+- **What:** the dark palette is replaced by the **verbatim `KkPN3` frame values**
+  (screen bg `#18191A`, rail `#2E3134`, divider `#343638`, primary text `#F2EEE7`,
+  soft text `#E2DDD5`, muted `#918F8B`, progress track `#676866`, …). A few surfaces the
+  frame does not show (menu/popup/drawer cards) are derived from the same neutral family
+  and documented. `SettingsStubActivity` now follows `ThemeMode` (Light/Dark/System) and
+  matches its status/nav bar appearance to the resolved theme (was hardcoded light).
+- **Why:** P1–P3 shipped a DERIVED warm-dark guess (assumption #5, bg `#1F1D1A`). The
+  `.pen` actually names a concrete, cooler/neutral dark palette in `KkPN3`; P4c renders
+  it faithfully instead of the guess.
+- **Impact:** the `Dark*` tokens in `Color.kt` are re-pointed to the `KkPN3` values; a
+  new `DarkPaletteTest` pins them; dark surfaces (home, drawer, settings, context menu,
+  folder popup, editor) were re-checked on device. `ThemeMode` plumbing unchanged.
+
+---
+
+### D-038 - P4b "rich editor" is pick-from-what-exists (no crop/upload)
+- **What:** the P4b icon editor offers **pack drawable** (from the active pack's mapped
+  set) or **glyph + color** (for non-pack apps), plus **Reset**. It does **NOT** crop,
+  resize, or upload a custom image.
+- **Why:** the `.pen` has **no** editor mock (byte-identical re-audit; keyword sweep 0),
+  so a crop/upload flow would be unbounded UI with no source. A custom-image path is a
+  real subsystem (SAF/decode/downscale/adaptive-icon safety/storage format). The P3 Q4
+  promise ("pick from the active pack's drawables") and the P4 scope text ("pack drawable
+  **or** category glyph; recolor; reset") are fully satisfied without it.
+- **Impact:** crop/upload is recorded as an explicit future phase, not lost. The pack
+  picker lists the pack's **mapped distinct drawables** (not raw zip/APK enumeration).
+
+### D-037 - Per-app icon override is a typed choice (P4b)
+- **What:** `LauncherPrefs.iconOverrides` changes from `Map<componentKey, packId>` to
+  `Map<componentKey, IconOverride>`, where `IconOverride` = `Pack(drawableName)` |
+  `Glyph(symbolName, colorToken)`. Absence = automatic (the P3.5 hybrid). `IconSource`
+  gains a `Glyph` variant; `ResolvedIcon` gains `overrideColorToken`. `IconResolver`
+  consults the override **first**; the drawer renderer honors a chosen glyph color.
+- **Why:** the old shape **could not express a choice** -- the resolver re-derived the
+  pack's default entry, so an "override" was visually a no-op, and there was no UI or
+  setter at all (the "Edit Icon" row closed the menu). This is the minimal honest model
+  that makes "Edit Icon" mean something.
+- **Impact:** new `IconOverridesCodec` (pure, total decode + legacy migration);
+  `PrefsRepository.setIconOverride`; `IconEditor` (pure state machine); `IconEditorSheet`
+  + `IconEditorCard`/`ChoiceTile`/`ColorSwatchRow` atoms; the override applies in the
+  drawer **and** the home rail (one resolver path). +20 unit tests, +6 instrumented.
+
+---
+- **What:** `Modifier.dragSource` / `Modifier.dropTarget` / `DragPreviewLayer` /
+  `DragInsertionLine` (in `core:designsystem`) form **one** gesture engine. Two adapters
+  sit on top: home-row reorder (`feature:home`) and drawer app→folder
+  (`feature:appdrawer`). The pure drop math lives in `core:model`
+  (`HomeRowDropResolver`, `FolderDropResolver`).
+- **Why:** the two surfaces (a `Column` of unequal rows vs. a mixed-cell
+  `LazyVerticalGrid`) cannot share a layout, but they share gesture math, the lift
+  animation, and the preview visual. Splitting the layout keeps hit-testing correct
+  while keeping one interaction language.
+- **Impact:** +18 JVM tests (`DragAndDropStateTest`, `DragDropResolverTest`); the engine
+  is Compose-only and covered by instrumented tests.
+
+### D-036 - Long-press splits into menu vs. drag by movement (P4a)
+- **What:** a node that is both tappable and draggable uses a **single** gesture owner
+  (`Modifier.dragSource`) instead of stacking `combinedClickable` on top of a drag
+  detector (which fight over the press). Behaviour: quick press → `onTap`; long-press
+  with **no movement** → `onLongPress` (context menu); long-press **with movement** →
+  drag, `onDrop` on release.
+- **Why:** the P3 context menu already used long-press on drawer tiles while P4a needs
+  long-press to drag. Two detectors on one node produced a grey press-ripple with no
+  drag. One owner removes the ambiguity.
+- **Impact:** `DrawerAppScreen.AppCell` uses `dragSource(onTap, onLongPress, onDrop)`;
+  the P3 long-press menu is preserved (verified on device).
+
 ### D-033 - Drawer icons use a hybrid color source (P3.5)
 - **What:** in the app drawer, an app with an active-pack entry renders the **real
   drawable untinted** (its own colors); an app **not** in the pack renders a

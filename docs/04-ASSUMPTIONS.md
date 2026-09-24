@@ -16,7 +16,7 @@ Status legend: ❓ open · 🔒 accepted · 🔁 revisit later
 | 2 | **Page indicator** ("garis pill kecil") has no design node | Active page = short tall pill; inactive = small dot/line, both in charcoal at low opacity, centered above the mic pill | Visual may differ from intent | ❓ |
 | 3 | **Folder popup** & **2×2 mini-grid** preview have no mock | Use `SoftCard` (r24, `#F6F0E7`, soft shadow), 2×2 of mini `AppIconTile`s, editable title as centered bold text | Folder look unverified | ❓ |
 | 4 | **Calendar / notes / battery widgets** have no direct mock (only names in settings + icon set) | Build them from tokens: card `#F6F0E7`, r24, soft shadow; big number DM Sans bold; thin progress bar = 4px `#2B2B2B` on `#E8DFD0` track | Widget proportions guessed | ❓ |
-| 5 | **Dark mode** requested, but no dark palette in the file | Derived **warm dark** palette (charcoal family): bg `#1F1D1A`, card `#2E2A25`, cream tile inverted. See [02](02-DESIGN-SYSTEM.md) | Dark tone may need tuning | 🔒 |
+| 5 | **Dark mode** requested, but no dark palette in the file | **Superseded by P4c:** the `.pen` now has a named dark palette — frame `KkPN3` "Dark Editorial" (`#18191A` canvas / `#2E3134` rail / `#343638` divider / `#F2EEE7` text). The former derived warm-dark (`#1F1D1A`) is retired. See [section M](#m-assumptions-taken-during-the-p4c-build-dark-mode--kkpn3) and [02](02-DESIGN-SYSTEM.md) | Resolved by design | 🔒 |
 | 6 | **Wallpaper**: design shows solid `#EDE6D8` only | Default = flat warm background; custom wallpaper selection deferred (stub in P1) | — | 🔒 |
 | 7 | **Weather data source** unspecified; mock shows `18° Soft light · 72% humidity` | P1 renders the designed static values; live weather provider deferred | Live data absent in MVP | 🔒 |
 | 8 | **Status bar** content (`9:41 ◦ ◦ ▪`) is a mockup, not a real spec | Real status bar shown; its icon tint follows theme (F1, P3) | — | 🔒 |
@@ -227,6 +227,78 @@ Real screenshots in `docs/screenshots/`:
 
 ---
 
+## K. Assumptions taken during the P4a build (drag & drop)
+
+Scope: P4a = **drag-and-drop** (home-row reorder + drawer app→folder), one gesture
+subsystem. Full spec:
+[`superpowers/specs/2026-09-25-p4a-drag-and-drop-design.md`](superpowers/specs/2026-09-25-p4a-drag-and-drop-design.md).
+
+The `.pen` was **re-audited 2026-09-25**: it contains **no** drag/drop/reorder/handle
+node (keyword sweep: `drag`/`drop`/`reorder`/`handle`/`grip` = 0 hits). The `.pen` stays
+**read-only** (byte-identical after the build), and P4a visuals derive from the existing
+Warm Right Rail vocabulary.
+
+### Locked decisions (user-confirmed)
+
+| # | Decision | Detail |
+|---|---|---|
+| P4a-1 | One gesture subsystem, two targets | Row reorder + app→folder share the engine; only the drop adapters differ (spec §2). |
+| P4a-2 | Drag **complements** the up/down buttons | Both stay (D-031 keeps the buttons). |
+| P4a-3 | Membership/order via existing repos | Drag calls the same `setHomeRows` / `FolderLogic` paths. |
+| P4a-6 | Drag trigger = long-press-lift (haptic) | No persistent drag handle. |
+| P4a-7 | Row reorder drops anywhere vertically | Live insertion line; no empty slots. |
+| P4a-8 | App→folder: folder tile **or** "New folder" chip | Dropping elsewhere = snap back. |
+
+### Documented assumptions
+
+| # | Gap found in P4a | Assumption taken (as built) | Where reflected | Status |
+|---|---|---|---|---|
+| K1 | `.pen` has no drag/drop mock | Long-press-lift (haptic), floating preview (~1.05 scale, soft shadow), 3px accent insertion line / accent hover ring. Built from Warm tokens (`Dimens.drag*`, `MotionTokens.drag*`). | `core/designsystem/atom/DragAndDrop.kt` | 🔒 |
+| K2 | No drag-handle glyph | No persistent handle; the whole row/tile is the drag source after long-press. | `DragAndDrop.kt` | 🔒 |
+| K3 | Long-press already opens a menu (P3) | One gesture owner: no-move → menu, move → drag (D-036). | `AppDrawerScreen.AppCell`, `DragAndDrop.dragSource` | 🔒 |
+| K4 | Row preview shape | Compact **label chip** (cream pill), not the full-height row. | `DragRowChip` | 🔒 |
+| K5 | Drag-out of a folder | **Descoped** from P4a (the popup card's clickable + the scrim click fight the drag; low value). Removing a member stays tap-to-remove in the popup. `FolderDropResolver.removeFrom` + `AppDrawerViewModel.moveOutOfFolder` are kept + unit-tested for a future phase. | `AppDrawerScreen.FolderPopup` | 🔁 |
+| K6 | Drop-to-create folder | Dropping an app on the "New folder" header chip creates a folder containing it (P4a-8). | `AppDrawerViewModel.createFolderWith` | 🔒 |
+| K7 | Swipe-up-to-drawer vs. row drag | A swipe **starting on a row** is now owned by the row's gesture (tap/long-press); swipe-up-to-drawer works from **empty space** (unchanged from A-#47). | `HomeScreen`, `HomeActivity` | 🔒 |
+
+### P4a verification evidence (emulator, Android 15 / API 35, `soft_home_pixel`)
+
+Real screenshots in `docs/screenshots/`:
+
+| Evidence | File |
+|---|---|
+| Home IDLE (baseline) | `p4a-home-idle.png` |
+| **Row reorder mid-drag** (drag chip + accent insertion line at top + dimmed source) | `p4a-row-mid-drag.png` |
+| Row reorder settled (Weather moved up) | `p4a-row-drag-result.png` |
+| **Row order survives `am force-stop`** | `p4a-row-persist.png` |
+| Drawer (all apps) | `p4a-drawer.png` |
+| **App→folder mid-drag** (icon preview + "New folder" chip hovered) | `p4a-app-middrag.png` |
+| Drop-to-create folder (Calendar in a new folder) | `p4a-drop-created-folder.png` |
+| App→existing folder (2 members in the 2×2 preview) | `p4a-app-to-folder.png` |
+| **Folder membership survives `am force-stop`** | `p4a-folder-persist.png` |
+| Folder popup (tap-to-open, members + add-app) | `p4a-folder-popup.png` |
+| **Long-press menu still works** (Open/App Info/Edit Icon/Remove/Uninstall greyed/Shortcuts) | `p4a-longpress-menu.png` |
+| Final drawer state (folder with 2 apps) | `p4a-final-drawer.png` |
+
+- **Tests:** **307 JVM unit tests** (was 176; +18 new: `DragAndDropStateTest` 5 ,
+  `DragDropResolverTest` 13) and **27 instrumented tests** (was 20; +2:`HomeRowDragTest`).
+  The 7 icon-pipeline tests stayed green.
+- **Row reorder:** drag Weather up → order becomes Time→Weather→Date; survives force-stop.
+- **App→folder:** drag an app onto the "New folder" chip → folder created with it; drag
+  onto an existing folder → member added (2×2 preview shows both); survives force-stop;
+  the source app leaves the root grid.
+- **Long-press split:** a stationary long-press opens the context menu; a long-press then
+  drag reorders / assigns; a quick tap launches.
+
+### P4a descopes / deferrals
+
+| Item | Status | Reason |
+|---|---|---|
+| **Drag-out of a folder** (P4a-9) | 🔁 **Descoped** | Popup card `clickable` + scrim click fight the drag gesture; low value (tap-to-remove exists). Resolution kept + tested (K5). |
+| Drag reorder of **drawer grid** order (not just into folders) | ⛔ Deferred | Not requested; folders-first ordering is derived, not user-ordered. |
+
+---
+
 ## J. Assumptions taken during the P3 build (System UI + Settings)
 
 Scope: P3 = System UI (F) + Settings (G), built on the Warm Right Rail design system
@@ -251,13 +323,13 @@ Warm Right Rail vocabulary.
 | P3-5 | Active icon pack **persists + rehydrates** | Closes #36; falls back to auto-mask on a missing/corrupt pack |
 | P3-6 | Wallpaper = **flat default + system picker** | Live-wallpaper **engine** stays deferred (#12) |
 
-### Resolved questions (Q1�Q5)
+### Resolved questions (Q1�Q5)
 
 | # | Question | Decision |
 |---|---|---|
 | Q1 | Settings entry point | Rail `panel-left` icon opens **our** panel; a "System settings" row opens the OS screen |
 | Q2 | "Remove" semantics | **Hide from drawer** (reversible `hiddenApps` set + "Hidden apps" manager) |
-| Q3 | Spacing values | **Multiplier** Compact �0.88 / Normal �1.0 / Roomy �1.12 |
+| Q3 | Spacing values | **Multiplier** Compact �0.88 / Normal �1.0 / Roomy �1.12 |
 | Q4 | Edit Icon depth | Pick from the active pack's drawables (rich editor ? P4) |
 | Q5 | Move-buttons placement | **Inline** on each Widgets row (?/? next to the toggle) |
 
@@ -270,7 +342,7 @@ Warm Right Rail vocabulary.
 | 62 | No long-press menu mock | Row-style cream r24 `AppContextMenu` (Open/App Info/Edit Icon/Remove/Uninstall/Shortcuts); anchored to a centered card in P3 | `core/designsystem/atom/AppContextMenu.kt`, rail + drawer | ?? |
 | 63 | Uninstall availability varies | Greyed when `isSystem` or not removable; never throws; App Info always present | `core:model/AppActionLogic`, `AppActionsRepository` | ?? |
 | 64 | No settings-panel mock | Sectioned panel built from `SettingsRow` + `SoftToggle`; lives in `:app` (thin shell, no new Gradle module) | `app/.../settings/SettingsPanel.kt` | ?? |
-| 65 | No custom-toggle mock | `SoftToggle` 42�22 pill from tokens; reuses `railMotion` (220ms) for the knob | `core/designsystem/atom/SoftToggle.kt` | ?? |
+| 65 | No custom-toggle mock | `SoftToggle` 42�22 pill from tokens; reuses `railMotion` (220ms) for the knob | `core/designsystem/atom/SoftToggle.kt` | ?? |
 | 66 | No row reorder gesture spec | Up/down buttons (P3-2); drag deferred to P4 | `SettingsRow` reorder buttons | ?? |
 | 67 | "Grid size"/"spacing" vs the row-based home | Applied to the **drawer** grid (the only grid surface) + row vertical rhythm; home row layout unchanged | `SettingsPanel` Appearance section | ?? |
 | 68 | Active icon pack lost on restart (#36) | Persist `activeIconPackId`; rehydrate on cold start (zip ? installed ? newest-zip fallback); clear a dead id | `feature/iconpack/.../IconPackRepositoryImpl.kt` | ?? |
@@ -282,8 +354,8 @@ Real screenshots in `docs/screenshots/`:
 
 | Evidence | File |
 |---|---|
-| Home Idle (status icons dark on cream � F1 light) | `p3-home-idle.png` |
-| Home in Dark theme (status icons light on warm-dark � F1) | `p3-home-dark.png` |
+| Home Idle (status icons dark on cream � F1 light) | `p3-home-idle.png` |
+| Home in Dark theme (status icons light on warm-dark � F1) | `p3-home-dark.png` |
 | "Quick notes" toggled off ? row gone; survives force-stop | `p3-home-notes-hidden.png` |
 | Settings: Appearance (theme/grid/spacing/System settings/Hidden apps) | `p3-settings-appearance.png` |
 | Settings: Widgets (locked rows non-toggle, inline ?/?) + Wallpaper + Gestures | `p3-settings-widgets-wallpaper-gestures.png` |
@@ -310,3 +382,190 @@ Real screenshots in `docs/screenshots/`:
 | **Backup & restore settings (G4)** | ? **Deferred to P4** | Out of P3 scope. |
 | **Real gesture actions** (swipe-down / double-tap) | ? **Deferred** | Needs notification access / Device Admin (@15); settings rows show "Coming soon". |
 | **MediaSession (#39)**, **KkPN3 dark editorial**, **live calendar** | ? **Deferred** (still) | Carried from P2. |
+
+---
+
+## L. Assumptions taken during the P4b build (Edit Icon — rich editor)
+
+Scope: P4b = the "Edit Icon" editor over the P3.5 hybrid renderer. Full spec:
+[`superpowers/specs/2026-09-25-p4b-edit-icon-rich-editor-design.md`](superpowers/specs/2026-09-25-p4b-edit-icon-rich-editor-design.md).
+
+The `.pen` was **re-audited 2026-09-25**: byte-identical to the P3.5/P4a audits (176,128
+bytes, SHA256 `08DB2A81…CA6201`, mtime 2026-09-24 11:58). It contains **no** editor mock
+(keyword sweep for `picker`/`swatch`/`crop`/`resize`/`upload`/`icon editor` = 0). The
+`.pen` stays **read-only**; P4b is authored from the Warm Right Rail vocabulary.
+
+### Key finding (why P4b is not "just wiring a picker")
+
+P3's "pick-from-pack" **did not exist**: `iconOverrides` was `Map<componentKey, packId>`,
+which the resolver ignored except to check `== activePack.id`, then re-derived the pack's
+**default** drawable (a visual no-op). The "Edit Icon" row was `onEditIcon =
+viewModel::closeMenu` (no-op) and `PrefsRepository` had no override setter. P4b builds
+the **typed override data path + the editor UI**.
+
+### Documented assumptions
+
+| # | Gap found in P4b | Assumption taken (as built) | Where reflected | Status |
+|---|---|---|---|---|
+| L1 | `.pen` has no editor mock | Cream r24 editor card over a dim scrim (the `FolderPopupBody`/`AppContextMenu` vocabulary), not a platform dialog/sheet | `core/designsystem/atom/IconEditorScaffold.kt` | 🔒 |
+| L2 | No picker mock | Drawable/glyph grids of 48 r14 `ChoiceTile`s; 7 color swatches from the P3.5 `TpzL1` palette | `IconEditorScaffold.kt` | 🔒 |
+| L3 | "Pick from pack" ambiguity | The picker offers the pack's **mapped distinct drawables** (`entries.values`), not raw zip/APK drawables (deferred, D-038) | `AppDrawerViewModel.iconEditorState` | 🔁 |
+| L4 | Non-pack edit depth | A non-pack app may choose a **glyph + color**; no crop/upload (D-038) | `IconEditor`/`IconEditorSheet` | 🔒 |
+| L5 | Reset semantics | Reset = remove the override → derived (pack/category) rendering; no confirmation (reversible) | `AppDrawerViewModel.resetIconOverride` | 🔒 |
+| L6 | Override scope | One override per app, applied wherever the shared `IconResolver` renders it (drawer + folder previews + home rail) | `IconResolver` | 🔒 |
+| L7 | Preview fidelity | The editor preview uses the **same** `DrawerIconTile` composition as the grid, so it cannot drift | `IconEditorSheet.EditorPreview` | 🔒 |
+
+### P4b verification evidence (emulator, Android 15 / API 35, `soft_home_pixel`)
+
+Real captures in `docs/screenshots/`:
+
+| Evidence | File |
+|---|---|
+| Editor, **pack mode** (tabs + "Choose from the active pack" grid + gated Save) | `p4b-editor-pack.png` |
+| Editor, **glyph mode** (glyph grid + selected ring + 7 color swatches) | `p4b-editor-glyph.png` |
+| **Override applied in the real drawer** (Calendar = chosen HeartHandshake glyph in Travel color) | `p4b-override-applied.png` |
+| **Override survives `am force-stop`** (same tile after full process death + relaunch) | `p4b-override-persist.png` |
+| Baseline drawer (P3.5 colored glyphs, pre-edit) | `p4b-drawer.png` |
+
+- **Tests:** **217 JVM unit** (`IconOverridesCodecTest` 10, `IconEditorTest` 10,
+  `IconResolverTest` 8→10) and **33 instrumented** (`IconEditorSheetTest` 2,
+  `IconEditorScreenshotTest` 2, `IconOverrideEndToEndTest` 2). The 7 icon-pipeline tests
+  stayed green.
+- **End-to-end:** a saved override round-trips through the **real** Android DataStore and
+  drives the **real** `IconResolver` (proven on-device by `IconOverrideEndToEndTest`).
+- **Honesty note:** the pack-mode editor screenshot uses a synthetic pack whose drawables
+  do not exist on disk, so its tiles/preview render blank — the *layout, tabs, selection
+  ring, and Save gating* are what that screenshot proves. The drawable **decode inside the
+  editor** uses the identical `IconPackDrawableLoader` + `IconCompositor` path already
+  verified since P1.5/P3.5.
+
+### P4b out of scope (recorded, NOT silently dropped)
+
+| Item | Status | Reason |
+|---|---|---|
+| **Crop / resize / upload a custom image** | ⛔ **Out of P4b** | No design source; a real subsystem (SAF/decode/downscale/adaptive-icon safety/storage). D-038. |
+| Raw pack drawable enumeration (`listDrawables`) | ⛔ **Deferred** | The mapped set is the pack's curated repertoire; enumeration is new infra. |
+| Editing rail-icon **shortcut targets** | ⛔ **Out** | That is the "Edit Shortcut" row, unrelated to icon artwork. |
+
+---
+
+## M. Assumptions taken during the P4c build (Dark Mode — KkPN3)
+
+Scope: P4c = render the `KkPN3` "Dark Editorial" named palette faithfully, replacing the
+derived warm-dark guess (old assumption #5), and audit every surface under dark.
+Design source: `design/homeApp.pen` frame **`KkPN3` "Home Screen Mockup — Dark Editorial"**.
+Full context: the [P4 scope spec §0](superpowers/specs/2026-09-25-p4-scope-and-phase-split-design.md).
+
+The `.pen` was **re-audited 2026-09-25**: byte-identical to the P3.5/P4a/P4b audits
+(176,128 bytes, SHA256 `08DB2A81…CA6201`). The `.pen` stays **read-only**.
+
+### `KkPN3` palette (authoritative, extracted node-by-node)
+
+| Element | Value |
+|---|---|
+| Screen bg | `#18191A` |
+| Dark rail | `#2E3134` |
+| Divider | `#343638` |
+| Rail icon / time / date number / music title / search icon / music controls / progress fill / signature | `#F2EEE7` |
+| Soft text (weather label / signature-level) | `#E2DDD5` |
+| Date day | `#D2CBC1` |
+| Date month / music track | `#918F8B` / `#817F7B` |
+| Search placeholder | `#A8A29A` |
+| Music artist | `#C8C0B6` |
+| Album art / album mark | `#E3DED6` / `#454648` |
+| Progress track | `#676866` |
+| Search idle dots | `#777873` |
+
+### Documented assumptions
+
+| # | Gap found in P4c | Assumption taken (as built) | Where reflected | Status |
+|---|---|---|---|---|
+| M1 | `KkPN3` shows no card/menu/popup/drawer-card surface | Derived from the same neutral family: card `#24262A`, cardAlt `#2A2C30`, drawer bg `#1F2124`, drawer stroke `#3E4145` | `Color.kt` (dark block) | 🔁 |
+| M2 | No dark **drawer icon** palette in the `.pen` | P3.5's dark drawer adaptations kept, aligned to the neutral tile `#2E3134` (glyph colors remain legible) | `Color.kt` (`DarkDrawer*`) | 🔁 |
+| M3 | `KkPN3` has no accent color (it is monochrome-warm) | Kept a warm accent (`#C98B6E`) for interactive emphasis (links, active tab, toggle), legible on `#18191A` | `Color.kt` (`DarkAccent`) | 🔁 |
+| M4 | Settings panel behaviour under dark was unspecified | `SettingsStubActivity` now resolves `ThemeMode` and matches its status/nav bars (was hardcoded light) | `app/.../SettingsStubActivity.kt` | 🔒 |
+
+### P4c verification evidence (emulator, Android 15 / API 35, `soft_home_pixel`)
+
+Real screenshots in `docs/screenshots/`:
+
+| Evidence | File |
+|---|---|
+| Home, **light** (baseline) | `p4c-home-light.png` |
+| Home, **dark** (`KkPN3`: `#18191A` canvas, `#2E3134` rail, `#F2EEE7` type, warm accent) | `p4c-home-dark.png` |
+| Drawer, **dark** (dark tiles + legible category-colored glyphs) | `p4c-drawer-dark.png` |
+| Settings, **dark** (rows on `#24262A`; Theme row reads **"Dark"** — proves the fix) | `p4c-settings-dark.png` |
+
+- **Tests:** **220 JVM unit** (was 217; +3 `DarkPaletteTest`) and **36 instrumented** (was
+  33; +3 `DarkThemeTest`). Both `soft_home_pixel` (API 35) and a physical device ran the
+  instrumented suite green.
+- **Palette lock:** `DarkPaletteTest` asserts the verbatim `KkPN3` hexes so dark mode
+  cannot drift from the design again.
+- **Bug fixed:** `SettingsStubActivity` previously forced `darkTheme = false` for the bars
+  while the panel followed the system — a dark panel with a mismatched status bar. Now
+  both follow `ThemeMode`.
+
+---
+
+## N. Assumptions taken during the P4d build (Backup & Restore)
+
+Scope: P4d = export/import the whole launcher user state as one file, from a settings
+section (G4). It is the final P4 sub-phase.
+Design source: `design/homeApp.pen`. The `.pen` was **re-audited 2026-09-25**:
+byte-identical to every audit since P3.5 (176,128 bytes, SHA256
+`08DB2A81...CA6201`); keyword sweep `backup`/`restore`/`export`/`import`/`cloud` = **0**.
+The `.pen` stays **read-only**.
+
+### Key finding (why P4d is "one codec + one apply", not new infra)
+
+Unlike P4b (which had to build a data path from scratch), every persisted field already
+has a typed model, a pure codec (`HomeRowsCodec`, `IconOverridesCodec`, `FoldersCodec`)
+and a typed repository setter. So P4d only had to (a) serialize the union of those values
+and (b) apply them back. The one gap closed: a single atomic `PrefsRepository.applyAll`
+(one DataStore write) so a restore is not N separate edits.
+
+### Documented assumptions
+
+| # | Gap | Assumption taken (as built) | Status |
+|---|---|---|---|
+| N1 | `.pen` has no backup mock | A "Backup & restore" `SettingsRow` section appended to the P3 settings panel | OK |
+| N2 | No format spec | One JSON document `{app,version,exportedAt,prefs,folders,notes}` (D-040) | OK |
+| N3 | No transport spec | SAF `CreateDocument` / `OpenDocument` (MIME `application/json`), like the P1.5 zip flow | OK |
+| N4 | Restore UX unspecified | Destructive, behind an inline confirm; result shown as a tappable message row | OK |
+| N5 | Icon-pack bytes | Backed up as an **id reference** only; rehydrated via the P3-5 cold-start path | OK |
+| N6 | Foreign/corrupt files | Guarded by the `app` marker + `version`; failure leaves state untouched (total decode) | OK |
+
+### P4d verification evidence (emulator API 35 + real device TECNO CN7c / Android 16)
+
+Real screenshots in `docs/screenshots/`:
+
+| Evidence | File |
+|---|---|
+| Settings shows the "BACKUP & RESTORE" section (real device, dark) | `p4d-settings-backup-real.png` |
+| Settings shows the section with Export/Import rows (emulator, light) | `p4d-settings-backup-emulator.png` |
+| SAF `CreateDocument` picker with the suggested name `softhome-backup-<date>.json` | `p4d-saf-save-picker.png` |
+| "Backup saved." message after export | `p4d-backup-saved-emulator.png` |
+| The exported file itself (421 B, well-formed) | `p4d-backup-file-example.json` |
+| Home, light mode (real device) | `p4d-home-light-real.png` |
+
+- **Tests:** **236 JVM unit** (was 220; +16: `BackupCodecTest` 11, `BackupRepositoryTest`
+  3, `PrefsRepositoryTest` +2 `applyAll`) and **38 instrumented** (was 36; +2
+  `BackupRestoreEndToEndTest`, `BackupSettingsScreenshotTest`). Both `soft_home_pixel`
+  (API 35) and the physical device TECNO CN7c (Android 16 / API 36) ran the instrumented
+  suite green.
+- **Round-trip:** `BackupRestoreEndToEndTest` exports to a real file, wipes every store,
+  restores, and asserts every field came back -- against the real DataStore on both
+  devices.
+- **Bug found & fixed during verification:** the export first wrote a **0-byte** file,
+  because the SAF stream was opened with `contentResolver.openOutputStream(uri)?.use {}`
+  at the *call site* while `exportBackup` launched a coroutine and returned immediately --
+  so the stream closed before the async write. Fixed by passing the `ContentResolver` +
+  `Uri` into the ViewModel and opening/using/closing the stream **inside** the coroutine
+  (`BackupRepository.export` also stopped closing the caller's stream). Verified: the file
+  is now 421 B and well-formed.
+
+### P4d out of scope (recorded, NOT silently dropped)
+
+- Backing up the icon-pack **bytes** / installed pack APKs (id reference only).
+- Any cloud / account / auto-sync, scheduled backups.
+- Per-section (partial) backup -- it is the whole state or nothing.

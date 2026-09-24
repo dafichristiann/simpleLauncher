@@ -13,10 +13,14 @@ import com.softhome.core.model.GridConfig
 import com.softhome.core.model.HomeRowKind
 import com.softhome.core.model.HomeRowLogic
 import com.softhome.core.model.HomeRowPref
+import com.softhome.core.model.IconOverride
+import com.softhome.core.model.DrawerIconTokenName
 import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import dagger.hilt.android.qualifiers.ApplicationContext
+import org.json.JSONArray
+import org.json.JSONObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -42,6 +46,10 @@ interface PrefsRepository {
     suspend fun hideApp(componentKey: String)
     /** P3 (Q2): restore a hidden app. */
     suspend fun unhideApp(componentKey: String)
+    /** P4b: set (or clear, with null) the explicit icon override for one app. */
+    suspend fun setIconOverride(componentKey: String, override: IconOverride?)
+    /** P4d: replace ALL persisted prefs in a single write (used by backup restore). */
+    suspend fun applyAll(prefs: LauncherPrefs)
 }
 
 @Singleton
@@ -62,6 +70,8 @@ class PrefsRepositoryImpl @Inject constructor(
         val HOME_ROWS = stringPreferencesKey("home_rows")
         val SPACING = stringPreferencesKey("spacing_scale")
         val HIDDEN_APPS = stringSetPreferencesKey("hidden_apps")
+        // --- P4b ---
+        val ICON_OVERRIDES = stringPreferencesKey("icon_overrides_json")
     }
 
     override val prefs: Flow<LauncherPrefs> = context.launcherDataStore.data.map { p ->
@@ -82,6 +92,7 @@ class PrefsRepositoryImpl @Inject constructor(
             spacing = runCatching { SpacingScale.valueOf(p[Keys.SPACING] ?: SpacingScale.Normal.name) }
                 .getOrDefault(SpacingScale.Normal),
             hiddenApps = p[Keys.HIDDEN_APPS] ?: emptySet(),
+            iconOverrides = IconOverridesCodec.decode(p[Keys.ICON_OVERRIDES]),
         )
     }
 
@@ -136,6 +147,47 @@ class PrefsRepositoryImpl @Inject constructor(
             p[Keys.HIDDEN_APPS] = (p[Keys.HIDDEN_APPS] ?: emptySet()) - componentKey
         }
     }
+
+    override suspend fun setIconOverride(componentKey: String, override: IconOverride?) {
+        context.launcherDataStore.edit { p ->
+            val current = IconOverridesCodec.decode(p[Keys.ICON_OVERRIDES]).toMutableMap()
+            if (override == null) current.remove(componentKey)
+            else current[componentKey] = override
+            if (current.isEmpty()) {
+                p.remove(Keys.ICON_OVERRIDES)
+            } else {
+                p[Keys.ICON_OVERRIDES] = IconOverridesCodec.encode(current)
+            }
+        }
+    }
+
+    /**
+     * P4d: write every pref key in **one** `edit` block, so a restore produces a single
+     * DataStore write (and one reactive `prefs` emission) rather than N. Mirrors the
+     * encode used by the read path exactly, so encode/decode stay symmetric.
+     */
+    override suspend fun applyAll(prefs: LauncherPrefs) {
+        context.launcherDataStore.edit { p ->
+            p[Keys.COLUMNS] = prefs.grid.columns
+            p[Keys.ROWS] = prefs.grid.rows
+            p[Keys.ICON_SCALE] = (prefs.grid.iconScale * 100).toInt()
+            p[Keys.SHOW_LABELS] = prefs.grid.showLabels
+
+            val packId = prefs.activeIconPackId
+            if (packId == null) p.remove(Keys.ICON_PACK)
+            else p[Keys.ICON_PACK] = packId
+
+            p[Keys.MASK] = prefs.maskUnsupportedApps
+            p[Keys.THEME] = prefs.darkTheme.name
+            p[Keys.BADGES] = prefs.showNotificationBadges
+            p[Keys.HOME_ROWS] = HomeRowsCodec.encode(HomeRowLogic.sanitize(prefs.homeRows))
+            p[Keys.SPACING] = prefs.spacing.name
+            p[Keys.HIDDEN_APPS] = prefs.hiddenApps
+
+            if (prefs.iconOverrides.isEmpty()) p.remove(Keys.ICON_OVERRIDES)
+            else p[Keys.ICON_OVERRIDES] = IconOverridesCodec.encode(prefs.iconOverrides)
+        }
+    }
 }
 
 /**
@@ -158,5 +210,83 @@ object HomeRowsCodec {
                 ?: return@mapNotNull null
             HomeRowPref(kind, visible = bits[1].trim() == "1")
         }
+    }
+}
+
+/**
+ * P4b: pure (Android-free apart from org.json) codec for per-app [IconOverride]s.
+ *
+ * Format: a JSON object `{ "pkg/Class": {"type":"pack","name":"drawable"} }` or
+ * `{ ..., "type":"glyph","symbol":"Phone","color":"Communication" }`. Decoding is
+ * **total**: unknown `type`s, unknown color tokens, blank names, and malformed JSON are
+ * dropped (never throws) -- so a bad/legacy value degrades to "automatic", not a crash.
+ *
+ * Migration (P4b-11): the previous storage shape was `componentKey -> packId`. Values
+ * that are not the new object shape are skipped here; a stale old value simply yields
+ * no override (the app falls back to the P3.5 hybrid). Nothing is lost that the old
+ * value could actually express (the old value could not pick a drawable -- see spec §1).
+ */
+object IconOverridesCodec {
+
+    private const val TYPE = "type"
+    private const val TYPE_PACK = "pack"
+    private const val TYPE_GLYPH = "glyph"
+    private const val NAME = "name"
+    private const val SYMBOL = "symbol"
+    private const val COLOR = "color"
+
+    fun encode(overrides: Map<String, IconOverride>): String {
+        val obj = JSONObject()
+        overrides.forEach { (key, override) ->
+            if (key.isBlank()) return@forEach
+            val value = JSONObject()
+            when (override) {
+                is IconOverride.Pack -> {
+                    if (override.drawableName.isBlank()) return@forEach
+                    value.put(TYPE, TYPE_PACK)
+                    value.put(NAME, override.drawableName)
+                }
+                is IconOverride.Glyph -> {
+                    if (override.symbolName.isBlank()) return@forEach
+                    value.put(TYPE, TYPE_GLYPH)
+                    value.put(SYMBOL, override.symbolName)
+                    value.put(COLOR, override.colorToken.name)
+                }
+            }
+            obj.put(key, value)
+        }
+        return obj.toString()
+    }
+
+    /** Decodes overrides, dropping anything unrecognised (never throws). */
+    fun decode(json: String?): Map<String, IconOverride> {
+        if (json.isNullOrBlank()) return emptyMap()
+        return runCatching {
+            val obj = JSONObject(json)
+            buildMap {
+                val keys = obj.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    if (key.isBlank()) continue
+                    val value = obj.optJSONObject(key) ?: continue
+                    when (value.optString(TYPE)) {
+                        TYPE_PACK ->
+                            value.optString(NAME).takeIf { it.isNotBlank() }
+                                ?.let { put(key, IconOverride.Pack(it)) }
+
+                        TYPE_GLYPH -> {
+                            val symbol = value.optString(SYMBOL).takeIf { it.isNotBlank() }
+                            val token = DrawerIconTokenName.entries
+                                .firstOrNull { it.name == value.optString(COLOR) }
+                            if (symbol != null && token != null) {
+                                put(key, IconOverride.Glyph(symbol, token))
+                            }
+                        }
+
+                        else -> Unit // unknown/legacy type -> no override
+                    }
+                }
+            }
+        }.getOrDefault(emptyMap())
     }
 }

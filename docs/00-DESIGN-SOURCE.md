@@ -156,3 +156,73 @@ stays **read-only** (verified byte-identical after the P3 build).
   platform `PopupMenu`.
 - **Settings** is a sectioned panel (Appearance / Widgets / Wallpaper / Gestures) built
   from `SettingsRow`s + the `SoftToggle` pill.
+
+---
+
+## P4a (Drag & Drop) — no design nodes
+
+Re-audited 2026-09-25: the `.pen` contains **no** drag/drop/reorder/handle node (keyword
+sweep `drag`/`drop`/`reorder`/`handle`/`grip` = 0 hits). P4a is authored as documented
+assumptions on the Warm Right Rail vocabulary — see
+[`04` section K](04-ASSUMPTIONS.md) and the
+[P4a spec](superpowers/specs/2026-09-25-p4a-drag-and-drop-design.md). The `.pen` stays
+**read-only** (verified byte-identical after the P4a build).
+
+- **Drag trigger** is long-press-lift (haptic); there is no persistent drag handle.
+- The **drag preview** scales the item to ~1.05 with a soft shadow; the source dims to
+  ~35% alpha; home rows preview as a compact cream **label chip**.
+- **Drop feedback** is a 3px accent (`#8A5F43`) insertion line for row reorder, and an
+  accent hover-wash for folder tiles / the "New folder" chip.
+- Drag **complements** the up/down buttons (P3); it does not replace them.
+
+---
+
+## P4b (Edit Icon — rich editor) — no design nodes
+
+Re-audited 2026-09-25: the `.pen` is **byte-identical** to the P3.5/P4a audits (176,128
+bytes, SHA256 `08DB2A81…CA6201`) and contains **no** icon-editor mock (keyword sweep
+`picker`/`swatch`/`crop`/`resize`/`upload`/`icon editor` = 0). P4b is authored as
+documented assumptions on the Warm Right Rail vocabulary — see
+[`04` section L](04-ASSUMPTIONS.md) and the
+[P4b spec](superpowers/specs/2026-09-25-p4b-edit-icon-rich-editor-design.md). The `.pen`
+stays **read-only**.
+
+- The editor is a **cream r24 card over a dim scrim** (the folder-popup / context-menu
+  vocabulary), opened from the existing "Edit Icon" menu row.
+- A **live preview** reuses the exact drawer tile composition, so it cannot drift.
+- It edits the **P3.5 hybrid model**: a pack app may pick a drawable from the active
+  pack's mapped set; a non-pack app may pick a **glyph + one of the 7 `TpzL1` colors**;
+  either can **Reset** to automatic. No crop/upload (D-038).
+
+---
+
+## P4c (Dark Mode) — the `KkPN3` frame IS the design source
+
+Unlike P4a/P4b, P4c **has** a real design source: frame **`KkPN3` "Home Screen Mockup —
+Dark Editorial"** (390×720). Its named palette is extracted node-by-node and rendered
+verbatim (screen bg `#18191A`, rail `#2E3134`, divider `#343638`, primary text `#F2EEE7`,
+soft text `#E2DDD5`, muted `#918F8B`, progress track `#676866`). See
+[`04` section M](04-ASSUMPTIONS.md) and [D-039](09-DECISIONS-LOG.md). The `.pen` stays
+**read-only** (byte-identical, 176,128 bytes, SHA256 `08DB2A81…CA6201`).
+
+- Dark mode **replaces** the earlier derived warm-dark guess (old assumption #5).
+- Surfaces the frame does not show (menu/popup/drawer cards) are derived from the same
+  neutral family; the `.pen` is the source for every value it **does** show.
+- A warm accent (`#C98B6E`) is kept for interactive emphasis (the frame is monochrome).
+
+---
+
+## P4d (Backup & Restore) — no design nodes
+
+Re-audited 2026-09-25: the `.pen` is **byte-identical** to every audit since P3.5
+(176,128 bytes, SHA256 `08DB2A81…CA6201`) and contains **no** backup/restore/export/import
+mock (keyword sweep = 0). P4d is authored as documented assumptions on the Warm Right Rail
+vocabulary — a new "Backup & restore" `SettingsRow` section (see
+[`04` section N](04-ASSUMPTIONS.md) and the
+[P4d spec](superpowers/specs/2026-09-25-p4d-backup-restore-design.md)). The `.pen` stays
+**read-only**.
+
+- The backup is **one versioned JSON document** (all launcher prefs), moved via SAF;
+  no design surface to honour.
+- Restore **replaces** state wholesale, behind an inline confirm; failure is graceful and
+  leaves state untouched.

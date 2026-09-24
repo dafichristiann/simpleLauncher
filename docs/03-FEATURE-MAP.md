@@ -99,7 +99,7 @@ Master table of every requested feature -> priority -> backing design node -> st
 | G1 | Settings sections: Appearance / Widgets / Wallpaper / Gestures | *(assumption)* | [x] | `SettingsPanel` (4 sections); `SettingsRow` + `SoftToggle`; opened from the rail settings icon (Q1) |
 | G2 | Custom pill toggle (charcoal, not system default) | *(assumption)* | [x] | `SoftToggle` atom (42×22, charcoal, `Role.Switch`) |
 | G3 | Dark/light mode (warm dark palette) | *(assumption)* | [x] | `ThemeMode` persisted + applied app-wide (Theme setting cycles Light/Dark/System) |
-| G4 | Backup & restore settings | - | [ ] | **deferred to P4** |
+| G4 | Backup & restore settings | *(assumption)* | [x] | **P4d DONE** (Session 13): export/import all launcher state as one JSON file via SAF; versioned + total decode. See [P4d spec](superpowers/specs/2026-09-25-p4d-backup-restore-design.md) |
 
 ### Home Widgets (P3 addition to G1/Widgets)
 
@@ -114,22 +114,101 @@ Master table of every requested feature -> priority -> backing design node -> st
 
 | Item | Status |
 |---|---|
-| Drag-and-drop row reorder | ⛔ deferred to **P4** (P3-2) |
-| Drag-and-drop app → folder (from P2) | ⛔ deferred to **P4** |
-| Rich icon editor (upload/crop custom icon) | ⛔ deferred to **P4** (P3 ships pick-from-pack, Q4) |
-| Live-wallpaper engine | ⛔ deferred (flat default + system picker in P3, P3-6) |
-| Backup & restore settings (G4) | ⛔ deferred to **P4** |
+| Drag-and-drop row reorder | ✅ **done in P4a** |
+| Drag-and-drop app → folder (from P2) | ✅ **done in P4a** |
+| Rich icon editor (upload/crop custom icon) | ⛔ deferred to **P4b** (P3 ships pick-from-pack, Q4) |
+| Live-wallpaper engine | ⚪ **dropped from roadmap** (flat default + system picker in P3, P3-6) |
+| Backup & restore settings (G4) | ⛔ deferred to **P4d** |
 | Real gesture actions (swipe-down / double-tap) | ⛔ deferred (settings rows show "Coming soon") |
 
 ---
 
-## Priority 4 - Onboarding (H) + Polish  ·  NOT STARTED
+## Priority 4a - Drag & Drop  ·  DONE (2026-09-25)
+
+One gesture engine, two targets. `.pen` has **no** drag/drop mock — authored from Warm
+tokens. Full spec:
+[P4a spec](superpowers/specs/2026-09-25-p4a-drag-and-drop-design.md). See also
+[04 section K](04-ASSUMPTIONS.md).
 
 | ID | Feature | Design node | Status | Notes |
 |---|---|---|---|---|
-| H1 | Empty state / onboarding before icon pack applied | hero copy `OHvvM`, CTA `z1fmFx` | [ ] | full in P4 |
-| H2 | Line-art illustration + heading + pill CTA | hero section | [ ] | copy: "A softer way to start the day." |
-| H3 | Extra polish / animations | - | [~] | drawer slide/fade + reduced-motion aware |
+| P4a-1 | Drag-reorder home rows | *(assumption)* | [x] | Long-press-lift + accent insertion line; `HomeRowDropResolver`; composes with the P3 ↑/↓ buttons |
+| P4a-2 | Drag app → existing folder | *(assumption)* | [x] | Folder tile = drop target (accent hover); `FolderDropResolver.assign` |
+| P4a-3 | Drag app → "New folder" chip (drop-to-create) | *(assumption)* | [x] | `FolderDropResolver.createWith` |
+| P4a-4 | Long-press split: menu vs. drag | *(assumption)* | [x] | one gesture owner: no-move → menu, move → drag (D-036) |
+| P4a-5 | Persistence (order + folder membership) | — | [x] | verified across `am force-stop` |
+| — | Drag-out of a folder | *(assumption)* | [~] | **descoped** (popup clickable fights the drag; tap-to-remove exists); resolver kept + tested |
+
+### P4 (remaining) — planned
+
+| Sub-phase | Item | Status |
+|---|---|---|
+| P4b | Rich icon editor (pack drawable or category glyph; recolor; reset) | [x] **done** (Session 11) |
+| P4c | Dark mode rendered from the `KkPN3` palette | [x] **done** (Session 12) |
+| P4d | Backup & restore settings (G4) | [x] **done** (Session 13) |
+
+> **P4 is complete.** All four sub-phases (P4a–P4d) are done. See the P4d section below.
+
+---
+
+## Priority 4d - Backup & Restore  ·  DONE (2026-09-25)
+
+`.pen` has **no** backup/restore mock (byte-identical re-audit; sweep 0) — authored from
+the P3 `SettingsRow` + P1.5 action-pill vocabulary. Full spec:
+[P4d spec](superpowers/specs/2026-09-25-p4d-backup-restore-design.md). See also
+[04 section N](04-ASSUMPTIONS.md) and [D-040/D-041/D-042](09-DECISIONS-LOG.md).
+
+| ID | Feature | Design node | Status | Notes |
+|---|---|---|---|---|
+| P4d-1 | Export all launcher state to one file | *(assumption)* | [x] | One versioned JSON doc (rows, spacing, hidden, overrides, folders, notes, theme, pack id); SAF `CreateDocument` |
+| P4d-2 | Import/restore, destructively, behind a confirm | *(assumption)* | [x] | Decodes first; only a valid `SOFT_HOME` file offers the inline confirm; SAF `OpenDocument` |
+| P4d-3 | Total, non-destructive failure handling | — | [x] | `NotABackup` / `UnsupportedVersion` / `Malformed` leave state untouched; never throws |
+| P4d-4 | Atomic apply | — | [x] | `PrefsRepository.applyAll` writes all prefs in one DataStore edit |
+| P4d-5 | Round-trip verified on device | — | [x] | `BackupRestoreEndToEndTest` on emulator (API 35) + real device (API 36); file dump 421 B |
+
+---
+
+## Priority 4c - Dark Mode (KkPN3)  ·  DONE (2026-09-25)
+
+`.pen` now has a **named dark palette** — frame `KkPN3` "Home Screen Mockup — Dark
+Editorial". P4c renders it faithfully (replacing the derived warm-dark guess). See
+[04 section M](04-ASSUMPTIONS.md) and [D-039](09-DECISIONS-LOG.md).
+
+| ID | Feature | Design node | Status | Notes |
+|---|---|---|---|---|
+| P4c-1 | Dark palette = verbatim `KkPN3` values | `KkPN3` | [x] | bg `#18191A`, rail `#2E3134`, divider `#343638`, text `#F2EEE7`/`#D2CBC1`/`#918F8B` |
+| P4c-2 | Home + rail render `KkPN3` in dark | `KkPN3` | [x] | near-black canvas + `#2E3134` rail (screenshot) |
+| P4c-3 | Drawer + category glyphs legible in dark | *(assumption)* | [x] | dark tiles + the P3.5 color glyphs' dark adaptations |
+| P4c-4 | Settings panel follows `ThemeMode` | *(assumption)* | [x] | `SettingsStubActivity` fix; status/nav bar matches |
+| P4c-5 | Context menu / folder popup / icon editor in dark | *(assumption)* | [x] | all read `SoftColors`, so they follow the palette |
+| P4c-6 | Token lock | — | [x] | `DarkPaletteTest` pins the `KkPN3` hexes |
+
+---
+
+## Priority 4b - Edit Icon (rich editor)  ·  DONE (2026-09-25)
+
+`.pen` has **no** editor mock (byte-identical re-audit; sweep 0) — authored from Warm
+tokens. Full spec:
+[P4b spec](superpowers/specs/2026-09-25-p4b-edit-icon-rich-editor-design.md). See also
+[04 section L](04-ASSUMPTIONS.md).
+
+| ID | Feature | Design node | Status | Notes |
+|---|---|---|---|---|
+| P4b-1 | "Edit Icon" opens a real editor | *(assumption)* | [x] | cream r24 card over a dim scrim, opened from the long-press menu row (`IconEditorSheet`) |
+| P4b-2 | Pick a pack drawable | *(assumption)* | [x] | grid of the active pack's **mapped distinct drawables**; `IconOverride.Pack` |
+| P4b-3 | Pick a glyph + color (non-pack apps) | *(assumption)* | [x] | glyph grid + 7 `TpzL1` color swatches; `IconOverride.Glyph` |
+| P4b-4 | Reset to automatic | *(assumption)* | [x] | clears the override → derived (pack/category) rendering |
+| P4b-5 | Live preview | *(assumption)* | [x] | uses the **same** `DrawerIconTile` path as the grid (cannot drift) |
+| P4b-6 | Persistence | — | [x] | DataStore (`IconOverridesCodec`); verified across `am force-stop` |
+| P4b-7 | Applies everywhere via the resolver | — | [x] | drawer + folder previews + home rail (one resolver path) |
+| — | Crop / resize / upload a custom image | — | ⛔ | **out of P4b** (D-038); recorded as a future phase |
+| — | Raw pack drawable enumeration | — | ⛔ | **out of P4b**; picker uses the mapped set |
+
+> **Roadmap note:** the earlier "P4 = Onboarding (H) + polish" framing was re-split into
+> P4a–P4d by the [P4 scope spec](superpowers/specs/2026-09-25-p4-scope-and-phase-split-design.md).
+> **Onboarding (H) is OUT** — the `.pen` has no onboarding mock (`onboard`/`welcome`/`setup`
+> = 0 hits). MediaSession + live calendar stay parked past P4. Live-wallpaper engine +
+> battery callback stream are dropped.
 
 ---
 

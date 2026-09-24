@@ -150,7 +150,30 @@ Notes:
 
 ---
 
-## 7. CI (later)
+## 7. Backup & restore (P4d)
+
+From the settings panel (rail `panel-left` icon → **Settings** → scroll to **Backup &
+restore**):
+
+- **Export backup** → the system SAF picker opens with the suggested name
+  `softhome-backup-<yyyy-MM-dd>.json`. Pick a location and tap **SAVE**. The whole
+  launcher state (rows, spacing, hidden apps, icon overrides, folders, notes, theme, and
+  the active icon-pack **id**) is written as one JSON document. A "Backup saved." message
+  appears on success.
+- **Import backup** → the SAF picker opens; choose a `softhome-backup-*.json`. If it is a
+  valid SOFT / HOME backup, an inline **"Replace all current settings with this backup?"**
+  confirm appears. Confirming replaces all state; cancel/foreign-file changes nothing.
+
+Notes:
+- No storage permission is required (SAF grants per-file access).
+- The icon pack's **bytes** are not in the backup — only its id. If the pack is still on
+  the device after a restore, it rehydrates automatically (P3-5); otherwise the launcher
+  falls back to mask.
+- A backup from a **newer** app version is refused gracefully (never mis-read).
+
+---
+
+## 7b. CI (later)
 
 A GitHub Actions workflow can run `./gradlew test` + `assembleDebug` on push.
 Not set up yet.

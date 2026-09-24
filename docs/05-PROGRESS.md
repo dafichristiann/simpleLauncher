@@ -9,11 +9,208 @@ hardened glyph uniqueness (D-016). **Session 5 redesigned the home + drawer into
 battery-storage / quick notes) + the folder system, under the Warm Right Rail design
 system.** **Session 8 fixed the drawer BACK regression.** **Session 9 delivered P3.5:
 the drawer icon color system (cream tiles + per-category colored glyphs + amber
-selected state), rendering the `TpzL1` frame faithfully.** Stopped for review.
+selected state), rendering the `TpzL1` frame faithfully.** **Session 10 delivered P4a:
+drag-and-drop — one gesture engine, two targets (home-row reorder + drawer app→folder).**
+**Session 11 delivered P4b: the "Edit Icon" rich editor (per-app typed override: pack
+drawable or glyph+color, with reset).** Working P4b and P4c back-to-back (user-authorized
+no-stop), stopping at the end of P4c.
+
+**Session 12: P4c — Dark Mode from the `KkPN3` named palette — DONE (2026-09-25).**
+
+**Session 13: P4d — Backup & Restore — DONE (2026-09-25). P4 is COMPLETE. See the
+FINAL PROJECT REPORT at the end of this file.**
 
 ---
 
 ## Session log
+
+### Session 13 - P4d Backup & Restore — DONE (2026-09-25)
+
+**Why:** P4d is the last P4 sub-phase — export/import the whole launcher state as one
+file (G4, deferred since P3). Spec:
+[`superpowers/specs/2026-09-25-p4d-backup-restore-design.md`](superpowers/specs/2026-09-25-p4d-backup-restore-design.md).
+
+**Re-audit:** the `.pen` is **byte-identical** to every audit since P3.5 (176,128 bytes,
+SHA256 `08DB2A81…CA6201`). Keyword sweep `backup`/`restore`/`export`/`import`/`cloud` = **0**.
+No design source; authored from the P3 `SettingsRow` + P1.5 action-pill vocabulary.
+`.pen` stays read-only.
+
+**Key finding:** unlike P4b (which built a data path from scratch), every persisted field
+already had a typed model + a pure codec + a typed setter, so P4d is "one serializer +
+one apply". The one gap closed: a single atomic `PrefsRepository.applyAll` (one DataStore
+write).
+
+**What changed:**
+- **`core:model`** — new `BackupDocument` (versioned envelope; `app` marker + `version`).
+- **`core:data`** — new `BackupCodec` (pure, total decode: `Ok`/`NotABackup`/
+  `UnsupportedVersion`/`Malformed`; reuses `HomeRowsCodec`/`IconOverridesCodec`/
+  `FoldersCodec`); new `BackupRepository`/`Impl` (SAF-shaped streams, non-destructive on
+  failure); `PrefsRepository.applyAll(LauncherPrefs)` (single edit); DI binding.
+- **`app`** — `SettingsPanel` gains a "BACKUP & RESTORE" section (2 rows + inline confirm
+  + message row + SAF `CreateDocument`/`OpenDocument` launchers); `SettingsViewModel`
+  gains export/import + `pendingRestore` + message state.
+
+**Tests:** **236 JVM unit** (was 220; +16: `BackupCodecTest` 11, `BackupRepositoryTest` 3,
+`PrefsRepositoryTest` +2) and **38 instrumented** (was 36; +2 `BackupRestoreEndToEndTest`,
+`BackupSettingsScreenshotTest`). Green on `soft_home_pixel` (API 35) **and** the physical
+device TECNO CN7c (API 36).
+
+**Evidence (real screenshots + a real file):** `p4d-settings-backup-real.png`,
+`p4d-settings-backup-emulator.png`, `p4d-saf-save-picker.png`,
+`p4d-backup-saved-emulator.png`, `p4d-backup-file-example.json` (the 421-byte export),
+`p4d-home-light-real.png`.
+
+**Bug found & fixed during verification:** export first produced a **0-byte** file — the
+SAF stream was opened with `.use{}` at the call site while `exportBackup` launched a
+coroutine and returned immediately, so the stream closed before the async write. Fixed by
+opening/using/closing the stream **inside** the coroutine (VM now takes the
+`ContentResolver` + `Uri`). Re-verified: file is 421 B and well-formed.
+
+**Decisions:** D-040 (versioned JSON format), D-041 (restore replaces, behind a confirm),
+D-042 (SAF transport, id-only pack reference).
+
+**Blocked / needs decision**
+- None. **P4 is complete. STOP for review.**
+
+---
+
+### Session 12 - P4c Dark Mode (KkPN3 palette) — DONE (2026-09-25)
+
+**Why:** P4c replaces the **derived warm-dark guess** (assumption #5, bg `#1F1D1A`) with
+the **`KkPN3` "Dark Editorial" named palette** now present in the `.pen`, and audits every
+surface under dark. It is the highest-visual-payoff P4 sub-phase; `ThemeMode` plumbing
+already existed from P3. Spec: [P4 scope §2](superpowers/specs/2026-09-25-p4-scope-and-phase-split-design.md).
+
+**Re-audit:** the `.pen` is **byte-identical** to the P3.5/P4a/P4b audits (176,128 bytes,
+SHA256 `08DB2A81…CA6201`). The `KkPN3` frame was re-extracted node-by-node (see below);
+the palette matches the P4 scope §0 table. The `.pen` stays **read-only**.
+
+**`KkPN3` palette (authoritative, from the file):** screen bg `#18191A`; rail `#2E3134`;
+divider `#343638`; primary text / rail icon / time / title / progress fill `#F2EEE7`;
+soft text `#E2DDD5`; date day `#D2CBC1`; date month / track `#918F8B`; search placeholder
+`#A8A29A`; artist `#C8C0B6`; album `#E3DED6`; album mark `#454648`; progress track
+`#676866`.
+
+**What changed:**
+- **`core:designsystem/Color.kt`** — the `Dark*` tokens re-pointed to the `KkPN3` values
+  (bg/surface `#18191A`, rail/`tileWarm`/`drawerTileCream` `#2E3134`, divider `#343638`,
+  text `#F2EEE7`/`#D2CBC1`/`#918F8B`, progress track `#676866`, status text `#E2DDD5`);
+  card/menu/popup/drawer-derived surfaces documented as same-family derivations. The dark
+  **drawer icon** adaptations aligned to the neutral family.
+- **`app/.../SettingsStubActivity.kt`** — now resolves `ThemeMode` (Light/Dark/System) and
+  applies `SoftHomeTheme(darkTheme=…)` + a matching status/nav bar (was hardcoded light →
+  a dark panel had light status-bar icons). **Bug fixed.**
+- **`core/designsystem/theme/DarkPaletteTest.kt`** (new) — pins the verbatim `KkPN3`
+  values + asserts every dark `SoftColors` field is set and opaque.
+
+**Tests:** **220 JVM unit** (was 217; +3 `DarkPaletteTest`) and **36 instrumented** (was
+33; +3 `DarkThemeTest`). The 7 icon-pipeline tests + all P4b tests stayed green.
+
+**Evidence (emulator, Android 15 / API 35, `soft_home_pixel`) — real screenshots:**
+`p4c-home-light.png` (baseline light), `p4c-home-dark.png` (KkPN3 dark home: `#18191A`
+canvas, `#2E3134` rail, warm-white type), `p4c-drawer-dark.png` (dark drawer: dark tiles +
+legible category-colored glyphs), `p4c-settings-dark.png` (dark settings panel; the Theme
+row reads **"Dark"**, proving the `SettingsStubActivity` fix).
+
+**Decisions:** D-039 (dark = the `KkPN3` named palette).
+
+### Session 11 - P4b Edit Icon (rich editor) — DONE (2026-09-25)
+
+**Why:** P4b is the second of the four P4 sub-phases; it is "the whole reason P3.5 was
+run first — so P4's Edit Icon editor builds on the final model". Spec:
+[`superpowers/specs/2026-09-25-p4b-edit-icon-rich-editor-design.md`](superpowers/specs/2026-09-25-p4b-edit-icon-rich-editor-design.md).
+
+**Re-audit:** the `.pen` was re-audited (byte-identical to the P3.5/P4a audits: 176,128
+bytes, SHA256 `08DB2A81…CA6201`, mtime 2026-09-24 11:58). Keyword sweep for an editor
+mock (`picker`/`swatch`/`crop`/`resize`/`upload`/`icon editor`) = **0**. No design
+source; authored from Warm tokens. `.pen` stays read-only.
+
+**Key finding (a gap, not a wiring task):** P3's "pick-from-pack" **did not exist**.
+`iconOverrides` was `Map<componentKey, packId>` — the resolver ignored the value except
+to check `== activePack.id`, then re-derived the pack's **default** drawable (identical
+to no override). The "Edit Icon" row was `onEditIcon = viewModel::closeMenu` (a no-op),
+and `PrefsRepository` had no override setter. So P4b had to build the **data path and the
+UI**, not just a picker.
+
+**What changed:**
+- **`core:model`** — new `IconOverride` (`Pack(drawableName)` | `Glyph(symbolName,
+  colorToken)`) + `DrawerIconTokenName`; `LauncherPrefs.iconOverrides` retyped;
+  `IconSource.Glyph` added; `ResolvedIcon.overrideColorToken` added.
+- **`core:data`** — new `IconOverridesCodec` (pure, JSON, **total** decode + legacy
+  migration); `PrefsRepository.setIconOverride(key, override?)` (null clears).
+- **`core:designsystem`** — new `atom/IconEditorScaffold.kt` (`IconEditorCard` cream r24
+  card + `ChoiceTile` + `ColorSwatchRow` + `EditorSectionLabel`); `Dimens` `editor*`/
+  `choice*`/`swatch*` tokens.
+- **`feature:iconpack`** — new `domain/IconEditor.kt` (pure editor state machine) +
+  `ui/IconEditorSheet.kt` (live preview via the **same** `DrawerIconTile` path);
+  `DrawerIconColor.nameOf` bridge; `DrawerAppIcon` honors the chosen glyph color.
+- **`feature:appdrawer`** — `AppMenu`'s "Edit Icon" opens the editor; VM
+  `openIconEditor/closeIconEditor/applyIconOverride/resetIconOverride` + `editingEntry`
+  state; screen renders the sheet (BACK closes it, topmost first).
+- **`feature:home`** — honors the override automatically via the shared resolver (no
+  code change needed).
+
+**Tests:** **217 JVM unit** (IconOverridesCodecTest 10, IconEditorTest 10,
+IconResolverTest 8→10; the 7 icon-pipeline tests stayed green) and **33 instrumented**
+(IconEditorSheetTest 2, IconEditorScreenshotTest 2, IconOverrideEndToEndTest 2).
+*(Count reconciliation: the P4a log's "307 unit" was an over-count; the authoritative
+debug-unit total is now 217.)*
+
+**Evidence:** `p4b-editor-pack.png` (pack mode: tabs + drawable grid + gated Save),
+`p4b-editor-glyph.png` (glyph mode: glyph grid + selected ring + 7 color swatches),
+`p4b-override-applied.png` (Calendar shows the chosen HeartHandshake glyph in the Travel
+color in the real drawer), `p4b-override-persist.png` (same after `am force-stop`).
+
+**Decisions:** D-037 (typed per-app override), D-038 (rich = pick-from-existing; no
+crop/upload).
+
+### Session 10 - P4a Drag & Drop (row reorder + app→folder) — DONE (2026-09-25)
+
+**Why:** P4a is the first of the four P4 sub-phases (spec:
+[`superpowers/specs/2026-09-25-p4-scope-and-phase-split-design.md`](superpowers/specs/2026-09-25-p4-scope-and-phase-split-design.md)).
+It delivers the two long-deferred drag targets at once — **home-row reorder** (deferred
+from P3 / P3-2) and **assign app → folder** (deferred from P2 #52) — as one gesture
+subsystem, per the P4a spec
+[`superpowers/specs/2026-09-25-p4a-drag-and-drop-design.md`](superpowers/specs/2026-09-25-p4a-drag-and-drop-design.md).
+
+**Re-audit:** the `.pen` was re-audited (unchanged, 176KB): **no** drag/drop/reorder/
+handle node exists (keyword sweep 0). The gesture is authored from Warm tokens; the
+`.pen` stays read-only.
+
+**What changed:**
+- **`core:model`** — new `DragAndDrop.kt` (`DragKind`, `DragAndDropState`, `FloatPair`)
+  + pure `HomeRowDropResolver` (wraps `HomeRowLogic.move`, new) + `FolderDropResolver`
+  (assign / createWith / removeFrom, wraps `FolderLogic`).
+- **`core:designsystem`** — new `atom/DragAndDrop.kt`: `Modifier.dragSource` (one
+  gesture owner: tap / long-press / drag), `Modifier.dropTarget`, `DragPreviewLayer`,
+  `DragInsertionLine`, `DragRowChip`, `DragHoverRing`, `dragSourceAlpha`. New `Dimens`
+  (`drag*`) + `MotionTokens` (`dragLift` / `dragSnapBack` / `dragReorder`).
+- **`feature:home`** — `HomeScreen` rows are drag sources; live insertion line;
+  `HomeViewModel.reorderHomeRow` → `setHomeRows` (same path as the up/down buttons).
+- **`feature:appdrawer`** — `AppDrawerScreen.AppCell` is a drag source
+  (tap / long-press menu / drag); folder tiles + the "New folder" chip are drop targets;
+  `AppDrawerViewModel.assignToFolder` / `createFolderWith`.
+
+**Tests:** **307 unit** (was 176; +18: `DragAndDropStateTest` 5, `DragDropResolverTest`
+13); **27 instrumented** (was 20; +2: `HomeRowDragTest`). The 7 icon-pipeline tests
+stayed green.
+
+**Evidence:** `p4a-row-mid-drag.png` (drag chip + accent insertion line + dimmed source),
+`p4a-row-persist.png` (order survives force-stop), `p4a-app-middrag.png` (icon preview +
+hovered "New folder" chip), `p4a-app-to-folder.png` (2-member folder), `p4a-folder-persist.png`,
+`p4a-longpress-menu.png` (menu preserved).
+
+**Descoped:** drag-out of a folder (popup-card clickable fights the drag; tap-to-remove
+exists). Resolver + VM method kept + tested for a later phase.
+
+**Decisions:** D-035 (one shared gesture engine, two adapters), D-036 (long-press splits
+into menu vs. drag by movement).
+
+**Blocked / needs decision**
+- None. **Stopped at the end of P4a for review. Do NOT auto-start P4b.**
+
+**Next:** P4b (Edit Icon — rich editor), on approval, building on the P3.5 hybrid
+renderer.
 
 ### Session 9 - P3.5 Drawer Icon Redesign (color + labels) — DONE (2026-09-25)
 
@@ -477,6 +674,228 @@ Calendar row + battery/storage row (real values) + quick-notes row (DataStore) o
 home (Warm Right Rail rows); folder system in the app drawer (tile + popup). 124 unit
 tests; verified on emulator with real screenshots. See the Session 6 log above.
 
-## P3 - System UI (F) + Settings (G)  ·  NOT STARTED
+## P3 - System UI (F) + Settings (G)  ·  DONE (2026-09-25)
 
-## P4 - Onboarding (H) + Polish  ·  NOT STARTED
+System UI (theme-following status/nav bars, long-press menus) + a sectioned settings
+panel. Verified on emulator (F1/F2/F3, G). 160 unit + 20 instrumented tests. See Session 7.
+
+## P3.5 - Drawer Icon Redesign (color + labels)  ·  DONE (2026-09-25)
+
+Cream tiles + per-category colored glyphs + amber selected state (`TpzL1`). 176 unit +
+25 instrumented tests. See Session 9.
+
+## P4a - Drag & Drop  ·  DONE (2026-09-25)
+
+One gesture engine, two targets: home-row reorder + drawer app→folder. 217 unit + 33
+instrumented tests. See Session 10 (P4a) and Session 11 (P4b).
+
+## P4b - Edit Icon (rich editor)  ·  DONE (2026-09-25)
+
+Typed per-app override (pack drawable **or** glyph+color; Reset); cream r24 editor card
+opened from the "Edit Icon" menu row. 217 unit + 33 instrumented. See Session 11.
+
+## P4c - Dark Mode (KkPN3)  ·  DONE (2026-09-25)
+
+Dark palette replaced with the verbatim `KkPN3` "Dark Editorial" values; settings panel
+now follows `ThemeMode`. 220 unit + 36 instrumented. See Session 12.
+
+## P4d - Backup & Restore  ·  NOT STARTED
+
+*(Superseded roadmap note: the earlier "P4 = Onboarding (H) + polish" was re-split into
+P4a–P4d; onboarding H is **out** — no design source. See the P4 scope spec.)*
+
+
+---
+
+# FINAL PROJECT REPORT — SOFT / HOME launcher (P1 → P4d complete)
+
+> Generated at the end of **P4d** (Session 13), the last sub-phase. Everything below is
+> verified against the committed working tree (`git log` section at the end), the `.pen`
+> source of truth (byte-identical, SHA256 `08DB2A81…CA6201`, 176,128 B), and real
+> on-device runs (emulator `soft_home_pixel` API 35 **and** a physical TECNO CN7c,
+> Android 16 / API 36).
+
+## 1. What was built — phase checklist
+
+Legend: [x] done · [~] partial/stub · ⛔ deferred/dropped.
+
+### P1 — Home + Icon Pack + App Drawer · DONE (incl. P1.5)
+- [x] A1 Home replacement (default launcher, `HOME`+`DEFAULT` intent).
+- [~] A2 Grid config (home is now a row list; drawer grid columns configurable in P3).
+- [~] A3 Search row + voice (row + SEARCH state done; voice action is a stub).
+- [x] A4 Single Warm-Right-Rail page (the old multi-page/pill indicator was retired).
+- [~] A5 Swipe-up → drawer done; swipe L/R + double-tap parked.
+- [x] A6 Clock · A7 Date · A8 Weather row · A9 8-icon right rail · A10 music row (static) ·
+      A11 Idle/Search/Music states.
+- [x] B1 import/apply icon pack (`appfilter.xml` + drawables) · B2 live preview ·
+      B3 auto-mask real icons · B5 lucide glyph set.
+- [~] B4 notification badge dot built; listener parked (no permission path in scope).
+- [x] C1 drawer (swipe-up, tile grid) · C2 alphabet rail · C3 in-drawer search ·
+      C4 header · C5 category nav · C6 app labels.
+- **P1.5:** real icon-pack decode (zip + installed pack), auto-mask compositor, graceful
+  failure; glyph-uniqueness bug found + fixed (D-016).
+
+### P2 — Widgets (E) + Folders (D) · DONE
+- [x] E3 calendar row · E4 battery/storage row (**real** `BatteryManager`+`StatFs`) ·
+      E5 quick-notes row (DataStore-persisted).
+- [x] D1 folders in the drawer (68 r21 tile + 2×2 preview) · D2 folder popup (create/
+      rename/add/remove).
+- ⛔ D3 live system widgets (`AppWidgetHost`) — stub, out of scope.
+- Deferred (later delivered): drag app→folder (P4a), KkPN3 dark (P4c), live calendar (parked).
+
+### P3 — System UI (F) + Settings (G) · DONE
+- [x] F1 status-bar icon colour follows theme · F2 nav bar (hidden on gesture nav) ·
+      F3 long-press context menu (rail + drawer tiles; Uninstall greyed for system apps).
+- [x] G1 sectioned settings (Appearance/Widgets/Wallpaper/Gestures) · G2 custom toggle ·
+      G3 ThemeMode (Light/Dark/System) applied app-wide.
+- [x] G-W row visibility + order (+ up/down buttons) · G-H hidden-apps manager ·
+      G-S spacing preset · G-IP icon-pack persistence + cold-start rehydration.
+- [x] G4 Backup & restore — *delivered in P4d*.
+- Patch (Session 8): drawer BACK regression fixed (`HomeActivity.onBackPressed` bypass).
+
+### P3.5 — Drawer Icon Redesign · DONE
+- [x] `TpzL1` rendered: cream tiles + per-category coloured glyphs + amber selected state;
+      hybrid renderer (pack artwork OR coloured category glyph).
+
+### P4a — Drag & Drop · DONE
+- [x] Home-row reorder (long-press-lift + accent insertion line) · app→existing folder ·
+      app→"New folder" chip (drop-to-create) · long-press splits menu vs drag ·
+      persistence across `am force-stop`.
+- [~] Drag-out of a folder — descoped (resolver kept + tested).
+
+### P4b — Edit Icon (rich editor) · DONE
+- [x] Typed per-app override (`Pack(drawable)` | `Glyph(symbol,color)`), pure codec +
+      legacy migration; cream r24 editor card; live preview via the same tile path;
+      Reset; persists + applies everywhere (drawer + folders + home rail).
+- ⛔ Crop/resize/upload a custom image — out of P4b (D-038).
+- ⛔ Raw pack-drawable enumeration — out of P4b (picker uses the mapped set).
+
+### P4c — Dark Mode (KkPN3) · DONE
+- [x] Dark palette = verbatim `KkPN3` "Dark Editorial" values (`#18191A` canvas,
+      `#2E3134` rail, `#343638` divider, `#F2EEE7` type); every surface audited;
+      `SettingsStubActivity` now follows `ThemeMode` (bug fixed); token lock test.
+
+### P4d — Backup & Restore · DONE (this session)
+- [x] Export/import the whole launcher state as one versioned JSON file via SAF.
+- [x] Total, non-destructive failure handling; destructive restore behind an inline confirm.
+- [x] Atomic apply (`PrefsRepository.applyAll`); round-trip proven on emulator + device.
+
+## 2. Final test counts
+
+| Suite | Count | Where |
+|---|---|---|
+| **JVM unit tests (debug variant — authoritative)** | **236**, 0 failures | `./gradlew test` |
+| **Instrumented Compose tests** | **38**, 0 failures | `./gradlew :app:connectedDebugAndroidTest` |
+
+Instrumented suite green on **both** the emulator (`soft_home_pixel`, API 35) and the
+physical device (**TECNO CN7c, Android 16 / API 36**).
+
+> **Counting discipline (cross-checked).** `./gradlew test` builds *both* the debug and
+> release variants; the counted total is the **debug** variant (236). The release variant
+> reports fewer for the same sources. The P4a log's "307 unit" was an over-count; the
+> authoritative progression is 217 (P4b) → 220 (P4c) → 236 (P4d).
+> Instrumented progression: 22 (P3) → 25 (P3.5) → 33 (P4b) → 36 (P4c) → 38 (P4d).
+
+## 3. Deferred / dropped items (with reasons) — nothing silently lost
+
+| Item | Status | Reason |
+|---|---|---|
+| MediaSession / real music playback (#39) | 🟡 deferred past P4 | No playback design source; needs `MediaSessionManager` + notification-listener access. The music row is a static UI faithful to the `.pen`. |
+| Live calendar (`CalendarContract`) | 🟡 deferred past P4 | Needs `READ_CALENDAR` + permission-denied / no-app / multi-calendar edge cases; no design node. |
+| Real gesture actions (swipe-down → notifications, double-tap → lock) | 🟡 deferred | Permission-gated (notification access / Device Admin). Settings rows read "Coming soon". |
+| Live-wallpaper **engine** | ⚪ dropped from roadmap | P3-6 already ships "flat default + system picker" — the useful part. A full engine is a separate product with no design source. |
+| Battery change callback stream | ⚪ dropped | Re-reading on `ON_RESUME` is sufficient; a stream adds a receiver for a value that barely changes. |
+| Onboarding (H) | ⛔ out of P4 | No onboarding/welcome/setup mock in the `.pen` (sweep = 0). |
+| Notification badge listener (real counts) | 🟡 deferred | Needs notification-listener access; the cream dot atom exists. |
+| KWGT-style system widgets (`AppWidgetHost`) | 🟡 deferred | Large separate subsystem; custom rows (P2) cover the design's intent. |
+| Voice search action | 🟡 stub | Mic/search row present; no speech-integration source. |
+| Icon editor: crop / resize / upload a custom image | ⛔ out of P4b (D-038) | Unbounded UI with no design mock; a real subsystem (SAF/decode/adaptive-icon safety/storage format). Recorded as a future phase. |
+| Icon editor: raw pack-drawable enumeration | ⛔ out of P4b | The picker uses the pack's `appfilter`-mapped distinct drawables; raw zip/APK enumeration is new infra. |
+| Editing rail icons' shortcut targets | ⛔ out of P4b | That is the "Edit Shortcut" row, unrelated to icon appearance. |
+| Drag-out of a folder | [~] descoped in P4a | The popup card's clickable fights the drag; tap-to-remove exists. Resolver kept + tested. |
+| Backup of icon-pack **bytes** / wallpaper / installed-app list | ⛔ out of P4d | Pack bytes live outside our prefs (id reference captured; rehydrates via P3-5). Wallpaper is OS-owned; the app list is derived. |
+| Cloud / auto-sync / scheduled backups | ⛔ out of P4d | No design source; the file-based SAF flow is the whole scope. |
+
+## 4. Build & install (verified on device + emulator)
+
+Toolchain (already installed, all on D:): JDK 17, Android SDK `D:\Android\Sdk`,
+`GRADLE_USER_HOME=D:\gradle-cache`, AVD `soft_home_pixel` (API 35).
+
+```powershell
+# from the repo root
+.\gradlew.bat :app:assembleDebug            # -> app\build\outputs\apk\debug\app-debug.apk
+.\gradlew.bat :app:installDebug             # build + install to a running device/emulator
+.\gradlew.bat test                          # 236 JVM unit tests
+.\gradlew.bat :app:connectedDebugAndroidTest  # 38 instrumented tests (needs a device)
+
+# install + set as the default Home app (debug package id ends in .debug)
+adb install -r .\app\build\outputs\apk\debug\app-debug.apk
+adb shell cmd package set-home-activity com.softhome.launcher.debug/com.softhome.launcher.HomeActivity
+adb shell input keyevent KEYCODE_HOME
+```
+
+Verified working on:
+- **Emulator** `soft_home_pixel` — Android 15 / API 35 (the standard AVD).
+- **Physical device** — **TECNO CN7c, Android 16 / API 36** (installed, set as Home,
+  rendered + drove the settings, drawer, backup export).
+
+## 5. Known issues / limitations
+
+- **Auto-mask tint** can leave residual brand colour on some system adaptive icons; not
+  exhaustive across OEM icon sets.
+- **Voice search** and **notification badges** are visual stubs (see §3).
+- **Health/storage numbers** come from real `BatteryManager`/`StatFs` but are read on
+  resume, not pushed (dropped battery stream — §3).
+- **Themes:** the dark palette follows `KkPN3`; the `.pen` is monochrome, so a small warm
+  accent is derived for interactive emphasis (documented in `04` section M).
+- **Icon-pack rehydrate** depends on the pack still being present (zip in app storage or
+  the pack app installed); a missing pack falls back to mask gracefully.
+- **Backup** does not carry pack bytes / wallpaper / app list (§3); restoring on a device
+  without the pack falls back to mask.
+- **`docs/07`** section 5 note "active pack is in-memory for now" is superseded by P3-5
+  (persisted + rehydrated) — kept only as historical prose.
+- Accessibility: content descriptions present; contrast audited in `docs/06`; not verified
+  with TalkBack end-to-end.
+
+## 6. Final APK
+
+| Variant | File | Size |
+|---|---|---|
+| **Debug** (installable, used for all verification) | `app\build\outputs\apk\debug\app-debug.apk` | **12,538,288 bytes (11.96 MB)** |
+| Release (unsigned) | `app\build\outputs\apk\release\app-release-unsigned.apk` | 8,627,796 bytes (8.23 MB) |
+
+Package id: `com.softhome.launcher.debug` (debug) — `.launcher` (release).
+
+## 7. Git log (baseline → P4d)
+
+```
+3093819 P4d: backup & restore (export/import all launcher state)
+b500dcf P4a-P4c: drag & drop, edit-icon editor, KkPN3 dark mode
+81aee32 P3.5: drawer icon redesign (cream tiles + category-colored glyphs)
+34c0af3 docs: P3.5 drawer icon redesign spec (color + labels)
+83fadd6 Fix: BACK button now closes drawer overlay
+0e2b6f9 P3 Phase 8: docs (00/02/03/04/05/06/09) + README
+b829973 P3 Phase 7: on-device verification (soft_home_pixel, API 35) + screenshots
+541335d P3 Phase 6: settings panel (G) + home row visibility/order + ThemeMode
+1ac8952 P3 Phase 5: drawer long-press context menu (F3) + hidden-apps "Remove" (Q2)
+4e28648 P3 Phase 4: System UI integration (F1 status bar, F2 nav bar, F3 rail long-press)
+6b9b8cb P3 Phase 3: icon-pack persistence + cold-start rehydration (closes docs/04 #36)
+bf21746 P3 Phase 2: design-system atoms (SoftToggle, AppContextMenu, SettingsRow)
+36887bb P3 Phase 1: repositories (prefs for row visibility/order/spacing/hidden apps + app actions)
+79ab168 P3 Phase 0: model + tokens + assets (home rows, spacing, menu/settings tokens)
+e00a70b baseline: P1 + P1.5 + P2 (Warm Right Rail launcher) + P3 spec
+```
+
+> Note: P4a, P4b and P4c were built in Sessions 10–12 but never committed between phases;
+> their combined state is captured in `b500dcf` (the docs land in `3093819`). Every phase
+> from the baseline onward is now in history.
+
+## 8. Status
+
+**All planned phases are COMPLETE (P1 → P4d).** The launcher is an installable,
+set-as-default Home app implementing the Warm Right Rail design system, with a real icon
+pack pipeline, widgets, folders, system UI, settings, drag-and-drop, a rich icon editor,
+KkPN3 dark mode, and backup/restore. Remaining work is the explicitly deferred/dropped set
+in §3.
+
+**STOP — awaiting review.**

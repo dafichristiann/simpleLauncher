@@ -6,6 +6,8 @@ import com.softhome.core.data.repository.AppActionsRepository
 import com.softhome.core.data.repository.AppActionsRepositoryImpl
 import com.softhome.core.data.repository.AppRepository
 import com.softhome.core.data.repository.AppRepositoryImpl
+import com.softhome.core.data.repository.BackupRepository
+import com.softhome.core.data.repository.BackupRepositoryImpl
 import com.softhome.core.data.repository.DeviceStatusRepository
 import com.softhome.core.data.repository.DeviceStatusRepositoryImpl
 import com.softhome.core.data.repository.FolderRepository
@@ -49,4 +51,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindDeviceStatusRepository(impl: DeviceStatusRepositoryImpl): DeviceStatusRepository
+
+    @Binds
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
 }

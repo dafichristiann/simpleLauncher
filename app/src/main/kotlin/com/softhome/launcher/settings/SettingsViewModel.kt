@@ -3,6 +3,10 @@ package com.softhome.launcher.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.softhome.core.data.repository.AppRepository
+import com.softhome.core.data.repository.BackupRepository
+import com.softhome.core.data.repository.BackupResult
+import com.softhome.core.data.repository.BackupDecodeResult
+import com.softhome.core.data.repository.BackupCodec
 import com.softhome.core.data.repository.PrefsRepository
 import com.softhome.core.model.AppInfo
 import com.softhome.core.model.GridConfig
@@ -33,6 +37,10 @@ data class SettingsUiState(
     val spacing: SpacingScale = SpacingScale.Normal,
     val homeRows: List<HomeRowPref> = HomeRowLogic.default(),
     val hiddenApps: List<HiddenApp> = emptyList(),
+    /** P4d: transient result text for a backup/restore attempt (null = nothing to show). */
+    val backupMessage: String? = null,
+    /** P4d: true when a valid backup file is loaded and awaiting the user's confirm. */
+    val pendingRestore: Boolean = false,
 ) {
     val visibleRowOrder: List<HomeRowKind> get() = homeRows.map { it.kind }
 }
@@ -42,13 +50,21 @@ class SettingsViewModel @Inject constructor(
     private val prefsRepository: PrefsRepository,
     private val iconPackRepository: IconPackRepository,
     private val appRepository: AppRepository,
+    private val backupRepository: BackupRepository,
+    private val folderRepository: com.softhome.core.data.repository.FolderRepository,
+    private val notesRepository: com.softhome.core.data.repository.NotesRepository,
 ) : ViewModel() {
 
     private val appsFlow = MutableStateFlow<List<AppInfo>>(emptyList())
+    private val backupMessage = MutableStateFlow<String?>(null)
+    private val pendingRestore = MutableStateFlow(false)
+
+    /** P4d: a validated backup document held until the user confirms the destructive import. */
+    private var pendingDocument: com.softhome.core.model.BackupDocument? = null
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        prefsRepository.prefs, iconPackRepository.activePack, appsFlow,
-    ) { prefs: LauncherPrefs, pack: IconPack?, apps: List<AppInfo> ->
+        prefsRepository.prefs, iconPackRepository.activePack, appsFlow, backupMessage, pendingRestore,
+    ) { prefs: LauncherPrefs, pack: IconPack?, apps: List<AppInfo>, message: String?, pending: Boolean ->
         SettingsUiState(
             themeMode = prefs.darkTheme,
             activePackName = pack?.name,
@@ -58,6 +74,8 @@ class SettingsViewModel @Inject constructor(
             hiddenApps = prefs.hiddenApps.map { key ->
                 HiddenApp(key, apps.firstOrNull { it.componentKey == key }?.label ?: key)
             },
+            backupMessage = message,
+            pendingRestore = pending,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
@@ -89,5 +107,77 @@ class SettingsViewModel @Inject constructor(
 
     fun moveHomeRowDown(kind: HomeRowKind) = viewModelScope.launch {
         prefsRepository.setHomeRows(HomeRowLogic.moveDown(uiState.value.homeRows, kind))
+    }
+
+    // --- Backup & restore (P4d) ----------------------------------------------
+
+    /** Suggested file name for the SAF export picker (date-stamped). */
+    fun suggestedBackupName(): String = "softhome-backup-${backupStamp()}.json"
+
+    /** Writes a backup to the SAF [uri] (the stream is opened + closed inside). */
+    fun exportBackup(resolver: android.content.ContentResolver, uri: android.net.Uri) =
+        viewModelScope.launch {
+            val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching {
+                    resolver.openOutputStream(uri)?.use { backupRepository.export(it) }
+                }.getOrNull()
+            }
+            backupMessage.value = when (result) {
+                is BackupResult.Success -> "Backup saved."
+                else -> "Could not write the backup file."
+            }
+        }
+
+    /**
+     * Validates the SAF [uri] and, if it is a valid SOFT / HOME backup, holds it for the
+     * user's confirmation (restore is destructive -- P4d-3). A bad file sets a message and
+     * changes nothing.
+     */
+    fun loadBackupForRestore(resolver: android.content.ContentResolver, uri: android.net.Uri) =
+        viewModelScope.launch {
+            val json = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { resolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } }
+                    .getOrNull()
+            }
+            when (val decoded = BackupCodec.decode(json)) {
+                is BackupDecodeResult.Ok -> {
+                    pendingDocument = decoded.document
+                    pendingRestore.value = true
+                    backupMessage.value = null
+                }
+                is BackupDecodeResult.NotABackup ->
+                    backupMessage.value = "That file is not a SOFT / HOME backup."
+                is BackupDecodeResult.UnsupportedVersion ->
+                    backupMessage.value = "This backup was made by a newer version."
+                is BackupDecodeResult.Malformed ->
+                    backupMessage.value = "Could not read that file."
+            }
+        }
+
+    /** Applies the held backup document (after the user confirmed). */
+    fun confirmRestore() = viewModelScope.launch {
+        val doc = pendingDocument ?: return@launch
+        prefsRepository.applyAll(doc.prefs)
+        // Folders + notes are applied through the backup repository's own path by
+        // re-importing the held document is overkill; instead apply directly here.
+        folderRepository.save(doc.folders)
+        notesRepository.setBody(doc.notes)
+        pendingDocument = null
+        pendingRestore.value = false
+        backupMessage.value = "Backup restored."
+    }
+
+    /** Dismisses a pending restore without applying it. */
+    fun cancelRestore() {
+        pendingDocument = null
+        pendingRestore.value = false
+    }
+
+    /** Consumes the transient message (tap to dismiss). */
+    fun consumeBackupMessage() { backupMessage.value = null }
+
+    private fun backupStamp(): String {
+        val now = java.time.LocalDate.now()
+        return now.toString()
     }
 }

@@ -45,15 +45,21 @@ the main flows. Not all tests exist yet — this file is the target and the trac
 | Manual | **glyph uniqueness on device** (log fingerprints + comparison grid screenshot) | on device | ✅ (Session 4) |
 | Manual | **P2 widgets + folders end-to-end** (real battery/storage vs `dumpsys`/`df`; notes & folders survive `am force-stop`) | on device | ✅ (P2) |
 | Manual | **P3 system UI + settings** (status bar light/dark, nav bar hidden, rail+drawer long-press, settings sections, row toggle survives `am force-stop`) | on device | ✅ (P3) |
+| Manual | **P4a drag & drop** (row reorder + app→folder on device; mid-drag preview + insertion line; order & folder membership survive `am force-stop`; long-press menu still opens) | on device | ✅ (P4a) |
+| Manual | **P4b Edit Icon** (editor pack/glyph modes; a saved override shows in the drawer + survives `am force-stop`; Reset returns the derived icon) | on device | ✅ (P4b) |
 | Manual | TalkBack navigation | on device | ⬜ |
 | Manual | WCAG contrast (title/body/muted on cream) | tooling | ⬜ |
 
-**Current total: 160 unit tests, 0 failures (P3, Session 7); 20 instrumented Compose
-tests pass on `soft_home_pixel`.** Was 124 after P2. P3 added: `HomeRowLogicTest` (11),
-`AppActionLogicTest` (5), `AppActionsTest` (5), `PrefsRepositoryTest` (+6),
-`IconPackPersistenceTest` (3), `SystemBarAppearanceTest` (2), `SettingsCyclesTest` (3),
-`DrawerMenuLabelsTest` (1). New instrumented: `SoftToggleTest` (3), `AppContextMenuTest`
-(3), `SettingsRowTest` (4), `HomeScreenTest` (+4).
+**Current total: 217 unit tests, 0 failures (P4b, Session 11); 33 instrumented Compose
+tests pass on `soft_home_pixel`.** P4b added: `IconOverridesCodecTest` (10),
+`IconEditorTest` (10) as unit; `IconEditorSheetTest` (2), `IconEditorScreenshotTest` (2),
+`IconOverrideEndToEndTest` (2) as instrumented. `IconResolverTest` grew 8→10. The 7
+icon-pipeline tests (AutoMask, IconResolver, IconMasker, GlyphUniqueness, Importer,
+Persistence, AppFilterParser) stayed green throughout.
+
+*(History: 124 after P2; 160 + 20 instrumented after P3; 176 + 25 after P3.5; P4a added
+`DragAndDropStateTest` 5 + `DragDropResolverTest` 13 + `HomeRowDragTest` 2. The P4a log's
+"307 unit" was an over-count; the authoritative debug-unit total after P4b is 217.)*
 
 ---
 
@@ -63,19 +69,27 @@ tests pass on `soft_home_pixel`.** Was 124 after P2. P3 added: `HomeRowLogicTest
 feature/iconpack/src/test/kotlin/.../
 ├─ AppFilterParserTest.kt        # appfilter variants + brace-heavy regression
 ├─ IconMaskerTest.kt             # radius, category heuristics
-├─ IconResolverTest.kt           # pipeline order + fallback + drawable name
+├─ IconResolverTest.kt           # pipeline order + fallback + drawable name + P4b overrides
 ├─ AutoMaskTest.kt               # P1.5 auto-mask rules (pure)
 ├─ IconPackImporterTest.kt       # P1.5 zip import (Robolectric + real zips)
+├─ IconEditorTest.kt             # P4b: editor state machine (pure)
 └─ IconCompositorGlyphUniquenessTest.kt  # Session 4: fingerprints differ; blank/blob rejected
 core/model/src/test/kotlin/.../
 ├─ GridConfigTest.kt
-└─ IconPackTest.kt               # P1.5 source kinds + counts
+├─ IconPackTest.kt               # P1.5 source kinds + counts
+├─ DragAndDropStateTest.kt       # P4a: begin/move/hover/end + gating (pure)
+└─ DragDropResolverTest.kt       # P4a: row reorder index math + folder membership (pure)
 core/data/src/test/kotlin/.../
-└─ PrefsRepositoryTest.kt
+├─ PrefsRepositoryTest.kt        # incl. P4b icon-override persist/clear
+└─ IconOverridesCodecTest.kt     # P4b: override codec + legacy migration (Robolectric)
 feature/appdrawer/src/test/kotlin/.../
 └─ AlphabetIndexTest.kt
 app/src/androidTest/kotlin/.../
-└─ HomeWidgetsTest.kt            # Compose UI smoke
+├─ HomeWidgetsTest.kt            # Compose UI smoke
+├─ HomeRowDragTest.kt            # P4a: drag reorders; stationary long-press does not
+├─ IconEditorSheetTest.kt        # P4b: editor modes + Save gating
+├─ IconEditorScreenshotTest.kt   # P4b: renders the editor and writes PNG evidence
+└─ IconOverrideEndToEndTest.kt   # P4b: real DataStore round-trip + resolver
 ```
 
 ### Glyph-uniqueness regression (Session 4 / D-016)
@@ -136,3 +150,47 @@ have **distinct** fingerprint values. Evidence screenshot:
 - [ ] Drawer search/filter + alphabet bucketing pass.
 - [ ] At least one Compose UI smoke test for Home and one for Drawer.
 - [ ] Manual: set-as-default + swipe-up drawer verified on emulator.
+
+## P4a exit criteria (verified)
+
+- [x] **Pure drag model unit-tested** (`DragAndDropStateTest`, `DragDropResolverTest`).
+- [x] **Home-row reorder** works on device and survives `am force-stop`.
+- [x] **App→folder** (existing + drop-to-create) works on device and survives `am force-stop`.
+- [x] **Long-press menu still opens** on a stationary press (P3 regression guarded).
+- [x] A stationary long-press does **not** reorder (`HomeRowDragTest`).
+- [x] Mid-drag evidence captured (preview + insertion line / hover).
+- [x] The 7 icon-pipeline tests stayed green.
+
+## P4d exit criteria (verified)
+
+- [x] **Pure codec unit-tested** (`BackupCodecTest`): round-trip (populated + empty),
+  null pack id, and the **total** decode contract — `NotABackup` for a foreign JSON,
+  `UnsupportedVersion` for a newer schema, `Malformed` for garbage / a missing `prefs`
+  section; unknown fields ignored; partial prefs default; unknown enum names default;
+  a locked home row in the string is sanitized.
+- [x] **Repository round-trip on the real DataStore** (`BackupRepositoryTest`,
+  Robolectric): export → wipe → import restores grid, theme, spacing, pack id, hidden
+  apps, icon overrides, home rows, folders, notes.
+- [x] **Non-destructive failure**: a non-backup / garbage file returns `NotABackup` /
+  `Malformed` and leaves state untouched.
+- [x] **Atomic apply**: `PrefsRepository.applyAll` writes every field (PrefsRepositoryTest).
+- [x] **On-device round-trip** (`BackupRestoreEndToEndTest`): export to a real file, wipe,
+  import, assert — green on **both** `soft_home_pixel` (API 35) and the physical TECNO
+  CN7c (Android 16 / API 36).
+- [x] **UI**: the "Backup & restore" section renders (real screenshots, emulator + device);
+  the SAF `CreateDocument` picker offers `softhome-backup-<date>.json`; the exported file
+  is well-formed JSON (421 B).
+- [x] The 7 icon-pipeline tests + all P4a/P4b/P4c suites stayed green.
+
+## Final test counts (P4 complete)
+
+| Suite | Count | Notes |
+|---|---|---|
+| **JVM unit (debug variant, authoritative)** | **236** | `./gradlew test` builds both variants; the **debug** variant is the counted total |
+| Instrumented (Compose, `:app`) | **38** | green on `soft_home_pixel` (API 35) **and** the physical device (API 36) |
+
+> Reconciliation note (continuing the honest-counting rule from P4a): the P4a log's
+> "307 unit" was an over-count; P4b's "217", P4c's "220", and P4d's "236" are the
+> authoritative **debug-variant** totals. The release variant reports a smaller number
+> for the same sources (Robolectric-only suites vary), which is why the number must always
+> be read per-variant and per-command.

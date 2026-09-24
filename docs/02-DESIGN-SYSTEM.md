@@ -8,7 +8,7 @@ Target files (created in P1):
 
 ```
 core/designsystem/src/main/kotlin/.../theme/
-├─ Color.kt        # palettes (light + warm dark)
+├─ Color.kt        # palettes (light + the KkPN3 dark)
 ├─ Type.kt         # DM Sans + IBM Plex Mono text styles
 ├─ Shape.kt        # squircle radii + pills
 ├─ Spacing.kt      # spacing scale
@@ -41,24 +41,29 @@ val SoftAccentDeep      = Color(0xFF7A553D)
 val SoftCodeAccent      = Color(0xFFCBB39D)
 ```
 
-### Warm dark palette (derived — not in the design file)
+### Dark palette — the `KkPN3` "Dark Editorial" named palette (P4c)
 
-No dark palette exists in the `.pen`; derived from the charcoal family while
-keeping the warm tone (see [04-ASSUMPTIONS](04-ASSUMPTIONS.md)).
+The `.pen` now **names** a dark palette in frame `KkPN3` ("Home Screen Mockup — Dark
+Editorial"). P4c renders it verbatim, replacing the earlier derived warm-dark guess.
+Values are pinned by `DarkPaletteTest` and documented in
+[04 section M](04-ASSUMPTIONS.md).
 
 ```kotlin
-// Color.kt — dark (warm adaptation)
-val DarkBackground      = Color(0xFF1F1D1A)
-val DarkSurface         = Color(0xFF26231F)
-val DarkCard            = Color(0xFF2E2A25)
-val DarkCardAlt         = Color(0xFF332E28)
-val DarkAccentWash      = Color(0xFF3A342C)
-val DarkTile            = Color(0xFFEDE6D8)   // inverted: cream tile
-val DarkTextTitle       = Color(0xFFF7F0E5)
-val DarkTextBody        = Color(0xFFC9BFB0)
-val DarkTextMuted       = Color(0xFF9C9284)
-val DarkIconStroke      = Color(0xFF2B2B2B)   // dark stroke on cream tile
-val DarkAccent          = Color(0xFFC89A78)
+// Color.kt — dark (verbatim KkPN3, 2026-09-25)
+val DarkBackground  = Color(0xFF18191A)   // KkPN3 screen bg
+val DarkSurface     = Color(0xFF18191A)
+val DarkRailBg      = Color(0xFF2E3134)   // KkPN3 dark rail
+val DarkDivider     = Color(0xFF343638)   // KkPN3 divider
+val DarkTextTitle   = Color(0xFFF2EEE7)   // KkPN3 primary text
+val DarkTextBody    = Color(0xFFD2CBC1)   // KkPN3 "day"
+val DarkTextMuted   = Color(0xFF918F8B)   // KkPN3 "month"
+val DarkStatusText  = Color(0xFFE2DDD5)   // KkPN3 soft text
+val DarkProgressTrack = Color(0xFF676866) // KkPN3 progress track
+// Derived (frame shows no card/menu/popup surface) — same neutral family:
+val DarkCard        = Color(0xFF24262A)
+val DarkCardAlt     = Color(0xFF2A2C30)
+val DarkDrawerBg    = Color(0xFF1F2124)
+val DarkAccent      = Color(0xFFC98B6E)   // interactive emphasis on the neutral dark
 ```
 
 ### Semantic mapping (what screens use)

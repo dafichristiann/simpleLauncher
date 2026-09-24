@@ -145,6 +145,11 @@ private object FakePrefsRepository : PrefsRepository {
     override suspend fun setHiddenApps(keys: Set<String>) = Unit
     override suspend fun hideApp(componentKey: String) = Unit
     override suspend fun unhideApp(componentKey: String) = Unit
+    override suspend fun setIconOverride(
+        componentKey: String,
+        override: com.softhome.core.model.IconOverride?,
+    ) = Unit
+    override suspend fun applyAll(prefs: LauncherPrefs) = Unit
 }
 
 private object FakeAppActionsRepository : AppActionsRepository {

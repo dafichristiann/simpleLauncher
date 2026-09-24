@@ -1,23 +1,33 @@
 package com.softhome.launcher.settings
 
 import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.softhome.core.designsystem.atom.SettingsRow
@@ -46,6 +56,19 @@ fun SettingsPanel(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.softColors
     val context = LocalContext.current
+
+    // P4d: SAF launchers. Export -> CreateDocument; Import -> OpenDocument. Both mirror
+    // the P1.5 icon-pack flow (no storage permission needed on any API level).
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) viewModel.exportBackup(context.contentResolver, uri)
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) viewModel.loadBackupForRestore(context.contentResolver, uri)
+    }
 
     Box(
         modifier = modifier
@@ -94,6 +117,17 @@ fun SettingsPanel(
             WallpaperSection(context = context)
 
             GesturesSection()
+
+            BackupSection(
+                message = state.backupMessage,
+                pendingRestore = state.pendingRestore,
+                suggestedName = viewModel.suggestedBackupName(),
+                onExport = { name -> exportLauncher.launch(name) },
+                onImport = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
+                onConfirm = viewModel::confirmRestore,
+                onCancel = viewModel::cancelRestore,
+                onConsumeMessage = viewModel::consumeBackupMessage,
+            )
         }
     }
 }
@@ -223,6 +257,112 @@ private fun GesturesSection() {
         SettingsRow(label = "Swipe down", supporting = "Coming soon", enabled = false)
         SettingsRow(label = "Double-tap", supporting = "Coming soon", enabled = false)
     }
+}
+
+/**
+ * P4d: Backup & restore section. Two `SettingsRow`s drive SAF pickers (via the caller).
+ * A destructive restore is gated behind an inline confirm (P4d-3), and every outcome
+ * surfaces as a tappable message row.
+ */
+@Composable
+private fun BackupSection(
+    message: String?,
+    pendingRestore: Boolean,
+    suggestedName: String,
+    onExport: (String) -> Unit,
+    onImport: () -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+    onConsumeMessage: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        SectionLabel("BACKUP & RESTORE")
+        Text(
+            text = "Export your rows, folders, notes, theme and icon choices to a file, or restore them.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.softColors.textMuted,
+            modifier = Modifier.padding(bottom = Spacing.xs),
+        )
+
+        SettingsRow(
+            label = "Export backup",
+            supporting = "Save a backup file",
+            showChevron = true,
+            onClick = { onExport(suggestedName) },
+        )
+        SettingsRow(
+            label = "Import backup",
+            supporting = "Restore from a backup file",
+            showChevron = true,
+            onClick = onImport,
+        )
+
+        message?.let { msg ->
+            MessageRow(text = msg, onClick = onConsumeMessage)
+        }
+
+        if (pendingRestore) {
+            Text(
+                text = "Replace all current settings with this backup?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.softColors.textPrimary,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                ActionPill(
+                    label = "Restore",
+                    primary = true,
+                    modifier = Modifier.weight(1f),
+                    onClick = onConfirm,
+                )
+                ActionPill(
+                    label = "Cancel",
+                    primary = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = onCancel,
+                )
+            }
+        }
+    }
+}
+
+/** A tappable result/message row (cream card, accent text) -- mirrors the P1.5 sheet. */
+@Composable
+private fun MessageRow(text: String, onClick: () -> Unit) {
+    val colors = MaterialTheme.softColors
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = colors.accent,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.cardAlt)
+            .clickable(onClick = onClick)
+            .padding(Spacing.md),
+    )
+}
+
+/** Full-width action pill; reuses the P1.5 `PrimaryAction`/`SecondaryAction` vocabulary. */
+@Composable
+private fun ActionPill(
+    label: String,
+    primary: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val colors = MaterialTheme.softColors
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodyLarge,
+        color = if (primary) colors.onPrimaryAction else colors.textBody,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(if (primary) colors.primaryAction else colors.card)
+            .clickable(onClick = onClick)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+    )
 }
 
 private fun HomeRowKind.displayLabel(): String = when (this) {

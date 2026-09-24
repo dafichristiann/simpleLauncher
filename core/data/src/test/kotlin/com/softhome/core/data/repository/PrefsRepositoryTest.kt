@@ -3,10 +3,13 @@ package com.softhome.core.data.repository
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.softhome.core.model.DrawerIconTokenName
 import com.softhome.core.model.GridConfig
 import com.softhome.core.model.HomeRowKind
 import com.softhome.core.model.HomeRowLogic
 import com.softhome.core.model.HomeRowPref
+import com.softhome.core.model.IconOverride
+import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import kotlinx.coroutines.flow.first
@@ -32,6 +35,7 @@ class PrefsRepositoryTest {
         repo.setHomeRows(HomeRowLogic.default())
         repo.setSpacing(SpacingScale.Normal)
         repo.setHiddenApps(emptySet())
+        repo.setIconOverride("com.reset/Main", null)
     }
 
     @Test
@@ -117,8 +121,64 @@ class PrefsRepositoryTest {
         assertThat(repo.prefs.first().hiddenApps).containsExactly("com.b/Two")
     }
 
-    // --- HomeRowsCodec (pure) ---
+    // --- P4b: icon overrides ---
 
+    @Test
+    fun `icon override persists and clears`() = runTest {
+        val repo = newRepo(); reset(repo)
+        repo.setIconOverride("com.a/Main", IconOverride.Pack("a_drawable"))
+        assertThat(repo.prefs.first().iconOverrides)
+            .containsExactly("com.a/Main", IconOverride.Pack("a_drawable"))
+        repo.setIconOverride("com.b/Main", IconOverride.Glyph("Phone", DrawerIconTokenName.Communication))
+        assertThat(repo.prefs.first().iconOverrides).hasSize(2)
+        // null clears just that app.
+        repo.setIconOverride("com.a/Main", null)
+        val remaining = repo.prefs.first().iconOverrides
+        assertThat(remaining).doesNotContainKey("com.a/Main")
+        assertThat(remaining["com.b/Main"])
+            .isEqualTo(IconOverride.Glyph("Phone", DrawerIconTokenName.Communication))
+    }
+
+    // --- P4d: bulk apply ---
+
+    @Test
+    fun `applyAll writes every field in one shot`() = runTest {
+        val repo = newRepo(); reset(repo)
+        repo.applyAll(
+            LauncherPrefs(
+                grid = GridConfig(columns = 6, rows = 7, iconScale = 1.3f, showLabels = true),
+                activeIconPackId = "bulk_pack",
+                maskUnsupportedApps = false,
+                darkTheme = ThemeMode.Dark,
+                showNotificationBadges = false,
+                iconOverrides = mapOf("com.a/Main" to IconOverride.Pack("x")),
+                homeRows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Music),
+                spacing = SpacingScale.Roomy,
+                hiddenApps = setOf("com.h/One"),
+            ),
+        )
+        val p = repo.prefs.first()
+        assertThat(p.grid.columns).isEqualTo(6)
+        assertThat(p.grid.rows).isEqualTo(7)
+        assertThat(p.activeIconPackId).isEqualTo("bulk_pack")
+        assertThat(p.maskUnsupportedApps).isFalse()
+        assertThat(p.darkTheme).isEqualTo(ThemeMode.Dark)
+        assertThat(p.showNotificationBadges).isFalse()
+        assertThat(p.spacing).isEqualTo(SpacingScale.Roomy)
+        assertThat(p.hiddenApps).containsExactly("com.h/One")
+        assertThat(p.iconOverrides).containsExactly("com.a/Main", IconOverride.Pack("x"))
+        assertThat(p.homeRows.first { it.kind == HomeRowKind.Music }.visible).isFalse()
+    }
+
+    @Test
+    fun `applyAll clears a previously set pack id when null`() = runTest {
+        val repo = newRepo(); reset(repo)
+        repo.setActiveIconPack("some_pack")
+        repo.applyAll(LauncherPrefs(activeIconPackId = null))
+        assertThat(repo.prefs.first().activeIconPackId).isNull()
+    }
+
+    // --- HomeRowsCodec (pure) ---
     @Test
     fun `codec round-trips and tolerates junk`() {
         val rows = listOf(
