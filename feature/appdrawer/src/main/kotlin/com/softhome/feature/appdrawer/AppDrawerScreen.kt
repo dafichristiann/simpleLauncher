@@ -3,6 +3,7 @@ package com.softhome.feature.appdrawer
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +51,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.softhome.core.designsystem.atom.AppContextMenu
+import com.softhome.core.designsystem.atom.ContextMenuItem
 import com.softhome.core.designsystem.atom.FolderPopupBody
 import com.softhome.core.designsystem.atom.FolderTile
 import com.softhome.core.designsystem.atom.LineIcon
@@ -127,6 +130,7 @@ fun AppDrawerScreen(
                             viewModel.launchApp(it.app)
                             onAppLaunched()
                         },
+                        onLongPress = viewModel::openMenu,
                         onOpenFolder = viewModel::openFolder,
                         modifier = Modifier.weight(1f),
                     )
@@ -172,7 +176,65 @@ fun AppDrawerScreen(
                 onRemoveApp = { viewModel.removeAppFromFolder(folder.id, it) },
             )
         }
+
+        // Long-press context menu (P3 / F3): row-style cream r24 card.
+        state.menuEntry?.let { entry ->
+            AppMenu(
+                canUninstall = viewModel.canUninstall(entry.app),
+                onOpen = {
+                    viewModel.launchApp(entry.app)
+                    viewModel.closeMenu()
+                    onAppLaunched()
+                },
+                onAppInfo = {
+                    viewModel.openAppInfo(entry.app)
+                    viewModel.closeMenu()
+                },
+                onEditIcon = viewModel::closeMenu,
+                onRemove = { viewModel.hideApp(entry.app) },
+                onUninstall = {
+                    viewModel.requestUninstall(entry.app)
+                    viewModel.closeMenu()
+                },
+                onDismiss = viewModel::closeMenu,
+            )
+        }
     }
+}
+
+/**
+ * Long-press context menu body (P3 / F3). Row-style items over the shared
+ * [AppContextMenu] atom: Open / App Info / Edit Icon / Remove / Uninstall (greyed for
+ * system apps, P3-4) / Shortcuts. "Edit Icon" opens the icon flow (deferred to P4 for
+ * the rich editor; the row is present) -- see the P3 spec section 4.8.
+ */
+@Composable
+private fun AppMenu(
+    canUninstall: Boolean,
+    onOpen: () -> Unit,
+    onAppInfo: () -> Unit,
+    onEditIcon: () -> Unit,
+    onRemove: () -> Unit,
+    onUninstall: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val items = buildList {
+        add(ContextMenuItem(DrawerMenuLabels.OPEN, LineIcon.ArrowUpRight, onClick = onOpen))
+        add(ContextMenuItem(DrawerMenuLabels.APP_INFO, LineIcon.Info, onClick = onAppInfo))
+        add(ContextMenuItem(DrawerMenuLabels.EDIT_ICON, LineIcon.PenLine, onClick = onEditIcon))
+        add(ContextMenuItem(DrawerMenuLabels.REMOVE, LineIcon.X, onClick = onRemove))
+        add(
+            ContextMenuItem(
+                DrawerMenuLabels.UNINSTALL,
+                LineIcon.Trash2,
+                enabled = canUninstall,
+                destructive = true,
+                onClick = onUninstall,
+            ),
+        )
+        add(ContextMenuItem(DrawerMenuLabels.SHORTCUTS, LineIcon.AppWindow, onClick = onOpen))
+    }
+    AppContextMenu(items = items, onDismiss = onDismiss)
 }
 
 @Composable
@@ -327,6 +389,7 @@ private fun AppGridContent(
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
     bitmapProvider: com.softhome.feature.iconpack.domain.IconBitmapProvider,
     onLaunch: (DrawerEntry) -> Unit,
+    onLongPress: (DrawerEntry) -> Unit,
     onOpenFolder: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -355,6 +418,7 @@ private fun AppGridContent(
                     drawableLoader = drawableLoader,
                     bitmapProvider = bitmapProvider,
                     onLaunch = onLaunch,
+                    onLongPress = onLongPress,
                 )
 
                 is DrawerCell.FolderCell -> FolderTile(
@@ -373,6 +437,7 @@ private fun AppGridContent(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun AppCell(
     item: DrawerEntry,
@@ -380,13 +445,18 @@ private fun AppCell(
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
     bitmapProvider: com.softhome.feature.iconpack.domain.IconBitmapProvider,
     onLaunch: (DrawerEntry) -> Unit,
+    onLongPress: (DrawerEntry) -> Unit,
 ) {
     val colors = MaterialTheme.softColors
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = item.app.label }
-            .clickable { onLaunch(item) },
+            .combinedClickable(
+                onClick = { onLaunch(item) },
+                onLongClickLabel = "Options",
+                onLongClick = { onLongPress(item) },
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         BoxWithConstraints(
@@ -623,4 +693,18 @@ private fun FolderPopup(
             }
         }
     }
+}
+
+/**
+ * Drawer long-press menu labels (P3 / F3). Single source so the menu rows and the
+ * tests cannot drift.
+ */
+internal object DrawerMenuLabels {
+    const val OPEN = "Open"
+    const val APP_INFO = "App Info"
+    const val EDIT_ICON = "Edit Icon"
+    const val REMOVE = "Remove"
+    const val UNINSTALL = "Uninstall"
+    const val SHORTCUTS = "Shortcuts"
+    val ALL = listOf(OPEN, APP_INFO, EDIT_ICON, REMOVE, UNINSTALL, SHORTCUTS)
 }

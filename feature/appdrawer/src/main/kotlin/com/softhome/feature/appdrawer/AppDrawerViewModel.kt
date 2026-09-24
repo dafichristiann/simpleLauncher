@@ -2,6 +2,7 @@ package com.softhome.feature.appdrawer
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.softhome.core.data.repository.AppActionsRepository
 import com.softhome.core.data.repository.AppRepository
 import com.softhome.core.data.repository.FolderRepository
 import com.softhome.core.data.repository.PrefsRepository
@@ -52,12 +53,23 @@ data class DrawerUiState(
     val folders: List<Folder> = emptyList(),
     /** Folder currently open in the popup, or null. */
     val openFolder: Folder? = null,
+    /** P3/F3: the app whose long-press context menu is open, or null. */
+    val menuEntry: DrawerEntry? = null,
+    /** P3/Q2: total hidden apps (for the settings "Hidden apps" row count). */
+    val hiddenApps: Set<String> = emptySet(),
+)
+
+/** Per-app facts the context menu needs (P3 / F3), computed on demand. */
+data class DrawerEntryActions(
+    val canUninstall: Boolean,
+    val shortcutCount: Int,
 )
 
 @HiltViewModel
 class AppDrawerViewModel @Inject constructor(
     private val appRepository: AppRepository,
-    prefsRepository: PrefsRepository,
+    private val prefsRepository: PrefsRepository,
+    private val appActionsRepository: AppActionsRepository,
     private val folderRepository: FolderRepository,
     val iconPackRepository: IconPackRepository,
     val drawableLoader: IconPackDrawableLoader,
@@ -70,6 +82,7 @@ class AppDrawerViewModel @Inject constructor(
     private val categoryFlow = MutableStateFlow(DrawerCategory.All)
     private val loadingFlow = MutableStateFlow(true)
     private val openFolderIdFlow = MutableStateFlow<String?>(null)
+    private val menuKeyFlow = MutableStateFlow<String?>(null)
 
     private data class Core(
         val apps: List<AppInfo>,
@@ -91,12 +104,22 @@ class AppDrawerViewModel @Inject constructor(
             Triple(core, pack, folders)
         }
         .combine(openFolderIdFlow) { (core, pack, folders), openId ->
+            Quad(core, pack, folders, openId)
+        }
+        .combine(menuKeyFlow) { quad, menuKey ->
             buildState(
-                core.apps, core.query, core.category, core.loading, core.prefs,
-                pack, folders, openId,
+                quad.core.apps, quad.core.query, quad.core.category, quad.core.loading, quad.core.prefs,
+                quad.pack, quad.folders, quad.openId, menuKey,
             )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DrawerUiState())
+
+    private data class Quad(
+        val core: Core,
+        val pack: IconPack?,
+        val folders: List<Folder>,
+        val openId: String?,
+    )
 
     private fun buildState(
         apps: List<AppInfo>,
@@ -107,22 +130,26 @@ class AppDrawerViewModel @Inject constructor(
         pack: IconPack?,
         folders: List<Folder>,
         openFolderId: String?,
+        menuKey: String?,
     ): DrawerUiState {
-        val entries = apps.associate { app ->
+        // P3/Q2: hidden apps are filtered out of the drawer entirely.
+        val hidden = prefs.hiddenApps
+        val visibleApps = apps.filterNot { it.componentKey in hidden }
+        val entries = visibleApps.associate { app ->
             app.componentKey to DrawerEntry(
                 app = app,
                 symbolName = IconMasker.symbolFor(app),
                 resolved = resolveIcon(app, prefs, pack),
             )
         }
-        val inCategory = DrawerCategoryMapper.filter(apps, category)
+        val inCategory = DrawerCategoryMapper.filter(visibleApps, category)
             .map { it.componentKey }
             .toSet()
         val matchesQuery: (AppInfo) -> Boolean =
             { query.isBlank() || it.label.contains(query, ignoreCase = true) }
 
         // Apps that pass the current filter, in original (alphabetical) order.
-        val visibleEntries = apps
+        val visibleEntries = visibleApps
             .filter { it.componentKey in inCategory && matchesQuery(it) }
             .mapNotNull { entries[it.componentKey] }
 
@@ -159,6 +186,8 @@ class AppDrawerViewModel @Inject constructor(
             activePack = pack,
             folders = folders,
             openFolder = openFolder,
+            menuEntry = menuKey?.let { entries[it] },
+            hiddenApps = hidden,
         )
     }
 
@@ -204,6 +233,34 @@ class AppDrawerViewModel @Inject constructor(
     fun onQueryChange(q: String) { queryFlow.value = q }
     fun onCategoryChange(category: DrawerCategory) { categoryFlow.value = category }
     fun launchApp(app: AppInfo) = appRepository.launchApp(app)
+
+    // --- Long-press context menu (P3 / F3) ------------------------------------
+
+    fun openMenu(entry: DrawerEntry) { menuKeyFlow.value = entry.app.componentKey }
+    fun closeMenu() { menuKeyFlow.value = null }
+
+    /** Whether the app can be uninstalled (P3-4): not system + actually removable. */
+    fun canUninstall(app: AppInfo): Boolean =
+        !app.isSystem && appActionsRepository.isRemovable(app)
+
+    /** Opens the system App Info screen for [app]. */
+    fun openAppInfo(app: AppInfo) { appActionsRepository.openAppInfo(app) }
+
+    /** Starts the system uninstall flow for [app]; no-op when not permitted. */
+    fun requestUninstall(app: AppInfo) {
+        if (canUninstall(app)) appActionsRepository.requestUninstall(app)
+    }
+
+    /** P3/Q2 "Remove": hide the app from the drawer (reversible in settings). */
+    fun hideApp(app: AppInfo) {
+        viewModelScope.launch { prefsRepository.hideApp(app.componentKey) }
+        closeMenu()
+    }
+
+    /** Restore a hidden app (settings "Hidden apps" row). */
+    fun unhideApp(componentKey: String) {
+        viewModelScope.launch { prefsRepository.unhideApp(componentKey) }
+    }
 
     // --- Folders (P2 / D1-D2) -------------------------------------------------
 
