@@ -133,6 +133,7 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
                 state = state,
                 onNotesChange = viewModel::setNotes,
                 onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
+                onReorderRow = viewModel::reorderHomeRow,
             )
 
             AnimatedVisibility(

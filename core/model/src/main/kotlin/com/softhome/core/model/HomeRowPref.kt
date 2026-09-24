@@ -82,6 +82,23 @@ object HomeRowLogic {
         return prefs.toMutableList().apply { add(i + 1, removeAt(i)) }
     }
 
+    /**
+     * Reorder [kind] to [targetIndex] (P4a drag-and-drop). [targetIndex] is a position
+     * in the **resulting** list (0..size-1); it is clamped, so dragging past the ends is
+     * safe. No-op when the kind is unknown or already at [targetIndex]. The move keeps
+     * visibility intact (locked rows stay visible; order is never locked — P4a-5).
+     */
+    fun move(prefs: List<HomeRowPref>, kind: HomeRowKind, targetIndex: Int): List<HomeRowPref> {
+        val from = prefs.indexOfFirst { it.kind == kind }
+        if (from < 0) return prefs
+        val to = targetIndex.coerceIn(0, prefs.size - 1)
+        if (from == to) return prefs
+        val list = prefs.toMutableList()
+        val moved = list.removeAt(from)
+        list.add(to.coerceIn(0, list.size), moved)
+        return list
+    }
+
     /** The rows the home screen should render, in order, honoring visibility. */
     fun visibleInOrder(prefs: List<HomeRowPref>): List<HomeRowKind> =
         prefs.filter { it.visible || it.kind in LOCKED }.map { it.kind }

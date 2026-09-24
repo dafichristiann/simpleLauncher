@@ -7,8 +7,8 @@ data class LauncherPrefs(
     val maskUnsupportedApps: Boolean = true,
     val darkTheme: ThemeMode = ThemeMode.System,
     val showNotificationBadges: Boolean = true,
-    /** component key -> pack id (per-app icon override). */
-    val iconOverrides: Map<String, String> = emptyMap(),
+    /** P4b: component key -> explicit icon choice (absent = automatic/P3.5 hybrid). */
+    val iconOverrides: Map<String, IconOverride> = emptyMap(),
     /** P3 (G/Widgets): which home rows show and in what order. */
     val homeRows: List<HomeRowPref> = HomeRowLogic.default(),
     /** P3 (G/Appearance): drawer + row spacing multiplier preset (Q3). */

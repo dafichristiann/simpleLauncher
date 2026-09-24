@@ -3,7 +3,6 @@ package com.softhome.feature.appdrawer
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +42,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -53,15 +55,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.softhome.core.designsystem.atom.AppContextMenu
 import com.softhome.core.designsystem.atom.ContextMenuItem
+import com.softhome.core.designsystem.atom.DragController
+import com.softhome.core.designsystem.atom.DragHoverRing
+import com.softhome.core.designsystem.atom.DragPreviewLayer
 import com.softhome.core.designsystem.atom.FolderPopupBody
 import com.softhome.core.designsystem.atom.FolderTile
 import com.softhome.core.designsystem.atom.LineIcon
 import com.softhome.core.designsystem.atom.LineIconImage
+import com.softhome.core.designsystem.atom.dragSource
+import com.softhome.core.designsystem.atom.dragSourceAlpha
+import com.softhome.core.designsystem.atom.dropTarget
+import com.softhome.core.designsystem.atom.rememberDragController
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.DrawerCategory
 import com.softhome.feature.iconpack.ui.DrawerAppIcon
+import com.softhome.feature.iconpack.domain.IconEditor
 import com.softhome.feature.iconpack.ui.IconPackImportSheet
 import kotlinx.coroutines.launch
 
@@ -85,6 +95,22 @@ fun AppDrawerScreen(
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     var iconPackSheetOpen by remember { mutableStateOf(false) }
+    // P4b: the editor's live state, keyed by the app being edited so reopening re-seeds.
+    var editorState by remember { mutableStateOf<com.softhome.feature.iconpack.domain.IconEditor.State?>(null) }
+    val editingEntry = state.editingEntry
+    // Re-seed the editor whenever the edited app changes (open/close/switch).
+    androidx.compose.runtime.LaunchedEffect(editingEntry?.app?.componentKey) {
+        editorState = editingEntry?.let { viewModel.iconEditorState(it) }
+    }
+
+    // P4a: one drag controller for the drawer surface (app -> folder + drag-out).
+    val dragController = rememberDragController()
+    val dragState = dragController.state
+    var surfaceOriginInWindow by remember { mutableStateOf(Offset.Zero) }
+    // The app currently being dragged (for the icon preview), or null.
+    val draggedApp: DrawerEntry? = dragState.draggingId
+        ?.removePrefix("app:")
+        ?.let { key -> state.allApps.firstOrNull { it.app.componentKey == key } }
 
     // BACK pops the drawer's own layer stack, topmost first: an open long-press
     // menu, then an open folder popup, and finally the drawer overlay itself
@@ -93,6 +119,7 @@ fun AppDrawerScreen(
     // stayed open. One place owns the stack, so precedence is unambiguous.
     BackHandler {
         when {
+            state.editingEntry != null -> viewModel.closeIconEditor()
             state.menuEntry != null -> viewModel.closeMenu()
             state.openFolder != null -> viewModel.closeFolder()
             else -> onClose()
@@ -102,7 +129,8 @@ fun AppDrawerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.drawerBg),
+            .background(colors.drawerBg)
+            .onGloballyPositioned { surfaceOriginInWindow = it.boundsInWindow().topLeft },
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -117,6 +145,7 @@ fun AppDrawerScreen(
                     onQueryChange = viewModel::onQueryChange,
                     onOpenIconPack = { iconPackSheetOpen = true },
                     onNewFolder = viewModel::createFolder,
+                    dragController = dragController,
                 )
 
                 CategoryNav(
@@ -139,12 +168,15 @@ fun AppDrawerScreen(
                     gridState = gridState,
                     activePack = state.activePack,
                     drawableLoader = viewModel.drawableLoader,
+                    dragController = dragController,
                     onLaunch = {
                             viewModel.launchApp(it.app)
                             onAppLaunched()
                         },
                         onLongPress = viewModel::openMenu,
                         onOpenFolder = viewModel::openFolder,
+                        onDropOnFolder = viewModel::assignToFolder,
+                        onDropOnNewFolder = viewModel::createFolderWith,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -202,7 +234,7 @@ fun AppDrawerScreen(
                     viewModel.openAppInfo(entry.app)
                     viewModel.closeMenu()
                 },
-                onEditIcon = viewModel::closeMenu,
+                onEditIcon = { viewModel.openIconEditor(entry) },
                 onRemove = { viewModel.hideApp(entry.app) },
                 onUninstall = {
                     viewModel.requestUninstall(entry.app)
@@ -210,6 +242,42 @@ fun AppDrawerScreen(
                 },
                 onDismiss = viewModel::closeMenu,
             )
+        }
+
+        // P4b: the "Edit Icon" editor over the drawer (cream r24 card + dim scrim).
+        editingEntry?.let { entry ->
+            editorState?.let { editor ->
+                com.softhome.feature.iconpack.ui.IconEditorSheet(
+                    appLabel = entry.app.label,
+                    state = editor,
+                    activePack = state.activePack,
+                    drawableLoader = viewModel.drawableLoader,
+                    category = entry.app.category,
+                    onSelectMode = { editorState = IconEditor.selectMode(editor, it) },
+                    onSelectDrawable = { editorState = IconEditor.selectDrawable(editor, it) },
+                    onSelectGlyph = { editorState = IconEditor.selectGlyph(editor, it) },
+                    onSelectColor = { editorState = IconEditor.selectColor(editor, it) },
+                    onReset = { viewModel.resetIconOverride(entry.app.componentKey) },
+                    onSave = {
+                        editor.currentOverride?.let { viewModel.applyIconOverride(entry.app.componentKey, it) }
+                            ?: viewModel.resetIconOverride(entry.app.componentKey)
+                    },
+                    onDismiss = viewModel::closeIconEditor,
+                )
+            }
+        }
+
+        // P4a: floating drag preview (the real app icon tile under the finger).
+        DragPreviewLayer(controller = dragController, windowOrigin = surfaceOriginInWindow) {            draggedApp?.let { entry ->
+                DrawerAppIcon(
+                    resolved = entry.resolved,
+                    size = Dimens.drawerTileNew,
+                    activePack = state.activePack,
+                    drawableLoader = viewModel.drawableLoader,
+                    category = entry.app.category,
+                    contentDescription = null,
+                )
+            }
         }
     }
 }
@@ -255,8 +323,10 @@ private fun DrawerHeader(
     onQueryChange: (String) -> Unit,
     onOpenIconPack: () -> Unit,
     onNewFolder: () -> Unit,
+    dragController: DragController,
 ) {
     val colors = MaterialTheme.softColors
+    val newFolderHovered = dragController.state.hoveredTargetId == "newfolder"
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -271,9 +341,11 @@ private fun DrawerHeader(
             Text(
                 text = "New folder",
                 style = MaterialTheme.typography.labelMedium,
-                color = colors.accent,
+                color = if (newFolderHovered) colors.accent else colors.accent,
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
+                    .dropTarget(targetId = "newfolder", controller = dragController)
+                    .background(if (newFolderHovered) colors.accent.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
                     .clickable(onClick = onNewFolder)
                     .padding(horizontal = Spacing.md, vertical = Spacing.xs),
             )
@@ -399,9 +471,12 @@ private fun AppGridContent(
     gridState: LazyGridState,
     activePack: com.softhome.core.model.IconPack?,
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
+    dragController: DragController,
     onLaunch: (DrawerEntry) -> Unit,
     onLongPress: (DrawerEntry) -> Unit,
     onOpenFolder: (String) -> Unit,
+    onDropOnFolder: (folderId: String, componentKey: String) -> Unit,
+    onDropOnNewFolder: (componentKey: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
@@ -427,43 +502,72 @@ private fun AppGridContent(
                     item = cell.entry,
                     activePack = activePack,
                     drawableLoader = drawableLoader,
+                    dragController = dragController,
                     onLaunch = onLaunch,
                     onLongPress = onLongPress,
+                    onDropFolder = onDropOnFolder,
+                    onDropNewFolder = { onDropOnNewFolder(it.app.componentKey) },
                 )
 
-                is DrawerCell.FolderCell -> FolderTile(
-                    name = cell.folder.name,
-                    onClick = { onOpenFolder(cell.folder.id) },
-                ) {
-                    FolderMiniGrid(
-                        entries = cell.preview,
-                        activePack = activePack,
-                        drawableLoader = drawableLoader,
-                    )
+                is DrawerCell.FolderCell -> {
+                    val hovered = dragController.state.hoveredTargetId == "folder:${cell.folder.id}"
+                    DragHoverRing(
+                        hovered = hovered,
+                        shape = RoundedCornerShape(Dimens.folderTileRadius),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .dropTarget(targetId = "folder:${cell.folder.id}", controller = dragController),
+                    ) {
+                        FolderTile(
+                            name = cell.folder.name,
+                            onClick = { onOpenFolder(cell.folder.id) },
+                        ) {
+                            FolderMiniGrid(
+                                entries = cell.preview,
+                                activePack = activePack,
+                                drawableLoader = drawableLoader,
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun AppCell(
     item: DrawerEntry,
     activePack: com.softhome.core.model.IconPack?,
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
+    dragController: DragController,
     onLaunch: (DrawerEntry) -> Unit,
     onLongPress: (DrawerEntry) -> Unit,
+    onDropFolder: (folderId: String, componentKey: String) -> Unit,
+    onDropNewFolder: (entry: DrawerEntry) -> Unit,
 ) {
     val colors = MaterialTheme.softColors
+    val beingDragged = dragController.state.draggingId == "app:${item.app.componentKey}"
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = item.app.label }
-            .combinedClickable(
-                onClick = { onLaunch(item) },
-                onLongClickLabel = "Options",
-                onLongClick = { onLongPress(item) },
+            .dragSourceAlpha(beingDragged)
+            .dragSource(
+                id = "app:${item.app.componentKey}",
+                controller = dragController,
+                onTap = { onLaunch(item) },
+                onLongPress = { onLongPress(item) },
+                onDrop = { target, _ ->
+                    // Only folder tiles / the new-folder chip accept an app; anything
+                    // else (or a null target) = snap back (no-op).
+                    when {
+                        target == "newfolder" -> onDropNewFolder(item)
+                        target != null && target.startsWith("folder:") ->
+                            onDropFolder(target.removePrefix("folder:"), item.app.componentKey)
+                        else -> Unit
+                    }
+                },
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

@@ -525,81 +525,89 @@
             {
               "type": "icon",
               "id": "vsygX",
-              "name": "Rail Icon 1",
+              "name": "icon-sparkle",
               "width": 20,
               "height": 20,
               "icon": "sparkles",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "Ws2pl",
-              "name": "Rail Icon 2",
+              "name": "icon-target",
               "width": 20,
               "height": 20,
               "icon": "circle-dot",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "rU7nM",
-              "name": "Rail Icon 3",
+              "name": "icon-chat",
               "width": 20,
               "height": 20,
               "icon": "message-circle",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "ibX83",
-              "name": "Rail Icon 4",
+              "name": "icon-send",
               "width": 20,
               "height": 20,
               "icon": "send",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "q2W46j",
-              "name": "Rail Icon 5",
+              "name": "icon-camera",
               "width": 20,
               "height": 20,
               "icon": "camera",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "RKZW7",
-              "name": "Rail Icon 6",
+              "name": "icon-wifi",
               "width": 20,
               "height": 20,
-              "icon": "wind",
+              "icon": "wifi",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "o3McO3",
-              "name": "Rail Icon 7",
+              "name": "icon-panel",
               "width": 20,
               "height": 20,
               "icon": "panel-left",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             },
             {
               "type": "icon",
               "id": "o1ALlt",
-              "name": "Rail Icon 8",
+              "name": "icon-phone",
               "width": 20,
               "height": 20,
               "icon": "phone",
               "library": "lucide",
+              "weight": 500,
               "fill": "#2B2B2B"
             }
           ]
@@ -1539,245 +1547,6 @@
           "fontWeight": "normal"
         },
         {
-          "type": "frame",
-          "id": "QBhow",
-          "layoutPosition": "absolute",
-          "x": 540,
-          "y": 250,
-          "name": "Icon Library Panel",
-          "width": 410,
-          "height": 260,
-          "fill": "#E4D7C7",
-          "cornerRadius": 24,
-          "layout": "none",
-          "children": [
-            {
-              "type": "frame",
-              "id": "E9T8qF",
-              "layoutPosition": "absolute",
-              "x": 24,
-              "y": 24,
-              "name": "Icon Tile 1",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "gFIo6",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 1",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "sparkles",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "kkQzm",
-              "layoutPosition": "absolute",
-              "x": 116,
-              "y": 24,
-              "name": "Icon Tile 2",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "Rhe8c",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 2",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "circle-dot",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "S5FIt",
-              "layoutPosition": "absolute",
-              "x": 208,
-              "y": 24,
-              "name": "Icon Tile 3",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "WgrOW",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 3",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "message-circle",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "EuNBo",
-              "layoutPosition": "absolute",
-              "x": 300,
-              "y": 24,
-              "name": "Icon Tile 4",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "H0Orv",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 4",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "send",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "e9GIa",
-              "layoutPosition": "absolute",
-              "x": 24,
-              "y": 128,
-              "name": "Icon Tile 5",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "GTl2z",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 5",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "camera",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "laNLb",
-              "layoutPosition": "absolute",
-              "x": 116,
-              "y": 128,
-              "name": "Icon Tile 6",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "f3zUC",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 6",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "wind",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "JrBrM",
-              "layoutPosition": "absolute",
-              "x": 208,
-              "y": 128,
-              "name": "Icon Tile 7",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "nb3SW",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 7",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "panel-left",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "y0DAnQ",
-              "layoutPosition": "absolute",
-              "x": 300,
-              "y": 128,
-              "name": "Icon Tile 8",
-              "width": 68,
-              "height": 68,
-              "fill": "#F5EFE6",
-              "cornerRadius": 20,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "UHrku",
-                  "layoutPosition": "absolute",
-                  "x": 22,
-                  "y": 22,
-                  "name": "Library Icon 8",
-                  "width": 24,
-                  "height": 24,
-                  "icon": "phone",
-                  "library": "lucide",
-                  "fill": "#2B2B2B"
-                }
-              ]
-            }
-          ]
-        },
-        {
           "type": "text",
           "id": "JNFYC",
           "layoutPosition": "absolute",
@@ -2293,7 +2062,7 @@
           "x": 24,
           "y": 22,
           "name": "Drawer Time",
-          "fill": "#2B2B2B",
+          "fill": "$text-dark",
           "content": "00:34",
           "fontFamily": "DM Sans",
           "fontSize": 14,
@@ -2306,7 +2075,7 @@
           "x": 326,
           "y": 22,
           "name": "Drawer Status",
-          "fill": "#625B52",
+          "fill": "$icon-neutral",
           "content": "◔  ▮▮  21",
           "fontFamily": "DM Sans",
           "fontSize": 12,
@@ -2384,10 +2153,10 @@
           "layoutPosition": "absolute",
           "x": 34,
           "y": 150,
-          "name": "App Tile Agoda",
+          "name": "App Tile WhatsApp",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2397,12 +2166,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Agoda",
+              "name": "icon-whatsapp",
               "width": 24,
               "height": 24,
-              "icon": "tent",
+              "icon": "message-circle",
               "library": "lucide",
-              "fill": "#B06F52"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -2412,11 +2182,11 @@
           "layoutPosition": "absolute",
           "x": 30,
           "y": 224,
-          "name": "App Label Agoda",
-          "fill": "#3A3A3A",
+          "name": "App Label WhatsApp",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Agoda",
+          "content": "WhatsApp",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2428,10 +2198,10 @@
           "layoutPosition": "absolute",
           "x": 125,
           "y": 150,
-          "name": "App Tile AI Gallery",
+          "name": "App Tile Instagram",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2441,12 +2211,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon AI Gallery",
+              "name": "icon-instagram",
               "width": 24,
               "height": 24,
-              "icon": "images",
+              "icon": "image",
               "library": "lucide",
-              "fill": "#D19B62"
+              "weight": 500,
+              "fill": "$icon-social"
             }
           ]
         },
@@ -2456,11 +2227,11 @@
           "layoutPosition": "absolute",
           "x": 121,
           "y": 224,
-          "name": "App Label AI Gallery",
-          "fill": "#3A3A3A",
+          "name": "App Label Instagram",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "AI Gallery",
+          "content": "Instagram",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2472,10 +2243,10 @@
           "layoutPosition": "absolute",
           "x": 216,
           "y": 150,
-          "name": "App Tile Alkitab",
+          "name": "App Tile Gmail",
           "width": 68,
           "height": 68,
-          "fill": "#E8DFD0",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2485,12 +2256,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Alkitab",
+              "name": "icon-gmail",
               "width": 24,
               "height": 24,
-              "icon": "book-open",
+              "icon": "mail",
               "library": "lucide",
-              "fill": "#5F7A72"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -2500,11 +2272,11 @@
           "layoutPosition": "absolute",
           "x": 212,
           "y": 224,
-          "name": "App Label Alkitab",
-          "fill": "#3A3A3A",
+          "name": "App Label Gmail",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Alkitab",
+          "content": "Gmail",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2516,10 +2288,10 @@
           "layoutPosition": "absolute",
           "x": 307,
           "y": 150,
-          "name": "App Tile blu",
+          "name": "App Tile Chrome",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2529,12 +2301,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon blu",
+              "name": "icon-chrome",
               "width": 24,
               "height": 24,
-              "icon": "wallet-cards",
+              "icon": "globe",
               "library": "lucide",
-              "fill": "#6E8B86"
+              "weight": 500,
+              "fill": "$icon-finance"
             }
           ]
         },
@@ -2544,11 +2317,11 @@
           "layoutPosition": "absolute",
           "x": 303,
           "y": 224,
-          "name": "App Label blu",
-          "fill": "#3A3A3A",
+          "name": "App Label Chrome",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "blu",
+          "content": "Chrome",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2560,10 +2333,10 @@
           "layoutPosition": "absolute",
           "x": 34,
           "y": 254,
-          "name": "App Tile Brave",
+          "name": "App Tile Messages",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2573,12 +2346,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Brave",
+              "name": "icon-messages",
               "width": 24,
               "height": 24,
-              "icon": "shield",
+              "icon": "message-square",
               "library": "lucide",
-              "fill": "#B06F52"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -2588,11 +2362,11 @@
           "layoutPosition": "absolute",
           "x": 30,
           "y": 328,
-          "name": "App Label Brave",
-          "fill": "#3A3A3A",
+          "name": "App Label Messages",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Brave",
+          "content": "Messages",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2604,10 +2378,10 @@
           "layoutPosition": "absolute",
           "x": 125,
           "y": 254,
-          "name": "App Tile Calculator",
+          "name": "App Tile Phone",
           "width": 68,
           "height": 68,
-          "fill": "#EFE3D3",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2617,12 +2391,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Calculator",
+              "name": "icon-phone",
               "width": 24,
               "height": 24,
-              "icon": "calculator",
+              "icon": "phone",
               "library": "lucide",
-              "fill": "#D19B62"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -2632,11 +2407,11 @@
           "layoutPosition": "absolute",
           "x": 121,
           "y": 328,
-          "name": "App Label Calculator",
-          "fill": "#3A3A3A",
+          "name": "App Label Phone",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Calculator",
+          "content": "Phone",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2648,10 +2423,10 @@
           "layoutPosition": "absolute",
           "x": 216,
           "y": 254,
-          "name": "App Tile Calendar",
+          "name": "App Tile Contacts",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2661,12 +2436,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Calendar",
+              "name": "icon-contacts",
               "width": 24,
               "height": 24,
-              "icon": "calendar-days",
+              "icon": "contact-round",
               "library": "lucide",
-              "fill": "#8A5F43"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -2676,11 +2452,11 @@
           "layoutPosition": "absolute",
           "x": 212,
           "y": 328,
-          "name": "App Label Calendar",
-          "fill": "#3A3A3A",
+          "name": "App Label Contacts",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Calendar",
+          "content": "Contacts",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2692,10 +2468,10 @@
           "layoutPosition": "absolute",
           "x": 307,
           "y": 254,
-          "name": "App Tile Camera",
+          "name": "App Tile Calendar",
           "width": 68,
           "height": 68,
-          "fill": "#E8DFD0",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2705,12 +2481,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Camera",
+              "name": "icon-calendar",
               "width": 24,
               "height": 24,
-              "icon": "camera",
+              "icon": "calendar-days",
               "library": "lucide",
-              "fill": "#625B52"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -2720,11 +2497,11 @@
           "layoutPosition": "absolute",
           "x": 303,
           "y": 328,
-          "name": "App Label Camera",
-          "fill": "#3A3A3A",
+          "name": "App Label Calendar",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Camera",
+          "content": "Calendar",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2736,10 +2513,10 @@
           "layoutPosition": "absolute",
           "x": 34,
           "y": 358,
-          "name": "App Tile Carlcare",
+          "name": "App Tile Calculator",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2749,12 +2526,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Carlcare",
+              "name": "icon-calculator",
               "width": 24,
               "height": 24,
-              "icon": "heart-handshake",
+              "icon": "calculator",
               "library": "lucide",
-              "fill": "#6E8B86"
+              "weight": 500,
+              "fill": "$icon-media"
             }
           ]
         },
@@ -2764,11 +2542,11 @@
           "layoutPosition": "absolute",
           "x": 30,
           "y": 432,
-          "name": "App Label Carlcare",
-          "fill": "#3A3A3A",
+          "name": "App Label Calculator",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Carlcare",
+          "content": "Calculator",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2780,10 +2558,10 @@
           "layoutPosition": "absolute",
           "x": 125,
           "y": 358,
-          "name": "App Tile ChatGPT",
+          "name": "App Tile Camera",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2793,12 +2571,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon ChatGPT",
+              "name": "icon-camera",
               "width": 24,
               "height": 24,
-              "icon": "bot",
+              "icon": "camera",
               "library": "lucide",
-              "fill": "#2B2B2B"
+              "weight": 500,
+              "fill": "$icon-media"
             }
           ]
         },
@@ -2808,11 +2587,11 @@
           "layoutPosition": "absolute",
           "x": 121,
           "y": 432,
-          "name": "App Label ChatGPT",
-          "fill": "#3A3A3A",
+          "name": "App Label Camera",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "ChatGPT",
+          "content": "Camera",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2824,10 +2603,10 @@
           "layoutPosition": "absolute",
           "x": 216,
           "y": 358,
-          "name": "App Tile Chrome",
+          "name": "App Tile Clock",
           "width": 68,
           "height": 68,
-          "fill": "#E8DFD0",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2837,12 +2616,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Chrome",
+              "name": "icon-clock",
               "width": 24,
               "height": 24,
-              "icon": "globe",
+              "icon": "alarm-clock",
               "library": "lucide",
-              "fill": "#B06F52"
+              "weight": 500,
+              "fill": "$icon-neutral"
             }
           ]
         },
@@ -2852,11 +2632,11 @@
           "layoutPosition": "absolute",
           "x": 212,
           "y": 432,
-          "name": "App Label Chrome",
-          "fill": "#3A3A3A",
+          "name": "App Label Clock",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Chrome",
+          "content": "Clock",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2868,10 +2648,10 @@
           "layoutPosition": "absolute",
           "x": 307,
           "y": 358,
-          "name": "App Tile Circle K",
+          "name": "App Tile Settings",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2881,12 +2661,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Circle K",
+              "name": "icon-settings",
               "width": 24,
               "height": 24,
-              "icon": "shopping-bag",
+              "icon": "settings-2",
               "library": "lucide",
-              "fill": "#8A5F43"
+              "weight": 500,
+              "fill": "$icon-neutral"
             }
           ]
         },
@@ -2896,11 +2677,11 @@
           "layoutPosition": "absolute",
           "x": 303,
           "y": 432,
-          "name": "App Label Circle K",
-          "fill": "#3A3A3A",
+          "name": "App Label Settings",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Circle K",
+          "content": "Settings",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2912,10 +2693,10 @@
           "layoutPosition": "absolute",
           "x": 34,
           "y": 462,
-          "name": "App Tile Claude",
+          "name": "App Tile Files",
           "width": 68,
           "height": 68,
-          "fill": "#D19B62",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2925,12 +2706,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Claude",
+              "name": "icon-files",
               "width": 24,
               "height": 24,
-              "icon": "sparkles",
+              "icon": "folder-open",
               "library": "lucide",
-              "fill": "#F5EFE6"
+              "weight": 500,
+              "fill": "$icon-productivity"
             }
           ]
         },
@@ -2940,11 +2722,11 @@
           "layoutPosition": "absolute",
           "x": 30,
           "y": 536,
-          "name": "App Label Claude",
-          "fill": "#3A3A3A",
+          "name": "App Label Files",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Claude",
+          "content": "Files",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -2956,10 +2738,10 @@
           "layoutPosition": "absolute",
           "x": 125,
           "y": 462,
-          "name": "App Tile Clock",
+          "name": "App Tile Photos",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -2969,12 +2751,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Clock",
+              "name": "icon-photos",
               "width": 24,
               "height": 24,
-              "icon": "clock-3",
+              "icon": "images",
               "library": "lucide",
-              "fill": "#625B52"
+              "weight": 500,
+              "fill": "$icon-media"
             }
           ]
         },
@@ -2984,11 +2767,11 @@
           "layoutPosition": "absolute",
           "x": 121,
           "y": 536,
-          "name": "App Label Clock",
-          "fill": "#3A3A3A",
+          "name": "App Label Photos",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Clock",
+          "content": "Photos",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3000,10 +2783,10 @@
           "layoutPosition": "absolute",
           "x": 216,
           "y": 462,
-          "name": "App Tile Compass",
+          "name": "App Tile YouTube",
           "width": 68,
           "height": 68,
-          "fill": "#E8DFD0",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3013,12 +2796,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Compass",
+              "name": "icon-youtube",
               "width": 24,
               "height": 24,
-              "icon": "compass",
+              "icon": "play",
               "library": "lucide",
-              "fill": "#B06F52"
+              "weight": 500,
+              "fill": "$icon-media"
             }
           ]
         },
@@ -3028,11 +2812,11 @@
           "layoutPosition": "absolute",
           "x": 212,
           "y": 536,
-          "name": "App Label Compass",
-          "fill": "#3A3A3A",
+          "name": "App Label YouTube",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Compass",
+          "content": "YouTube",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3044,10 +2828,10 @@
           "layoutPosition": "absolute",
           "x": 307,
           "y": 462,
-          "name": "App Tile Contacts",
+          "name": "App Tile Spotify",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3057,12 +2841,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Contacts",
+              "name": "icon-spotify",
               "width": 24,
               "height": 24,
-              "icon": "contact",
+              "icon": "disc-3",
               "library": "lucide",
-              "fill": "#6E8B86"
+              "weight": 500,
+              "fill": "$icon-media"
             }
           ]
         },
@@ -3072,11 +2857,11 @@
           "layoutPosition": "absolute",
           "x": 303,
           "y": 536,
-          "name": "App Label Contacts",
-          "fill": "#3A3A3A",
+          "name": "App Label Spotify",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Contacts",
+          "content": "Spotify",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3088,10 +2873,10 @@
           "layoutPosition": "absolute",
           "x": 34,
           "y": 566,
-          "name": "App Tile DANA",
+          "name": "App Tile Maps",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3101,12 +2886,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon DANA",
+              "name": "icon-maps",
               "width": 24,
               "height": 24,
-              "icon": "wallet",
+              "icon": "map",
               "library": "lucide",
-              "fill": "#5F7A72"
+              "weight": 500,
+              "fill": "$icon-travel"
             }
           ]
         },
@@ -3116,11 +2902,11 @@
           "layoutPosition": "absolute",
           "x": 30,
           "y": 640,
-          "name": "App Label DANA",
-          "fill": "#3A3A3A",
+          "name": "App Label Maps",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "DANA",
+          "content": "Maps",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3132,10 +2918,10 @@
           "layoutPosition": "absolute",
           "x": 125,
           "y": 566,
-          "name": "App Tile Discord",
+          "name": "App Tile DANA",
           "width": 68,
           "height": 68,
-          "fill": "#D19B62",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3145,12 +2931,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Discord",
+              "name": "icon-dana",
               "width": 24,
               "height": 24,
-              "icon": "messages-square",
+              "icon": "wallet-minimal",
               "library": "lucide",
-              "fill": "#F5EFE6"
+              "weight": 500,
+              "fill": "$icon-finance"
             }
           ]
         },
@@ -3160,11 +2947,11 @@
           "layoutPosition": "absolute",
           "x": 121,
           "y": 640,
-          "name": "App Label Discord",
-          "fill": "#3A3A3A",
+          "name": "App Label DANA",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Discord",
+          "content": "DANA",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3176,10 +2963,10 @@
           "layoutPosition": "absolute",
           "x": 216,
           "y": 566,
-          "name": "App Tile Drive",
+          "name": "App Tile Alkitab",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3189,12 +2976,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Drive",
+              "name": "icon-alkitab",
               "width": 24,
               "height": 24,
-              "icon": "folder-symlink",
+              "icon": "book-open",
               "library": "lucide",
-              "fill": "#8A5F43"
+              "weight": 500,
+              "fill": "$icon-communication"
             }
           ]
         },
@@ -3204,11 +2992,11 @@
           "layoutPosition": "absolute",
           "x": 212,
           "y": 640,
-          "name": "App Label Drive",
-          "fill": "#3A3A3A",
+          "name": "App Label Alkitab",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Drive",
+          "content": "Alkitab",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3220,10 +3008,10 @@
           "layoutPosition": "absolute",
           "x": 307,
           "y": 566,
-          "name": "App Tile Driver",
+          "name": "App Tile Brave",
           "width": 68,
           "height": 68,
-          "fill": "#E8DFD0",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3233,12 +3021,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Driver",
+              "name": "icon-brave",
               "width": 24,
               "height": 24,
-              "icon": "utensils",
+              "icon": "shield-check",
               "library": "lucide",
-              "fill": "#B06F52"
+              "weight": 500,
+              "fill": "$icon-productivity"
             }
           ]
         },
@@ -3248,11 +3037,11 @@
           "layoutPosition": "absolute",
           "x": 303,
           "y": 640,
-          "name": "App Label Driver",
-          "fill": "#3A3A3A",
+          "name": "App Label Brave",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Driver",
+          "content": "Brave",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3264,10 +3053,10 @@
           "layoutPosition": "absolute",
           "x": 34,
           "y": 670,
-          "name": "App Tile edLink",
+          "name": "App Tile Agoda",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3277,12 +3066,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon edLink",
+              "name": "icon-agoda",
               "width": 24,
               "height": 24,
-              "icon": "graduation-cap",
+              "icon": "tent",
               "library": "lucide",
-              "fill": "#5F7A72"
+              "weight": 500,
+              "fill": "$icon-travel"
             }
           ]
         },
@@ -3292,11 +3082,11 @@
           "layoutPosition": "absolute",
           "x": 30,
           "y": 744,
-          "name": "App Label edLink",
-          "fill": "#3A3A3A",
+          "name": "App Label Agoda",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "edLink",
+          "content": "Agoda",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3308,10 +3098,10 @@
           "layoutPosition": "absolute",
           "x": 125,
           "y": 670,
-          "name": "App Tile Ella",
+          "name": "App Tile AI Gallery",
           "width": 68,
           "height": 68,
-          "fill": "#D19B62",
+          "fill": "$tile-cream",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3321,12 +3111,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Ella",
+              "name": "icon-ai-gallery",
               "width": 24,
               "height": 24,
-              "icon": "box",
+              "icon": "images",
               "library": "lucide",
-              "fill": "#F5EFE6"
+              "weight": 500,
+              "fill": "$icon-media"
             }
           ]
         },
@@ -3336,11 +3127,11 @@
           "layoutPosition": "absolute",
           "x": 121,
           "y": 744,
-          "name": "App Label Ella",
-          "fill": "#3A3A3A",
+          "name": "App Label AI Gallery",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Ella",
+          "content": "AI Gallery",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3352,10 +3143,10 @@
           "layoutPosition": "absolute",
           "x": 216,
           "y": 670,
-          "name": "App Tile Facebook",
+          "name": "App Tile Claude",
           "width": 68,
           "height": 68,
-          "fill": "#F5EFE6",
+          "fill": "$selected-tile",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3365,12 +3156,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Facebook",
+              "name": "icon-claude",
               "width": 24,
               "height": 24,
-              "icon": "users",
+              "icon": "sparkles",
               "library": "lucide",
-              "fill": "#6E8B86"
+              "weight": 500,
+              "fill": "$selected-icon"
             }
           ]
         },
@@ -3380,11 +3172,11 @@
           "layoutPosition": "absolute",
           "x": 212,
           "y": 744,
-          "name": "App Label Facebook",
-          "fill": "#3A3A3A",
+          "name": "App Label Claude",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Facebook",
+          "content": "Claude",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3396,10 +3188,10 @@
           "layoutPosition": "absolute",
           "x": 307,
           "y": 670,
-          "name": "App Tile Files",
+          "name": "App Tile Discord",
           "width": 68,
           "height": 68,
-          "fill": "#E8DFD0",
+          "fill": "$selected-tile",
           "cornerRadius": 21,
           "layout": "none",
           "children": [
@@ -3409,12 +3201,13 @@
               "layoutPosition": "absolute",
               "x": 22,
               "y": 22,
-              "name": "Unique Icon Files",
+              "name": "icon-discord",
               "width": 24,
               "height": 24,
-              "icon": "folder-open",
+              "icon": "messages-square",
               "library": "lucide",
-              "fill": "#8A5F43"
+              "weight": 500,
+              "fill": "$selected-icon"
             }
           ]
         },
@@ -3424,11 +3217,11 @@
           "layoutPosition": "absolute",
           "x": 303,
           "y": 744,
-          "name": "App Label Files",
-          "fill": "#3A3A3A",
+          "name": "App Label Discord",
+          "fill": "$text-dark",
           "textGrowth": "fixed-width",
           "width": 76,
-          "content": "Files",
+          "content": "Discord",
           "textAlign": "center",
           "fontFamily": "DM Sans",
           "fontSize": 11,
@@ -3728,7 +3521,3021 @@
           "height": 4
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "QBhow",
+      "x": 11668,
+      "y": 0,
+      "name": "Icon Library Panel",
+      "width": 410,
+      "height": 900,
+      "fill": "#E4D7C7",
+      "cornerRadius": 24,
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "E9T8qF",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 24,
+          "name": "Reference Tile Sparkle",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "gFIo6",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-sparkle",
+              "width": 24,
+              "height": 24,
+              "icon": "sparkles",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kkQzm",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 24,
+          "name": "Reference Tile Target",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Rhe8c",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-target",
+              "width": 24,
+              "height": 24,
+              "icon": "circle-dot",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "S5FIt",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 24,
+          "name": "Reference Tile Chat",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "WgrOW",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-chat",
+              "width": 24,
+              "height": 24,
+              "icon": "message-circle",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "EuNBo",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 24,
+          "name": "Reference Tile Send",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "H0Orv",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-send",
+              "width": 24,
+              "height": 24,
+              "icon": "send",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "e9GIa",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 128,
+          "name": "Reference Tile Camera",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "GTl2z",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-camera",
+              "width": 24,
+              "height": 24,
+              "icon": "camera",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "laNLb",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 128,
+          "name": "Reference Tile Signal",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "f3zUC",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-signal",
+              "width": 24,
+              "height": 24,
+              "icon": "wifi",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "JrBrM",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 128,
+          "name": "Reference Tile Panel",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "nb3SW",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-panel",
+              "width": 24,
+              "height": 24,
+              "icon": "panel-left",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "y0DAnQ",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 128,
+          "name": "Reference Tile Phone",
+          "width": 68,
+          "height": 68,
+          "fill": "#F5EFE6",
+          "cornerRadius": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "UHrku",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-phone",
+              "width": 24,
+              "height": 24,
+              "icon": "phone",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "LwKOU",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 218,
+          "name": "Category Communication",
+          "fill": "#2B2B2B",
+          "content": "Communication",
+          "fontFamily": "DM Sans",
+          "fontSize": 12,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "SBSDT",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 240,
+          "name": "icon-email Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "YqJWs",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-email",
+              "width": 24,
+              "height": 24,
+              "icon": "mail",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yFB2w",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 240,
+          "name": "icon-messages Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "JtWfq",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-messages",
+              "width": 24,
+              "height": 24,
+              "icon": "message-square",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "WtOZ6",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 240,
+          "name": "icon-contacts Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "G6LZFl",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-contacts",
+              "width": 24,
+              "height": 24,
+              "icon": "contact-round",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "psMEA",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 240,
+          "name": "icon-video-call Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "n7eDs",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-video-call",
+              "width": 24,
+              "height": 24,
+              "icon": "video",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "vOXNV",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 338,
+          "name": "Category Browser & Productivity",
+          "fill": "#2B2B2B",
+          "content": "Browser & Productivity",
+          "fontFamily": "DM Sans",
+          "fontSize": 12,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "x8W589",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 360,
+          "name": "icon-browser Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "g7vXZ",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-browser",
+              "width": 24,
+              "height": 24,
+              "icon": "globe",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ZK9yi",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 360,
+          "name": "icon-calendar Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "HGzH5",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-calendar",
+              "width": 24,
+              "height": 24,
+              "icon": "calendar-days",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wW8SN",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 360,
+          "name": "icon-calculator Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "bQM4j",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-calculator",
+              "width": 24,
+              "height": 24,
+              "icon": "calculator",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Q1wUN",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 360,
+          "name": "icon-notes Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ARSvQ",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-notes",
+              "width": 24,
+              "height": 24,
+              "icon": "notebook-pen",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "H1aND4",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 458,
+          "name": "Category Media & Entertainment",
+          "fill": "#2B2B2B",
+          "content": "Media & Entertainment",
+          "fontFamily": "DM Sans",
+          "fontSize": 12,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "N9ZtLq",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 480,
+          "name": "icon-clock Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "VaNrK",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-clock",
+              "width": 24,
+              "height": 24,
+              "icon": "clock-3",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yke3o",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 480,
+          "name": "icon-gallery Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "i5iyqr",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-gallery",
+              "width": 24,
+              "height": 24,
+              "icon": "images",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zfMBD",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 480,
+          "name": "icon-music Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "j0AxZR",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-music",
+              "width": 24,
+              "height": 24,
+              "icon": "music-2",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "j2SvG",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 480,
+          "name": "icon-video-player Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Wo2Ze",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-video-player",
+              "width": 24,
+              "height": 24,
+              "icon": "play",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "iQ5Rb",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 578,
+          "name": "Category Utility & System",
+          "fill": "#2B2B2B",
+          "content": "Utility & System",
+          "fontFamily": "DM Sans",
+          "fontSize": 12,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "LX5gd",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 600,
+          "name": "icon-settings Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "t2gcF",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-settings",
+              "width": 24,
+              "height": 24,
+              "icon": "settings-2",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "N2GgxQ",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 600,
+          "name": "icon-compass Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "M17Kf8",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-compass",
+              "width": 24,
+              "height": 24,
+              "icon": "compass",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "XpKIC",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 600,
+          "name": "icon-weather Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ZYRYU",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-weather",
+              "width": 24,
+              "height": 24,
+              "icon": "cloud-sun",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "n8vOC",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 600,
+          "name": "icon-storage Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "PBd7C",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-storage",
+              "width": 24,
+              "height": 24,
+              "icon": "cloud-upload",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "C7xwmH",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 680,
+          "name": "icon-security Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "rwTUb",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-security",
+              "width": 24,
+              "height": 24,
+              "icon": "shield-check",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "a5hTgn",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 680,
+          "name": "icon-battery Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "BNzFs",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-battery",
+              "width": 24,
+              "height": 24,
+              "icon": "battery-medium",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "RRe3X",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 778,
+          "name": "Category Everyday Apps",
+          "fill": "#2B2B2B",
+          "content": "Everyday Apps",
+          "fontFamily": "DM Sans",
+          "fontSize": 12,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "eoJmm",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 800,
+          "name": "icon-shopping-cart Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "lZKvr",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-shopping-cart",
+              "width": 24,
+              "height": 24,
+              "icon": "shopping-cart",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mzBw1",
+          "layoutPosition": "absolute",
+          "x": 116,
+          "y": 800,
+          "name": "icon-wallet Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "l3UcQ",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-wallet",
+              "width": 24,
+              "height": 24,
+              "icon": "wallet-cards",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tvJYA",
+          "layoutPosition": "absolute",
+          "x": 208,
+          "y": 800,
+          "name": "icon-social Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "YHtL0",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-social",
+              "width": 24,
+              "height": 24,
+              "icon": "users-round",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NSWUV",
+          "layoutPosition": "absolute",
+          "x": 300,
+          "y": 800,
+          "name": "icon-education Artboard",
+          "width": 68,
+          "height": 68,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Nr8VM",
+              "layoutPosition": "absolute",
+              "x": 22,
+              "y": 22,
+              "name": "icon-education",
+              "width": 24,
+              "height": 24,
+              "icon": "book-open",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ciHU3",
+      "x": 12181,
+      "y": 0,
+      "name": "Warm Right Rail — Icon Language Library",
+      "clip": true,
+      "width": 520,
+      "height": 844,
+      "fill": "#E8DFD0",
+      "cornerRadius": 24,
+      "layout": "none",
+      "children": [
+        {
+          "type": "text",
+          "id": "WC5td",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 24,
+          "name": "Category Communication",
+          "fill": "#2B2B2B",
+          "content": "Communication",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "HbxrM",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 46,
+          "name": "icon-messages Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "OG4qa",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-messages",
+              "width": 20,
+              "height": 20,
+              "icon": "message-square",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cZOqF",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 46,
+          "name": "icon-phone Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "K956nl",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-phone",
+              "width": 20,
+              "height": 20,
+              "icon": "phone",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qaxqz",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 46,
+          "name": "icon-contacts Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "jCL0N",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-contacts",
+              "width": 20,
+              "height": 20,
+              "icon": "contact-round",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "guUpr",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 46,
+          "name": "icon-gmail Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Qqkuh",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-gmail",
+              "width": 20,
+              "height": 20,
+              "icon": "mail",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Mvr5p",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 46,
+          "name": "icon-whatsapp Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "LHlhS",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-whatsapp",
+              "width": 20,
+              "height": 20,
+              "icon": "message-circle",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UiTnI",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 46,
+          "name": "icon-telegram Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "gDAT6",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-telegram",
+              "width": 20,
+              "height": 20,
+              "icon": "send",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "f6bRx",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 46,
+          "name": "icon-discord Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "BDW1J",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-discord",
+              "width": 20,
+              "height": 20,
+              "icon": "messages-square",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "q4aSKB",
+          "layoutPosition": "absolute",
+          "x": 444,
+          "y": 46,
+          "name": "icon-meet Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "l0NAQW",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-meet",
+              "width": 20,
+              "height": 20,
+              "icon": "video",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FAHv1",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 84,
+          "name": "icon-threads Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "VVZiv",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-threads",
+              "width": 20,
+              "height": 20,
+              "icon": "network",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YciDu",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 84,
+          "name": "icon-spam-call-blocker Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "KsZoH",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-spam-call-blocker",
+              "width": 20,
+              "height": 20,
+              "icon": "phone-off",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "gaM1W",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 144,
+          "name": "Category Social & Entertainment",
+          "fill": "#2B2B2B",
+          "content": "Social & Entertainment",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "zdE8g",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 166,
+          "name": "icon-instagram Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "sj4EX",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-instagram",
+              "width": 20,
+              "height": 20,
+              "icon": "image",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "h446AI",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 166,
+          "name": "icon-facebook Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "zP6U4",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-facebook",
+              "width": 20,
+              "height": 20,
+              "icon": "share-2",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Q1rwjf",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 166,
+          "name": "icon-tiktok Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "H4RiI",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-tiktok",
+              "width": 20,
+              "height": 20,
+              "icon": "play",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GKBWo",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 166,
+          "name": "icon-pinterest Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "F5t7A5",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-pinterest",
+              "width": 20,
+              "height": 20,
+              "icon": "pin",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zA35T",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 166,
+          "name": "icon-youtube Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "U49CB1",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-youtube",
+              "width": 20,
+              "height": 20,
+              "icon": "play",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "KTw9s",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 166,
+          "name": "icon-yt-music Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "mgWqJ",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-yt-music",
+              "width": 20,
+              "height": 20,
+              "icon": "music-2",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VordY",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 166,
+          "name": "icon-spotify Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "x9gf3",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-spotify",
+              "width": 20,
+              "height": 20,
+              "icon": "disc-3",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "x28KV",
+          "layoutPosition": "absolute",
+          "x": 444,
+          "y": 166,
+          "name": "icon-fortnite Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "gSKNv",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-fortnite",
+              "width": 20,
+              "height": 20,
+              "icon": "gamepad-2",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "x3uTk",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 204,
+          "name": "icon-game-space Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Y33dF",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-game-space",
+              "width": 20,
+              "height": 20,
+              "icon": "joystick",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "e4VWD",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 204,
+          "name": "icon-123-4-player Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "rTMPm",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-123-4-player",
+              "width": 20,
+              "height": 20,
+              "icon": "users-round",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "w4f5wD",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 204,
+          "name": "icon-tandem Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "W2wnBO",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-tandem",
+              "width": 20,
+              "height": 20,
+              "icon": "languages",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "mt4W2",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 264,
+          "name": "Category Productivity & Tools",
+          "fill": "#2B2B2B",
+          "content": "Productivity & Tools",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "pQEEU",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 286,
+          "name": "icon-calculator Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "dZ6jw",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-calculator",
+              "width": 20,
+              "height": 20,
+              "icon": "calculator",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A28lIO",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 286,
+          "name": "icon-calendar Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "nvNp5",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-calendar",
+              "width": 20,
+              "height": 20,
+              "icon": "calendar-days",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "dsFrH",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 286,
+          "name": "icon-clock Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "R7KcF",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-clock",
+              "width": 20,
+              "height": 20,
+              "icon": "clock-3",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hdThk",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 286,
+          "name": "icon-notes Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "k2ebO",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-notes",
+              "width": 20,
+              "height": 20,
+              "icon": "notebook-pen",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HhP2S",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 286,
+          "name": "icon-files Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "Mj3Tf",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-files",
+              "width": 20,
+              "height": 20,
+              "icon": "folder-open",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vhQts",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 286,
+          "name": "icon-drive Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "iSpT3",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-drive",
+              "width": 20,
+              "height": 20,
+              "icon": "cloud-upload",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "R0m7W",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 286,
+          "name": "icon-recorder Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "VXIky",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-recorder",
+              "width": 20,
+              "height": 20,
+              "icon": "mic",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "e5rJyW",
+          "layoutPosition": "absolute",
+          "x": 444,
+          "y": 286,
+          "name": "icon-settings Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "qppsI",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-settings",
+              "width": 20,
+              "height": 20,
+              "icon": "settings-2",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LjXfA",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 324,
+          "name": "icon-themes Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "sTO68",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-themes",
+              "width": 20,
+              "height": 20,
+              "icon": "palette",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GLi4u",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 324,
+          "name": "icon-sim-toolkit Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "KuZ0h",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-sim-toolkit",
+              "width": 20,
+              "height": 20,
+              "icon": "credit-card",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "T17NW",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 324,
+          "name": "icon-phone-master Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "rpSU9",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-phone-master",
+              "width": 20,
+              "height": 20,
+              "icon": "wrench",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BKDO1",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 324,
+          "name": "icon-safety Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "nhh4x",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-safety",
+              "width": 20,
+              "height": 20,
+              "icon": "shield-check",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YOFth",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 324,
+          "name": "icon-roaming Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "O1Kg2U",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-roaming",
+              "width": 20,
+              "height": 20,
+              "icon": "globe",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "LFrc8",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 384,
+          "name": "Category Browser & Search",
+          "fill": "#2B2B2B",
+          "content": "Browser & Search",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "mS0xo",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 406,
+          "name": "icon-chrome Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "m27RO",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-chrome",
+              "width": 20,
+              "height": 20,
+              "icon": "globe",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Zm1LX",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 406,
+          "name": "icon-brave Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "cfBJp",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-brave",
+              "width": 20,
+              "height": 20,
+              "icon": "shield-check",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bHmj8",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 406,
+          "name": "icon-google Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ZkvTA",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-google",
+              "width": 20,
+              "height": 20,
+              "icon": "search",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "L73oy",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 406,
+          "name": "icon-gemini Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "eGo4n",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-gemini",
+              "width": 20,
+              "height": 20,
+              "icon": "sparkles",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "z8fT1P",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 406,
+          "name": "icon-chatgpt Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "SguNU",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-chatgpt",
+              "width": 20,
+              "height": 20,
+              "icon": "bot",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TPUeN",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 406,
+          "name": "icon-claude Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "m5KMsZ",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-claude",
+              "width": 20,
+              "height": 20,
+              "icon": "sparkles",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "p3fuog",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 406,
+          "name": "icon-palm-store Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "BHhCr",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-palm-store",
+              "width": 20,
+              "height": 20,
+              "icon": "store",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "z5At1",
+          "layoutPosition": "absolute",
+          "x": 444,
+          "y": 406,
+          "name": "icon-play-store Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "vIweD",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-play-store",
+              "width": 20,
+              "height": 20,
+              "icon": "play",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "QlFaR",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 466,
+          "name": "Category Camera & Media",
+          "fill": "#2B2B2B",
+          "content": "Camera & Media",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "Kic6f",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 488,
+          "name": "icon-camera Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "jUBuf",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-camera",
+              "width": 20,
+              "height": 20,
+              "icon": "camera",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fIbcy",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 488,
+          "name": "icon-photos Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "C6XZY",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-photos",
+              "width": 20,
+              "height": 20,
+              "icon": "images",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cTgvt",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 488,
+          "name": "icon-ai-gallery Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "rlDkU",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-ai-gallery",
+              "width": 20,
+              "height": 20,
+              "icon": "image",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "io70g",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 488,
+          "name": "icon-google-tv Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "s7KWe",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-google-tv",
+              "width": 20,
+              "height": 20,
+              "icon": "tv",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "Uo0Pq",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 548,
+          "name": "Category Maps & Travel",
+          "fill": "#2B2B2B",
+          "content": "Maps & Travel",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "x2CL4",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 570,
+          "name": "icon-maps Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "RYXOd",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-maps",
+              "width": 20,
+              "height": 20,
+              "icon": "map",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sVXRE",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 570,
+          "name": "icon-compass Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "wfhLv",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-compass",
+              "width": 20,
+              "height": 20,
+              "icon": "compass",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "dUkaD",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 570,
+          "name": "icon-weather Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ajSXQ",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-weather",
+              "width": 20,
+              "height": 20,
+              "icon": "cloud-sun",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "F5nPK",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 570,
+          "name": "icon-trip-com Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "avAWX",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-trip-com",
+              "width": 20,
+              "height": 20,
+              "icon": "briefcase",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MIeQb",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 570,
+          "name": "icon-agoda Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "cFH3O",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-agoda",
+              "width": 20,
+              "height": 20,
+              "icon": "tag",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tgJke",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 570,
+          "name": "icon-grab Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "r28UZ",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-grab",
+              "width": 20,
+              "height": 20,
+              "icon": "map-pin",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "M39OC",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 570,
+          "name": "icon-gojek Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "y7bxk",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-gojek",
+              "width": 20,
+              "height": 20,
+              "icon": "car-front",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "H8W1q",
+          "layoutPosition": "absolute",
+          "x": 444,
+          "y": 570,
+          "name": "icon-driver Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "mW9Ar",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-driver",
+              "width": 20,
+              "height": 20,
+              "icon": "bike",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "xCWDU",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 630,
+          "name": "Category Finance & Shopping",
+          "fill": "#2B2B2B",
+          "content": "Finance & Shopping",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "Ul4fA",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 652,
+          "name": "icon-dana Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "bVnk2",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-dana",
+              "width": 20,
+              "height": 20,
+              "icon": "wallet",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kC6iN",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 652,
+          "name": "icon-gopay Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "qddEk",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-gopay",
+              "width": 20,
+              "height": 20,
+              "icon": "wallet-cards",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "r1ID0c",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 652,
+          "name": "icon-jago Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "CGkKz",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-jago",
+              "width": 20,
+              "height": 20,
+              "icon": "credit-card",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mu2LV",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 652,
+          "name": "icon-seabank Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "X45a4",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-seabank",
+              "width": 20,
+              "height": 20,
+              "icon": "banknote",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Xzz0S",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 652,
+          "name": "icon-shopeepay Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "R8H7Vi",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-shopeepay",
+              "width": 20,
+              "height": 20,
+              "icon": "wallet-minimal",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "voJuO",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 652,
+          "name": "icon-yup Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "FtzLh",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-yup",
+              "width": 20,
+              "height": 20,
+              "icon": "wallet",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "psf8Q",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 652,
+          "name": "icon-shopee Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "sWJqe",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-shopee",
+              "width": 20,
+              "height": 20,
+              "icon": "shopping-cart",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QhdT9",
+          "layoutPosition": "absolute",
+          "x": 444,
+          "y": 652,
+          "name": "icon-tokopedia Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "W5COf",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-tokopedia",
+              "width": 20,
+              "height": 20,
+              "icon": "shopping-bag",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Rm4Id",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 690,
+          "name": "icon-circle-k-shop Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "rrK64",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-circle-k-shop",
+              "width": 20,
+              "height": 20,
+              "icon": "shopping-basket",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "day7X",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 690,
+          "name": "icon-blu Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "i82li",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-blu",
+              "width": 20,
+              "height": 20,
+              "icon": "wallet-cards",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BFuoI",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 690,
+          "name": "icon-welife Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "RLjiR",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-welife",
+              "width": 20,
+              "height": 20,
+              "icon": "heart-handshake",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "D9r8uH",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 750,
+          "name": "Category Food & Lifestyle",
+          "fill": "#2B2B2B",
+          "content": "Food & Lifestyle",
+          "fontFamily": "DM Sans",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "frame",
+          "id": "oUXBD",
+          "layoutPosition": "absolute",
+          "x": 24,
+          "y": 772,
+          "name": "icon-kfcku Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "vaztL",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-kfcku",
+              "width": 20,
+              "height": 20,
+              "icon": "utensils",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rk3bW",
+          "layoutPosition": "absolute",
+          "x": 84,
+          "y": 772,
+          "name": "icon-kopi-kenangan Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "PsW9J",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-kopi-kenangan",
+              "width": 20,
+              "height": 20,
+              "icon": "coffee",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "G32eG",
+          "layoutPosition": "absolute",
+          "x": 144,
+          "y": 772,
+          "name": "icon-tix-id Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "N4njM",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-tix-id",
+              "width": 20,
+              "height": 20,
+              "icon": "ticket",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BPacm",
+          "layoutPosition": "absolute",
+          "x": 204,
+          "y": 772,
+          "name": "icon-carlcare Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "r8rTh",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-carlcare",
+              "width": 20,
+              "height": 20,
+              "icon": "heart-handshake",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cRnsi",
+          "layoutPosition": "absolute",
+          "x": 264,
+          "y": 772,
+          "name": "icon-edlink Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "iomFT",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-edlink",
+              "width": 20,
+              "height": 20,
+              "icon": "graduation-cap",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ier1m",
+          "layoutPosition": "absolute",
+          "x": 324,
+          "y": 772,
+          "name": "icon-ella Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ddt12",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-ella",
+              "width": 20,
+              "height": 20,
+              "icon": "package",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "QVRt2",
+          "layoutPosition": "absolute",
+          "x": 384,
+          "y": 772,
+          "name": "icon-alkitab Artboard",
+          "width": 20,
+          "height": 20,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon",
+              "id": "ZF0NY",
+              "layoutPosition": "absolute",
+              "x": 0,
+              "y": 0,
+              "name": "icon-alkitab",
+              "width": 20,
+              "height": 20,
+              "icon": "book-open",
+              "library": "lucide",
+              "weight": 500,
+              "fill": "#2B2B2B"
+            }
+          ]
+        }
+      ]
     }
   ],
+  "variables": {
+    "tile-cream": {
+      "type": "color",
+      "value": "#F6F0E7"
+    },
+    "icon-communication": {
+      "type": "color",
+      "value": "#5F7A72"
+    },
+    "icon-social": {
+      "type": "color",
+      "value": "#6E8B86"
+    },
+    "icon-productivity": {
+      "type": "color",
+      "value": "#8A5F43"
+    },
+    "icon-media": {
+      "type": "color",
+      "value": "#D19B62"
+    },
+    "icon-travel": {
+      "type": "color",
+      "value": "#B06F52"
+    },
+    "icon-finance": {
+      "type": "color",
+      "value": "#4D7C8A"
+    },
+    "icon-neutral": {
+      "type": "color",
+      "value": "#625B52"
+    },
+    "selected-tile": {
+      "type": "color",
+      "value": "#D19B62"
+    },
+    "selected-icon": {
+      "type": "color",
+      "value": "#F5EFE6"
+    },
+    "text-dark": {
+      "type": "color",
+      "value": "#3A3A3A"
+    }
+  },
   "fileToken": "64f333b0-4f0c-485e-ac45-898268df4df8"
 }

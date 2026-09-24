@@ -71,8 +71,11 @@ fun DrawerAppIcon(
     }
 
     val background = if (selected) colors.drawerTileSelected else colors.drawerTileCream
+    val overrideToken = resolved.overrideColorToken
     val symbolTint = when {
         selected -> colors.drawerIconOnSelected
+        // P4b: a user-chosen glyph color, when the app carries a glyph override.
+        overrideToken != null -> tokenColor(colors, overrideToken)
         else -> tokenColor(colors, DrawerIconColor.tokenFor(category, resolved.symbolName))
     }
 
@@ -101,6 +104,24 @@ internal fun tokenColor(
     DrawerIconColor.Token.Travel -> colors.drawerIconTravel
     DrawerIconColor.Token.Finance -> colors.drawerIconFinance
     DrawerIconColor.Token.Neutral -> colors.drawerIconNeutral
+}
+
+/**
+ * P4b: resolve a persisted [com.softhome.core.model.DrawerIconTokenName] (a user icon
+ * override's color) to the same theme field. Kept separate so the persisted model enum
+ * never leaks into the P3.5 domain type.
+ */
+internal fun tokenColor(
+    colors: com.softhome.core.designsystem.theme.SoftColors,
+    token: com.softhome.core.model.DrawerIconTokenName,
+): Color = when (token) {
+    com.softhome.core.model.DrawerIconTokenName.Communication -> colors.drawerIconCommunication
+    com.softhome.core.model.DrawerIconTokenName.Social -> colors.drawerIconSocial
+    com.softhome.core.model.DrawerIconTokenName.Productivity -> colors.drawerIconProductivity
+    com.softhome.core.model.DrawerIconTokenName.Media -> colors.drawerIconMedia
+    com.softhome.core.model.DrawerIconTokenName.Travel -> colors.drawerIconTravel
+    com.softhome.core.model.DrawerIconTokenName.Finance -> colors.drawerIconFinance
+    com.softhome.core.model.DrawerIconTokenName.Neutral -> colors.drawerIconNeutral
 }
 
 private fun painterFromDrawable(drawable: android.graphics.drawable.Drawable): Painter? =

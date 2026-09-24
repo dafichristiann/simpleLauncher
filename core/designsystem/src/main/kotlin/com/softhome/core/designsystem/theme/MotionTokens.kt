@@ -39,4 +39,18 @@ object MotionTokens {
      * established vocabulary rather than inventing a new duration.
      */
     fun <T> notesExpand(): TweenSpec<T> = tween(MUSIC_RISE_MS, easing = WarmEase)
+
+    // --- P4a: drag & drop -----------------------------------------------------
+
+    /** Drag lift: the item scales up under the finger. Fade-class speed (160ms). */
+    fun <T> dragLift(): TweenSpec<T> = tween(SEARCH_FADE_MS, easing = WarmEase)
+
+    /** Drop / snap-back settle. Slightly longer than the lift so it reads as landing. */
+    fun <T> dragSnapBack(): TweenSpec<T> = tween(180, easing = WarmEase)
+
+    /**
+     * Live row shift while dragging an item over a list. Reuses the in-place grow
+     * family (280ms, WarmEase) so reorder matches the rest of the Warm vocabulary.
+     */
+    fun <T> dragReorder(): TweenSpec<T> = tween(MUSIC_RISE_MS, easing = WarmEase)
 }

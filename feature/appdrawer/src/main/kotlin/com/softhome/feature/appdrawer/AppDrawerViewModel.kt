@@ -11,6 +11,7 @@ import com.softhome.core.model.DrawerCategory
 import com.softhome.core.model.DrawerCategoryMapper
 import com.softhome.core.model.DrawerGridItem
 import com.softhome.core.model.Folder
+import com.softhome.core.model.FolderDropResolver
 import com.softhome.core.model.FolderLogic
 import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconSource
@@ -55,8 +56,12 @@ data class DrawerUiState(
     val openFolder: Folder? = null,
     /** P3/F3: the app whose long-press context menu is open, or null. */
     val menuEntry: DrawerEntry? = null,
+    /** P4b: the app whose icon editor is open, or null. */
+    val editingEntry: DrawerEntry? = null,
     /** P3/Q2: total hidden apps (for the settings "Hidden apps" row count). */
     val hiddenApps: Set<String> = emptySet(),
+    /** P4b: current per-app icon overrides (for the editor's seed). */
+    val iconOverrides: Map<String, com.softhome.core.model.IconOverride> = emptyMap(),
 )
 
 /** Per-app facts the context menu needs (P3 / F3), computed on demand. */
@@ -83,6 +88,7 @@ class AppDrawerViewModel @Inject constructor(
     private val loadingFlow = MutableStateFlow(true)
     private val openFolderIdFlow = MutableStateFlow<String?>(null)
     private val menuKeyFlow = MutableStateFlow<String?>(null)
+    private val editingKeyFlow = MutableStateFlow<String?>(null)
 
     private data class Core(
         val apps: List<AppInfo>,
@@ -107,9 +113,12 @@ class AppDrawerViewModel @Inject constructor(
             Quad(core, pack, folders, openId)
         }
         .combine(menuKeyFlow) { quad, menuKey ->
+            menuKey to quad
+        }
+        .combine(editingKeyFlow) { (menuKey, quad), editingKey ->
             buildState(
                 quad.core.apps, quad.core.query, quad.core.category, quad.core.loading, quad.core.prefs,
-                quad.pack, quad.folders, quad.openId, menuKey,
+                quad.pack, quad.folders, quad.openId, menuKey, editingKey,
             )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DrawerUiState())
@@ -131,6 +140,7 @@ class AppDrawerViewModel @Inject constructor(
         folders: List<Folder>,
         openFolderId: String?,
         menuKey: String?,
+        editingKey: String?,
     ): DrawerUiState {
         // P3/Q2: hidden apps are filtered out of the drawer entirely.
         val hidden = prefs.hiddenApps
@@ -187,7 +197,9 @@ class AppDrawerViewModel @Inject constructor(
             folders = folders,
             openFolder = openFolder,
             menuEntry = menuKey?.let { entries[it] },
+            editingEntry = editingKey?.let { entries[it] },
             hiddenApps = hidden,
+            iconOverrides = prefs.iconOverrides,
         )
     }
 
@@ -206,15 +218,22 @@ class AppDrawerViewModel @Inject constructor(
         val drawableName = when (source) {
             is IconSource.FromPack -> source.drawableName
             is IconSource.Override -> source.drawableName
+            is IconSource.Glyph -> null
             IconSource.AutoMask, IconSource.System -> null
+        }
+        // P4b: a glyph override carries both the chosen glyph and its color token.
+        val (symbolName, overrideToken) = when (source) {
+            is IconSource.Glyph -> source.symbolName to source.colorToken
+            else -> symbol to null
         }
         return ResolvedIcon(
             source = source,
             drawableName = drawableName,
-            symbolName = symbol,
+            symbolName = symbolName,
             componentKey = app.componentKey,
             packageName = app.packageName,
             className = app.className,
+            overrideColorToken = overrideToken,
         )
     }
 
@@ -238,6 +257,56 @@ class AppDrawerViewModel @Inject constructor(
 
     fun openMenu(entry: DrawerEntry) { menuKeyFlow.value = entry.app.componentKey }
     fun closeMenu() { menuKeyFlow.value = null }
+
+    // --- P4b: icon editor ------------------------------------------------------
+
+    /** Open the icon editor for [entry] (from the menu's "Edit Icon" row). */
+    fun openIconEditor(entry: DrawerEntry) {
+        menuKeyFlow.value = null
+        editingKeyFlow.value = entry.app.componentKey
+    }
+
+    fun closeIconEditor() { editingKeyFlow.value = null }
+
+    /**
+     * Build the pure [IconEditor.State] for [entry] from current prefs/pack. Called by
+     * the screen each recomposition; cheap (no I/O) and keeps the UI a pure function.
+     */
+    fun iconEditorState(entry: DrawerEntry): com.softhome.feature.iconpack.domain.IconEditor.State {
+        val prefs = uiState.value
+        val pack = prefs.activePack
+        // Distinct drawables the active pack maps (its curated repertoire).
+        val packDrawables = pack?.entries?.values?.distinct()?.sorted().orEmpty()
+        val automaticGlyph = entry.symbolName
+        val automaticColor = com.softhome.feature.iconpack.domain.DrawerIconColor.nameOf(
+            com.softhome.feature.iconpack.domain.DrawerIconColor.tokenFor(
+                entry.app.category, automaticGlyph,
+            ),
+        )
+        val existing = currentOverride(entry.app.componentKey)
+        return com.softhome.feature.iconpack.domain.IconEditor.start(
+            componentKey = entry.app.componentKey,
+            packDrawables = packDrawables,
+            automaticGlyph = automaticGlyph,
+            automaticColor = automaticColor,
+            existing = existing,
+        )
+    }
+
+    private fun currentOverride(componentKey: String): com.softhome.core.model.IconOverride? =
+        uiState.value.iconOverrides[componentKey]
+
+    /** Persist the chosen override for [componentKey]. */
+    fun applyIconOverride(componentKey: String, override: com.softhome.core.model.IconOverride) {
+        viewModelScope.launch { prefsRepository.setIconOverride(componentKey, override) }
+        closeIconEditor()
+    }
+
+    /** Clear any override for [componentKey] (Reset to automatic). */
+    fun resetIconOverride(componentKey: String) {
+        viewModelScope.launch { prefsRepository.setIconOverride(componentKey, null) }
+        closeIconEditor()
+    }
 
     /** Whether the app can be uninstalled (P3-4): not system + actually removable. */
     fun canUninstall(app: AppInfo): Boolean =
@@ -286,6 +355,32 @@ class AppDrawerViewModel @Inject constructor(
 
     fun removeAppFromFolder(folderId: String, componentKey: String) =
         updateFolder(folderId) { FolderLogic.removeApp(it, componentKey) }
+
+    // --- P4a: drag-and-drop drop targets --------------------------------------
+
+    /**
+     * App dropped onto a folder tile (P4a). Same membership path as the popup's
+     * "Add app"; resolution is the pure [FolderDropResolver.assign].
+     */
+    fun assignToFolder(folderId: String, componentKey: String) {
+        val next = FolderDropResolver.assign(foldersFlow.value, folderId, componentKey)
+        if (next != foldersFlow.value) persist(next)
+    }
+
+    /**
+     * App dropped onto the "New folder" action (P4a): a folder containing only it is
+     * created. Uses [FolderDropResolver.createWith] for the pure decision, then persists.
+     */
+    fun createFolderWith(componentKey: String) {
+        val id = "folder_${System.currentTimeMillis()}"
+        persist(FolderDropResolver.createWith(foldersFlow.value, componentKey, id, "New folder"))
+    }
+
+    /** App dragged out of an open folder (P4a): removed from that folder. */
+    fun moveOutOfFolder(folderId: String, componentKey: String) {
+        val next = FolderDropResolver.removeFrom(foldersFlow.value, folderId, componentKey)
+        if (next != foldersFlow.value) persist(next)
+    }
 
     private fun updateFolder(folderId: String, transform: (Folder) -> Folder) {
         val updated = foldersFlow.value.map { folder ->

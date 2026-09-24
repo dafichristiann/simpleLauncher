@@ -9,8 +9,10 @@ import androidx.compose.ui.graphics.Color
  *  - background / surface / card / tile / text values are read from the
  *    `.pen` frames `znb90` (Warm Right Rail home), `L7ZAp` (full system board)
  *    and `TpzL1` (Warm App Drawer).
- *  - The dark palette is a DERIVED warm adaptation (no dark palette exists in the
- *    `.pen`); see docs/04-ASSUMPTIONS.md #5.
+ *  - The **dark palette is the `KkPN3` "Dark Editorial" frame** (P4c): a concrete,
+ *    named palette in the file (cool/neutral), replacing the earlier DERIVED warm-dark.
+ *    See docs/04-ASSUMPTIONS.md section M. A few surfaces the frame does not show
+ *    (menu/popup/drawer cards) are derived from the same neutral family.
  *
  * Rule: no screen hardcodes a color. Every screen consumes [SoftColors].
  */
@@ -34,31 +36,35 @@ val SoftAccentDeep = Color(0xFF7A553D)
 val SoftCodeAccent = Color(0xFFCBB39D)
 val SoftStatusText = Color(0xFF3A3A3A) // status row + small dark icon fill
 
-// --- Warm dark palette (derived -- docs/02) ---
-val DarkBackground = Color(0xFF1F1D1A)
-val DarkSurface = Color(0xFF26231F)
-val DarkCard = Color(0xFF2E2A25)
-val DarkCardAlt = Color(0xFF332E28)
-val DarkAccentWash = Color(0xFF3A342C)
-val DarkTile = Color(0xFFEDE6D8)       // inverted: cream tile
-val DarkTextTitle = Color(0xFFF7F0E5)
-val DarkTextBody = Color(0xFFC9BFB0)
-val DarkTextMuted = Color(0xFF9C9284)
-val DarkIndexLetter = Color(0xFF9C9284)
-val DarkOnDark = Color(0xFF2B2B2B)
-val DarkIconStroke = Color(0xFF2B2B2B) // dark stroke on cream tile
-val DarkAccent = Color(0xFFC89A78)
-val DarkStatusText = Color(0xFFCFC4B4)
+// --- Dark palette (P4c: the KkPN3 "Dark Editorial" named palette) ---
+// Verbatim from `design/homeApp.pen` frame `KkPN3` (Pen v2.18), except where noted.
+// The frame defines: screen bg #18191A, rail #2E3134, divider #343638, primary text
+// #F2EEE7, soft text #E2DDD5, day #D2CBC1, month #918F8B, artist #C8C0B6, track
+// #817F7B, placeholder #A8A29A, album #E3DED6, album mark #454648, track #676866.
+val DarkBackground = Color(0xFF18191A)  // KkPN3 screen bg (verbatim)
+val DarkSurface = Color(0xFF18191A)     // KkPN3 screen bg (surfaces sit on it)
+val DarkCard = Color(0xFF24262A)        // derived: card/menu on the neutral family
+val DarkCardAlt = Color(0xFF2A2C30)     // derived: alt card
+val DarkAccentWash = Color(0xFF2E3134)  // KkPN3 rail tint (reused as a wash)
+val DarkTile = Color(0xFFF2EEE7)        // inverted: light tile on dark
+val DarkTextTitle = Color(0xFFF2EEE7)   // KkPN3 primary text (verbatim)
+val DarkTextBody = Color(0xFFD2CBC1)    // KkPN3 "day" soft text (verbatim)
+val DarkTextMuted = Color(0xFF918F8B)   // KkPN3 "month" muted (verbatim)
+val DarkIndexLetter = Color(0xFF918F8B)
+val DarkOnDark = Color(0xFF18191A)
+val DarkIconStroke = Color(0xFF18191A)  // dark stroke on the light inverted tile
+val DarkAccent = Color(0xFFC98B6E)      // warm accent kept legible on the neutral dark
+val DarkStatusText = Color(0xFFE2DDD5)  // KkPN3 soft text (verbatim)
 
-// --- Warm dark adaptations for the Warm Right Rail semantic fields ---
-val DarkRailBg = Color(0xFF2E3134)       // dark editorial rail (q0n2Wd)
-val DarkDivider = Color(0xFF343638)      // dark dividers (QzH19 / l3vDi / oNpkj / XLDj6)
-val DarkTileWarm = Color(0xFF33302B)
-val DarkCategoryWash = Color(0xFF3A342C)
-val DarkDrawerBg = Color(0xFF26231F)
-val DarkDrawerStroke = Color(0xFF4A443B)
-val DarkProgressTrack = Color(0xFF676866) // dark progress track (Tl7UC)
-val DarkIndexActive = Color(0xFFC89A78)
+// --- Dark adaptations for the Warm Right Rail semantic fields (KkPN3) ---
+val DarkRailBg = Color(0xFF2E3134)       // KkPN3 dark rail (verbatim)
+val DarkDivider = Color(0xFF343638)      // KkPN3 divider (verbatim)
+val DarkTileWarm = Color(0xFF2E3134)     // derived: tile warm on dark (rail family)
+val DarkCategoryWash = Color(0xFF2A2C30) // derived: panel/wash on dark
+val DarkDrawerBg = Color(0xFF1F2124)     // derived: drawer bg (slightly lifted from bg)
+val DarkDrawerStroke = Color(0xFF3E4145) // derived: drawer search pill border
+val DarkProgressTrack = Color(0xFF676866) // KkPN3 progress track (verbatim)
+val DarkIndexActive = Color(0xFFC98B6E)  // accent (legible on dark)
 
 // --- Warm Right Rail tokens (from homeApp.pen frames znb90 / L7ZAp / TpzL1) ---
 val SoftRailBg = Color(0xFFD8C8B6)         // right rail background (hrsLU / B6633e)
@@ -85,8 +91,9 @@ val DrawerIconTravel = Color(0xFFB06F52)        // $icon-travel      (== SoftInd
 val DrawerIconFinance = Color(0xFF4D7C8A)       // $icon-finance
 val DrawerIconNeutral = Color(0xFF625B52)       // $icon-neutral     (== SoftTextBody)
 
-// Dark adaptations (the .pen has no dark drawer palette; warm-derived per docs/02).
-val DarkDrawerTileCream = Color(0xFF33302B)
+// Dark adaptations (the .pen has no dark drawer palette; P4c aligns them to the
+// KkPN3 neutral dark family so the drawer reads consistently in dark mode).
+val DarkDrawerTileCream = Color(0xFF2E3134)
 val DarkDrawerTileSelected = Color(0xFF8A6440)
 val DarkDrawerIconOnSelected = Color(0xFFF5EFE6)
 val DarkDrawerIconCommunication = Color(0xFF7FA79B)
@@ -95,7 +102,7 @@ val DarkDrawerIconProductivity = Color(0xFFC89A78)
 val DarkDrawerIconMedia = Color(0xFFD9A972)
 val DarkDrawerIconTravel = Color(0xFFC98B6E)
 val DarkDrawerIconFinance = Color(0xFF7FA6B2)
-val DarkDrawerIconNeutral = Color(0xFFC9BFB0)
+val DarkDrawerIconNeutral = Color(0xFFD2CBC1)
 
 // --- P3 (System UI + Settings) semantic tokens ---
 // The warm palette has no red by design (docs/00); "destructive" (uninstall) is a

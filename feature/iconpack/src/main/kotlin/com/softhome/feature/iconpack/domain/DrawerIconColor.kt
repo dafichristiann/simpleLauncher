@@ -1,6 +1,7 @@
 package com.softhome.feature.iconpack.domain
 
 import com.softhome.core.model.AppCategory
+import com.softhome.core.model.DrawerIconTokenName
 
 /**
  * P3.5: the drawer icon **color** rule (pure -- no Android, no Compose).
@@ -64,5 +65,20 @@ object DrawerIconColor {
             // mail app is not a grey blob, then neutral.
             if (symbolName in COMMUNICATION_GLYPHS) Token.Communication else Token.Neutral
         }
+    }
+
+    /**
+     * P4b: the persisted-model mirror of [Token]. The editor stores
+     * [DrawerIconTokenName] in `core:model`, so the two enums must stay 1:1 — this
+     * mapping is the single bridge (tested by `IconEditorTest`).
+     */
+    fun nameOf(token: Token): DrawerIconTokenName = when (token) {
+        Token.Communication -> DrawerIconTokenName.Communication
+        Token.Social -> DrawerIconTokenName.Social
+        Token.Productivity -> DrawerIconTokenName.Productivity
+        Token.Media -> DrawerIconTokenName.Media
+        Token.Travel -> DrawerIconTokenName.Travel
+        Token.Finance -> DrawerIconTokenName.Finance
+        Token.Neutral -> DrawerIconTokenName.Neutral
     }
 }

@@ -98,6 +98,7 @@ fun AppIcon(
         if (sizePx < 8) return@remember null
         val needsMask = when (resolved.source) {
             is IconSource.FromPack, is IconSource.Override -> packPainter == null
+            is IconSource.Glyph -> false // a chosen glyph is drawn directly, no mask
             IconSource.AutoMask, IconSource.System -> true
         }
         if (!needsMask) return@remember null

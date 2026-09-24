@@ -51,4 +51,25 @@ object Dimens {
     val settingsRowMinHeight = 52.dp  // settings row tap target
     val settingsChevron = 18.dp       // trailing chevron glyph
     val moveButton = 28.dp            // inline up/down reorder button (Q5)
+
+    // --- P4a: drag & drop (tokens, not inline values) ---
+    val dragInsertionThickness = 3.dp // accent insertion line under the finger
+    val dragInsertionHeight = 20.dp   // insertion line length cap (row-list width)
+    val dragLiftScale = 1.05f         // lifted item scale (sibling of a soft shadow)
+    val dragSourceAlpha = 0.35f       // the in-place original, dimmed while lifted
+    val dragHoverScale = 1.08f        // a hovered folder tile grows slightly
+    val dragRowChipRadius = 14.dp     // home-row drag preview (label pill)
+    val dragRowChipPaddingX = 14.dp
+    val dragRowChipPaddingY = 8.dp
+    val dragRingWidth = 2.dp          // accent ring on a hovered drop target
+
+    // --- P4b: icon editor (tokens, not inline values) ---
+    val editorCardMaxWidth = 360.dp   // editor card cap (like the menu widthIn range)
+    val editorPreviewTile = 72.dp     // live preview tile (slightly larger than the grid)
+    val choiceTile = 48.dp            // one selectable drawable/glyph tile in the editor
+    val choiceTileRadius = 14.dp
+    val choiceIcon = 22.dp            // glyph inside a choice tile
+    val swatch = 28.dp                // one color swatch (glyph mode)
+    val swatchRadius = 14.dp          // ~half of `swatch` (a circle)
+    val swatchRingWidth = 2.dp        // selected-swatch ring
 }

@@ -17,15 +17,26 @@ sealed interface IconSource {
 
     /** Use the raw system icon (last resort). */
     data object System : IconSource
+
+    /**
+     * P4b: a **user-chosen** glyph in a **user-chosen** color (non-pack apps). Produced
+     * by an [IconOverride.Glyph]; the drawer renders [symbolName] tinted with the
+     * resolved [colorToken] instead of the category-derived color.
+     */
+    data class Glyph(val symbolName: String, val colorToken: DrawerIconTokenName) : IconSource
 }
 
 /**
  * The fully-resolved render intent for one tile, produced by the ViewModel and
- * consumed by [com.softhome.feature.iconpack.ui.AppIcon] (P1.5).
+ * consumed by [com.softhome.feature.iconpack.ui.AppIcon] (P1.5) and
+ * [com.softhome.feature.iconpack.ui.DrawerAppIcon] (P3.5/P4b).
  *
- * [drawableName] is set only for [IconSource.Override]/[IconSource.FromPack]; the UI
- * decodes it from the *active* pack. [symbolName] is the fallback glyph used only when
- * a drawable is missing (so a corrupt entry degrades to a mask/glyph, never a blank).
+ * [drawableName] is set only for [IconSource.Override]/[IconSource.FromPack]/[IconSource.Glyph]
+ * when a pack drawable is chosen; the UI decodes it from the *active* pack.
+ * [symbolName] is the fallback glyph, and (P4b) the chosen glyph when
+ * [source] is [IconSource.Glyph]. [overrideColorToken] is set only for a P4b glyph
+ * override, so the drawer tints the glyph with the user's chosen color instead of the
+ * category-derived one.
  */
 data class ResolvedIcon(
     val source: IconSource,
@@ -37,4 +48,7 @@ data class ResolvedIcon(
     val componentKey: String,
     val packageName: String,
     val className: String,
+    /** P4b: a user-chosen glyph color token (non-pack override), or null for the
+     *  category-derived color. */
+    val overrideColorToken: DrawerIconTokenName? = null,
 )

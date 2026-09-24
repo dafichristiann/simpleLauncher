@@ -2,6 +2,8 @@ package com.softhome.feature.iconpack.domain
 
 import com.google.common.truth.Truth.assertThat
 import com.softhome.core.model.AppInfo
+import com.softhome.core.model.DrawerIconTokenName
+import com.softhome.core.model.IconOverride
 import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconSource
 import org.junit.Test
@@ -20,11 +22,33 @@ class IconResolverTest {
     }
 
     @Test
-    fun `override wins over pack`() {
-        val pack = packOf(mapOf(app.componentKey to "from_pack"))
-        val overrides = mapOf(app.componentKey to pack.id)
+    fun `pack override wins over pack`() {
+        val pack = packOf(mapOf(app.componentKey to "from_pack", "com.other/Main" to "alt_drawable"))
+        val overrides = mapOf(app.componentKey to IconOverride.Pack("alt_drawable"))
         val source = resolver.resolve(app, pack, overrides, maskUnsupported = true)
         assertThat(source).isInstanceOf(IconSource.Override::class.java)
+        assertThat((source as IconSource.Override).drawableName).isEqualTo("alt_drawable")
+    }
+
+    @Test
+    fun `pack override with a drawable absent from the pack falls through to the normal path`() {
+        val pack = packOf(mapOf(app.componentKey to "from_pack"))
+        val overrides = mapOf(app.componentKey to IconOverride.Pack("ghost_drawable"))
+        val source = resolver.resolve(app, pack, overrides, maskUnsupported = true)
+        // Ghost name is not in the pack -> the override is ignored -> FromPack wins.
+        assertThat(source).isInstanceOf(IconSource.FromPack::class.java)
+    }
+
+    @Test
+    fun `glyph override wins over pack and produced a Glyph source`() {
+        val pack = packOf(mapOf(app.componentKey to "from_pack"))
+        val overrides = mapOf(
+            app.componentKey to IconOverride.Glyph("Phone", DrawerIconTokenName.Communication),
+        )
+        val source = resolver.resolve(app, pack, overrides, maskUnsupported = true)
+        assertThat(source).isInstanceOf(IconSource.Glyph::class.java)
+        assertThat((source as IconSource.Glyph).symbolName).isEqualTo("Phone")
+        assertThat(source.colorToken).isEqualTo(DrawerIconTokenName.Communication)
     }
 
     @Test
@@ -55,11 +79,10 @@ class IconResolverTest {
     }
 
     @Test
-    fun `override exposes the overridden drawable name`() {
+    fun `no override leaves the pipeline unchanged`() {
         val pack = packOf(mapOf(app.componentKey to "from_pack"))
-        val overrides = mapOf(app.componentKey to pack.id)
-        val source = resolver.resolve(app, pack, overrides, maskUnsupported = true)
-        assertThat((source as IconSource.Override).drawableName).isEqualTo("from_pack")
+        val source = resolver.resolve(app, pack, emptyMap(), maskUnsupported = true)
+        assertThat(source).isInstanceOf(IconSource.FromPack::class.java)
     }
 
     @Test

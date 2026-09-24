@@ -9,6 +9,7 @@ import com.softhome.core.data.repository.PrefsRepository
 import com.softhome.core.model.AppInfo
 import com.softhome.core.model.DeviceStatusSnapshot
 import com.softhome.core.model.GridConfig
+import com.softhome.core.model.HomeRowDropResolver
 import com.softhome.core.model.HomeRowKind
 import com.softhome.core.model.HomeRowLogic
 import com.softhome.core.model.HomeRowPref
@@ -166,6 +167,18 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * P4a: drag a home row to [targetIndex] (a position in the resulting list). Same
+     * persistence path as the up/down buttons; the resolution is the pure
+     * [HomeRowLogic.move] (see `HomeRowDropResolver`).
+     */
+    fun reorderHomeRow(kind: HomeRowKind, targetIndex: Int) {
+        val next = HomeRowDropResolver.reorder(uiState.value.homeRows, kind, targetIndex)
+        if (next != uiState.value.homeRows) {
+            viewModelScope.launch { prefsRepository.setHomeRows(next) }
+        }
+    }
+
     fun launchApp(app: AppInfo) = appRepository.launchApp(app)
 
 
@@ -184,16 +197,23 @@ class HomeViewModel @Inject constructor(
         val drawableName = when (source) {
             is IconSource.FromPack -> source.drawableName
             is IconSource.Override -> source.drawableName
+            is IconSource.Glyph -> null
             IconSource.AutoMask, IconSource.System -> null
+        }
+        // P4b: a glyph override carries both the chosen glyph and its color token.
+        val (symbolName, overrideToken) = when (source) {
+            is IconSource.Glyph -> source.symbolName to source.colorToken
+            else -> symbol to null
         }
         val resolved = ResolvedIcon(
             source = source,
             drawableName = drawableName,
-            symbolName = symbol,
+            symbolName = symbolName,
             componentKey = app.componentKey,
             packageName = app.packageName,
             className = app.className,
+            overrideColorToken = overrideToken,
         )
-        return AppIconUi(app = app, resolved = resolved, symbolName = symbol)
+        return AppIconUi(app = app, resolved = resolved, symbolName = symbolName)
     }
 }

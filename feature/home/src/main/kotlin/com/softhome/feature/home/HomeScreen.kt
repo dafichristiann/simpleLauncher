@@ -34,6 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -42,6 +46,9 @@ import com.softhome.core.designsystem.atom.AppContextMenu
 import com.softhome.core.designsystem.atom.BatteryStorageRowContent
 import com.softhome.core.designsystem.atom.CalendarRowContent
 import com.softhome.core.designsystem.atom.ContextMenuItem
+import com.softhome.core.designsystem.atom.DragInsertionLine
+import com.softhome.core.designsystem.atom.DragPreviewLayer
+import com.softhome.core.designsystem.atom.DragRowChip
 import com.softhome.core.designsystem.atom.HomeDivider
 import com.softhome.core.designsystem.atom.HomeRow
 import com.softhome.core.designsystem.atom.LineIcon
@@ -49,6 +56,10 @@ import com.softhome.core.designsystem.atom.LineIconImage
 import com.softhome.core.designsystem.atom.MusicPlayerRow
 import com.softhome.core.designsystem.atom.NotesRowContent
 import com.softhome.core.designsystem.atom.RailIcon
+import com.softhome.core.designsystem.atom.dragSource
+import com.softhome.core.designsystem.atom.dragSourceAlpha
+import com.softhome.core.designsystem.atom.dropTarget
+import com.softhome.core.designsystem.atom.rememberDragController
 import com.softhome.core.designsystem.theme.ClockLarge
 import com.softhome.core.designsystem.theme.DateNumber
 import com.softhome.core.designsystem.theme.Dimens
@@ -87,6 +98,7 @@ fun HomeScreen(
     state: HomeUiState = HomeUiState(),
     onNotesChange: (String) -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onReorderRow: (HomeRowKind, Int) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val colors = MaterialTheme.softColors
@@ -103,10 +115,29 @@ fun HomeScreen(
     var homeState by remember { mutableStateOf(HomeState.Idle) }
     val scrollState = rememberScrollState()
 
+    // P4a: one drag controller for the home surface. Rows are the drag sources; the
+    // drop target index is derived from the pointer's Y over the measured row bounds.
+    val dragController = rememberDragController()
+    val dragState = dragController.state
+    var rowBoundsByIndex by remember { mutableStateOf<Map<Int, Rect>>(emptyMap()) }
+    // The outer surface's window top-left: converts window-space pointer to local for
+    // the floating preview layer (which is a child of that same Box).
+    var surfaceOriginInWindow by remember { mutableStateOf(Offset.Zero) }
+
+    val rows = state.visibleRows
+    // While dragging a row: which index it would drop into (null = cancel).
+    val dropIndex: Int? = if (dragState.isDragging && dragState.draggingId?.startsWith("row:") == true) {
+        nearestRowIndex(dragState.pointerWindowPx.y, rowBoundsByIndex, rows.size)
+    } else null
+
     // Back / tapping outside a row returns to Idle.
     BackHandler(enabled = homeState != HomeState.Idle) { homeState = homeState.reset() }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { surfaceOriginInWindow = it.boundsInWindow().topLeft },
+    ) {
         // Dismiss layer (behind content): tapping empty space collapses any
         // active state. Rows / rail sit on top and consume their own taps.
         if (homeState != HomeState.Idle) {
@@ -136,6 +167,7 @@ fun HomeScreen(
                     .then(
                         if (homeState.isNotesOpen) Modifier.verticalScroll(scrollState) else Modifier,
                     )
+                    .dropTarget(targetId = "rowlist", controller = dragController)
                     .padding(
                         start = Dimens.homeRowPaddingX,
                         end = Dimens.homeRowPaddingX,
@@ -144,10 +176,9 @@ fun HomeScreen(
                     ),
             ) {
                 // P3 (G/Widgets): the row list is user-configurable (visibility +
-                // order). `visibleRows` already includes the locked set + ordering;
-                // dividers are rendered only between visible rows.
-                val rows = state.visibleRows
+                // order). P4a adds drag-to-reorder on top of the up/down buttons.
                 rows.forEachIndexed { index, kind ->
+                    val beingDragged = dragState.draggingId == "row:${kind.name}"
                     HomeRowSlot(
                         kind = kind,
                         time = time,
@@ -156,8 +187,34 @@ fun HomeScreen(
                         homeState = homeState,
                         onNotesChange = onNotesChange,
                         onTapRow = { homeState = homeState.onTapRow(it) },
+                        modifier = Modifier
+                            .onGloballyPositioned { coords ->
+                                val b = coords.boundsInWindow()
+                                rowBoundsByIndex = rowBoundsByIndex + (index to b)
+                            }
+                            .dragSourceAlpha(beingDragged)
+                            .dragSource(
+                                id = "row:${kind.name}",
+                                controller = dragController,
+                                onDrop = { target, pointer ->
+                                    if (target != null) {
+                                        val dropHere = nearestRowIndex(
+                                            pointer.y,
+                                            rowBoundsByIndex,
+                                            rows.size,
+                                        )
+                                        onReorderRow(kind, dropHere)
+                                    }
+                                },
+                            ),
                     )
-                    if (index != rows.lastIndex) HomeDivider()
+                    if (index != rows.lastIndex) {
+                        if (dropIndex == index + 1 && dragState.isDragging) {
+                            DragInsertionLine()
+                        } else {
+                            HomeDivider()
+                        }
+                    }
                 }
             }
 
@@ -168,7 +225,43 @@ fun HomeScreen(
                 expanded = homeState.isSearching,
             )
         }
+
+        // Floating drag preview (a compact row chip).
+        DragPreviewLayer(controller = dragController, windowOrigin = surfaceOriginInWindow) { draggingId ->
+            val label = rows.firstOrNull { "row:${it.name}" == draggingId }?.let(::homeRowLabel).orEmpty()
+            DragRowChip(label = label)
+        }
     }
+}
+
+/** Human label for a row's drag chip. */
+private fun homeRowLabel(kind: HomeRowKind): String = when (kind) {
+    HomeRowKind.Time -> "Time"
+    HomeRowKind.Date -> "Date"
+    HomeRowKind.Weather -> "Weather"
+    HomeRowKind.Search -> "Search"
+    HomeRowKind.Music -> "Music"
+    HomeRowKind.Calendar -> "Calendar"
+    HomeRowKind.BatteryStorage -> "Battery & Storage"
+    HomeRowKind.Notes -> "Quick notes"
+}
+
+/**
+ * The insertion index for a pointer at [pointerWindowY] given per-row window
+ * [bounds]. Rows are equal-ish height; we pick the row whose vertical midpoint the
+ * pointer has passed. Clamped to `0..rowCount`.
+ */
+private fun nearestRowIndex(
+    pointerWindowY: Float,
+    bounds: Map<Int, Rect>,
+    rowCount: Int,
+): Int {
+    if (bounds.isEmpty()) return 0
+    val sorted = bounds.entries.sortedBy { it.key }
+    for ((index, rect) in sorted) {
+        if (pointerWindowY < rect.center.y) return index
+    }
+    return sorted.last().key + 1
 }
 
 /**
@@ -184,36 +277,39 @@ private fun HomeRowSlot(
     homeState: HomeState,
     onNotesChange: (String) -> Unit,
     onTapRow: (HomeRowId) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    when (kind) {
-        HomeRowKind.Time -> TimeRow(time)
-        HomeRowKind.Date -> DateRow(date)
-        HomeRowKind.Weather -> WeatherRow()
-        HomeRowKind.Search -> SearchRow(
-            focused = homeState.isSearching,
-            onClick = { onTapRow(HomeRowId.Search) },
-        )
-        HomeRowKind.Music -> MusicRow(
-            expanded = homeState.isMusicOpen,
-            onToggle = { onTapRow(HomeRowId.Music) },
-        )
-        HomeRowKind.Calendar -> CalendarRowContent(
-            dayOfMonth = date.day,
-            weekday = date.weekday,
-            month = date.month,
-            events = emptyList(),
-        )
-        HomeRowKind.BatteryStorage -> BatteryStorageRowContent(
-            batteryPercent = state.deviceStatus.batteryPercent,
-            storageUsedPercent = state.deviceStatus.storageUsedPercent,
-            storageFreeLabel = state.deviceStatus.storageFreeBytes?.let(::formatBytes),
-        )
-        HomeRowKind.Notes -> NotesRow(
-            text = state.notes,
-            expanded = homeState.isNotesOpen,
-            onTextChange = onNotesChange,
-            onToggle = { onTapRow(HomeRowId.Notes) },
-        )
+    Box(modifier = modifier) {
+        when (kind) {
+            HomeRowKind.Time -> TimeRow(time)
+            HomeRowKind.Date -> DateRow(date)
+            HomeRowKind.Weather -> WeatherRow()
+            HomeRowKind.Search -> SearchRow(
+                focused = homeState.isSearching,
+                onClick = { onTapRow(HomeRowId.Search) },
+            )
+            HomeRowKind.Music -> MusicRow(
+                expanded = homeState.isMusicOpen,
+                onToggle = { onTapRow(HomeRowId.Music) },
+            )
+            HomeRowKind.Calendar -> CalendarRowContent(
+                dayOfMonth = date.day,
+                weekday = date.weekday,
+                month = date.month,
+                events = emptyList(),
+            )
+            HomeRowKind.BatteryStorage -> BatteryStorageRowContent(
+                batteryPercent = state.deviceStatus.batteryPercent,
+                storageUsedPercent = state.deviceStatus.storageUsedPercent,
+                storageFreeLabel = state.deviceStatus.storageFreeBytes?.let(::formatBytes),
+            )
+            HomeRowKind.Notes -> NotesRow(
+                text = state.notes,
+                expanded = homeState.isNotesOpen,
+                onTextChange = onNotesChange,
+                onToggle = { onTapRow(HomeRowId.Notes) },
+            )
+        }
     }
 }
 
