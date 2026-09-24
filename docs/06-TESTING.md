@@ -26,21 +26,34 @@ the main flows. Not all tests exist yet — this file is the target and the trac
 | Unit | **device status** (battery read + storage math from block counts) | JUnit + Robolectric | ✅ (P2) |
 | Unit | home interaction states (Idle/Search/Music/**Notes**) | JUnit | ✅ (P2) |
 | Unit | **folder drawer cells** (preview order/cap, skip-missing) | JUnit | ✅ (P2) |
+| Unit | **home row visibility/order** (locked set, toggle, move, sanitize) | JUnit | ✅ (P3) |
+| Unit | **prefs round-trip** (rows/spacing/hidden-apps + `HomeRowsCodec` junk tolerance) | JUnit + Robolectric | ✅ (P3) |
+| Unit | **app action eligibility** (uninstall greyed for system; remove/edit need drawer) | JUnit | ✅ (P3) |
+| Unit | **icon pack persistence** (rehydrate + ghost-id cleared) | JUnit + Robolectric | ✅ (P3) |
+| Unit | **settings cycles** (theme/spacing/columns) | JUnit | ✅ (P3) |
+| Unit | **drawer menu labels** (order) | JUnit | ✅ (P3) |
 | UI | home renders clock + icons | Compose UI test | ✅ (smoke) |
 | UI | home renders P2 rows (calendar/battery/notes) | Compose UI test | ✅ (P2, androidTest) |
+| UI | **P3 row visibility/order** (hidden row not rendered; locked rows always) | Compose UI test | ✅ (P3, androidTest) |
+| UI | **SoftToggle** (on/off, disabled non-interactive) | Compose UI test | ✅ (P3, androidTest) |
+| UI | **AppContextMenu** (rows, tap fires, uninstall disabled for system) | Compose UI test | ✅ (P3, androidTest) |
+| UI | **SettingsRow** (label, click, reorder buttons, toggle slot) | Compose UI test | ✅ (P3, androidTest) |
 | UI | drawer opens & filters by search | Compose UI test | ⬜ |
-| UI | long-press menu appears (P3) | Compose UI test | ⬜ |
+| UI | **long-press menu appears** (rail + drawer) | Compose UI test | ✅ (P3, androidTest) |
 | Manual | set as default launcher, gestures | on device | ✅ |
 | Manual | icon pack import (zip) end-to-end | on device | ✅ (P1.5) |
 | Manual | **glyph uniqueness on device** (log fingerprints + comparison grid screenshot) | on device | ✅ (Session 4) |
 | Manual | **P2 widgets + folders end-to-end** (real battery/storage vs `dumpsys`/`df`; notes & folders survive `am force-stop`) | on device | ✅ (P2) |
+| Manual | **P3 system UI + settings** (status bar light/dark, nav bar hidden, rail+drawer long-press, settings sections, row toggle survives `am force-stop`) | on device | ✅ (P3) |
 | Manual | TalkBack navigation | on device | ⬜ |
 | Manual | WCAG contrast (title/body/muted on cream) | tooling | ⬜ |
 
-**Current total: 124 unit tests, 0 failures (P2, Session 6).** Was 87 after the Warm
-Right Rail redesign. P2 added: `FolderLogicTest` (11), `NotesTest` (3),
-`NotesRepositoryTest` (4), `FolderRepositoryTest` (6), `DeviceStatusTest` (5),
-`FolderCellsTest` (4), `HomeStateTest` (+4), `MotionTokensTest` (+1).
+**Current total: 160 unit tests, 0 failures (P3, Session 7); 20 instrumented Compose
+tests pass on `soft_home_pixel`.** Was 124 after P2. P3 added: `HomeRowLogicTest` (11),
+`AppActionLogicTest` (5), `AppActionsTest` (5), `PrefsRepositoryTest` (+6),
+`IconPackPersistenceTest` (3), `SystemBarAppearanceTest` (2), `SettingsCyclesTest` (3),
+`DrawerMenuLabelsTest` (1). New instrumented: `SoftToggleTest` (3), `AppContextMenuTest`
+(3), `SettingsRowTest` (4), `HomeScreenTest` (+4).
 
 ---
 

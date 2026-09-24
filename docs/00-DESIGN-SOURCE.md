@@ -135,3 +135,24 @@ stays read-only.
   battery/storage → quick notes), not cream cards.
 - **Folders** live in the **app drawer** (the surviving grid surface), as a 68 r21
   tile with a 2×2 mini preview + a cream r24 popup.
+
+---
+
+## P3 (System UI + Settings) — no design nodes
+
+Re-audited 2026-09-25: the `.pen` contains **no** status-bar treatment, nav-bar
+handling, long-press menu, settings panel, or toggle mock (the only `status`/`nav`
+hits are a `Drawer Status` mock snippet; `gesture` is the Gesture-Bar drawable only).
+The five P3 node IDs previously cited in `docs/03` (`ogMkZ`, `Fzobx`, `pu2gg`,
+`nFk4u`, `UPa9N`) are from the **retired P1 file** and do **not** exist. P3 is
+authored as documented assumptions on the Warm Right Rail vocabulary — see
+[`04` section J](04-ASSUMPTIONS.md) and the
+[P3 spec](superpowers/specs/2026-09-25-p3-systemui-and-settings-design.md). The `.pen`
+stays **read-only** (verified byte-identical after the P3 build).
+
+- **Status/nav bar** follow the app theme (F1/F2); the bar icons themselves are
+  system-drawn — we request light/dark icon appearance via `WindowInsetsControllerCompat`.
+- **Long-press menus** (rail + drawer tile) are row-style cream r24 cards, **not** the
+  platform `PopupMenu`.
+- **Settings** is a sectioned panel (Appearance / Widgets / Wallpaper / Gestures) built
+  from `SettingsRow`s + the `SoftToggle` pill.

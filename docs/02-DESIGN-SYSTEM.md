@@ -287,3 +287,27 @@ New tokens: `Dimens.folderTile` (68), `folderTileRadius` (21), `folderMiniIcon` 
 `folderPopupRadius` (24), `widgetProgressHeight` (5); `MotionTokens.notesExpand()`
 (280ms, WarmEase); icons `LineIcon.Battery`, `LineIcon.HardDrive`.
 
+### P3 atoms (2026-09-25) — `SoftToggle.kt` / `SettingsRow.kt` / `AppContextMenu.kt`
+
+No `.pen` mock exists for P3; these reuse the Warm Right Rail vocabulary (cream
+surfaces, r18/r24 radii, `RowDisplay`/`labelMedium` type, warm accents).
+
+| Atom | Backed by | Props |
+|---|---|---|
+| `SoftToggle` | `UPa9N` (retired) — built from tokens | 42×22 pill, charcoal track on / warm track off, 16dp knob; `Role.Switch`; reuses `MotionTokens.railSlide()` |
+| `SettingsRow` | `Shape.medium` (r18) | label + supporting, click, chevron, `toggle` slot, inline **up/down** reorder buttons |
+| `AppContextMenu` | `Shape.large` (r24) | row-style long-press menu over a dim scrim; `ContextMenuItem(label, icon, enabled, destructive, onClick)` |
+
+New P3 tokens: colors `destructive` (warm clay `#9A4B33`) + `disabled` (`#AFA493`)
+light/dark; `Dimens.menuRadius` (24), `menuRowMinHeight` (48), `menuIcon` (20),
+`menuScrim` (0.53), `settingsRowRadius` (18), `settingsRowMinHeight` (52),
+`settingsChevron` (18), `moveButton` (28); icons `info`, `trash_2`, `chevron_right`,
+`arrow_up`, `arrow_down`, `x`, `external_link`.
+
+### System UI (P3 / F1–F2)
+
+`SystemBarAppearance` (`:app`) sets `isAppearanceLightStatusBars` /
+`isAppearanceLightNavigationBars` from the app theme (dark icons on cream, light on
+warm-dark) over transparent bars, and hides the nav bar under gesture navigation.
+`SoftHomeTheme(darkTheme)` follows `ThemeMode` (Light/Dark/System) from settings.
+

@@ -14,7 +14,7 @@ depth, and icons that feel considered, never loud.
 |---|---|---|
 | **P1** | Home core (A) + Custom icon pack (B) + App drawer (C) → installable MVP, can be set as default launcher | ✅ Done (incl. P1.5 real icon decode) |
 | **P2** | Custom widgets (E) + Folder system (D) | ✅ Done (2026-09-25) |
-| P3 | System UI integration (F) + Settings panel (G) | ⬜ Not started |
+| **P3** | System UI integration (F) + Settings panel (G) | ✅ Done (2026-09-25) |
 | P4 | Onboarding (H) + polish / animation | ⬜ Not started |
 
 Legend: ⬜ todo · 🟡 in progress · ✅ done · **stub** = skeleton only (logic not yet functional)

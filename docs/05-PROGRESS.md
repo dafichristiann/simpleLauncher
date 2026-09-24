@@ -13,6 +13,68 @@ system.** Stopped for review.
 
 ## Session log
 
+### Session 7 - P3 System UI + Settings — DONE (2026-09-25)
+
+**Why:** P3 = System UI (F) + Settings (G), built on the Warm Right Rail design system
+(not the retired P1 card/grid language). Spec:
+[`superpowers/specs/2026-09-25-p3-systemui-and-settings-design.md`](superpowers/specs/2026-09-25-p3-systemui-and-settings-design.md).
+First session under **git** (repo initialised; baseline commit e00a70b, then one commit
+per phase).
+
+**Audit result (Session 7)**
+- Re-audited `.pen`: still **no** status/nav/long-press/settings/toggle nodes; the P3
+  node IDs in `docs/03` (`ogMkZ`, `Fzobx`/`pu2gg`, `nFk4u`, `UPa9N`) are stale. `.pen`
+  stays read-only (verified byte-identical after the build).
+- Reused **live** scaffolding: `themes.xml` (transparent bars), `SettingsStubActivity`
+  shell, `PrefsRepository` (DataStore), the `FolderPopup` row-card pattern.
+
+**Locked decisions**
+- **P3-1** locked rows Time/Date/Weather; **P3-2** up/down buttons (drag → P4);
+  **P3-3** long-press on rail + drawer tiles; **P3-4** Uninstall greyed for system apps;
+  **P3-5** icon pack persists + rehydrates (closes #36); **P3-6** flat wallpaper +
+  system picker. Q1–Q5 resolved (settings entry via rail; Remove = hide-from-drawer;
+  spacing multiplier; pick-from-pack icon; inline move buttons).
+
+**Done (phases 0-8)**
+- **Phase 0:** `HomeRowKind`/`HomeRowPref`/`HomeRowLogic`; `LauncherPrefs` + `homeRows`,
+  `spacing`, `hiddenApps`; `SpacingScale`; P3 color/dimens tokens; glyphs info/trash_2/
+  chevron_right/arrow_up/arrow_down/x/external_link.
+- **Phase 1:** `PrefsRepository` persists rows/spacing/hidden-apps (`HomeRowsCodec`);
+  `AppActionsRepository` (+ pure `AppIntentFactory`) and `AppActionLogic`.
+- **Phase 2:** atoms `SoftToggle`, `SettingsRow`, `AppContextMenu`.
+- **Phase 3:** `IconPackRepositoryImpl` persists + rehydrates the active pack
+  (`IconPackRef`).
+- **Phase 4:** `SystemBarAppearance` (F1/F2) + rail long-press menu (F3) + `SettingsIntents`.
+- **Phase 5:** drawer long-press menu (F3) + hidden-apps "Remove" (Q2).
+- **Phase 6:** `SettingsViewModel` + `SettingsPanel` (4 sections); home rows data-driven
+  from prefs; ThemeMode applied app-wide; `WallpaperIntents`.
+- **Phase 7:** verified on `soft_home_pixel` (API 35) with real screenshots.
+- **Phase 8:** docs updated.
+
+**Verified on emulator (Android 15 / API 35, `soft_home_pixel`)** — real screenshots:
+- [x] F1 light: status icons **dark** on cream (`p3-home-idle.png`).
+- [x] F1 dark: ThemeMode=Dark → status icons **light** on warm-dark (`p3-home-dark.png`).
+- [x] F2: nav bar hidden under gesture nav (edge-to-edge home).
+- [x] F3 rail long-press → row-style r24 menu (`p3-rail-longpress-menu.png`).
+- [x] F3 drawer long-press → Open/App Info/Edit Icon/Remove/**Uninstall greyed**
+      (system app)/Shortcuts (`p3-drawer-longpress-menu.png`).
+- [x] G: four settings sections (`p3-settings-appearance.png`,
+      `p3-settings-widgets-wallpaper-gestures.png`).
+- [x] G: "Quick notes" toggled off → home row gone; survives `am force-stop`
+      (`p3-home-notes-hidden.png`).
+- [x] Locked rows show "Always shown" + disabled toggle.
+- **Tests:** 160 JVM unit tests pass; 20 instrumented Compose tests pass on the AVD.
+
+**Blocked / needs decision**
+- None. **Stopped at the end of P3 for review. Do NOT auto-start P4.**
+
+**Next:** P4 (onboarding H + polish) — likely absorbs the deferred drag-and-drop
+(row + app→folder), the rich icon editor, and backup/restore.
+
+---
+
+## Session log (previous)
+
 ### Session 6 - P2 Widgets + Folders — DONE (2026-09-25)
 
 **Why:** P2 = custom widgets (E) + folder system (D), built on the **Warm Right

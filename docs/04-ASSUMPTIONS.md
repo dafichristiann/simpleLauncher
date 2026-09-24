@@ -224,3 +224,89 @@ Real screenshots in `docs/screenshots/`:
 | **Live calendar events (`CalendarContract`)** | â›” **Deferred** | Same class of problem as weather: needs `READ_CALENDAR` permission + edge cases (permission denied, no calendar app, multiple calendars). The calendar row renders static/empty in P2. |
 | **Drag-and-drop app â†’ folder** | â›” **Deferred to P3** | Gesture-handling subsystem, out of P2 scope (see #52). |
 | **Battery change callback stream** | â›” **Deferred to P3** | P2 re-reads on resume (see #55). |
+
+---
+
+## J. Assumptions taken during the P3 build (System UI + Settings)
+
+Scope: P3 = System UI (F) + Settings (G), built on the Warm Right Rail design system
+(Session 5) and the P2 widgets/folders layer (Session 6). Full spec:
+[`superpowers/specs/2026-09-25-p3-systemui-and-settings-design.md`](superpowers/specs/2026-09-25-p3-systemui-and-settings-design.md).
+
+The `.pen` was **re-audited 2026-09-25**: it still contains **no** status-bar
+treatment, nav-bar handling, long-press menu, settings panel, or toggle mock. The five
+P3 node IDs previously cited in `docs/03` (`ogMkZ`, `Fzobx`/`pu2gg`, `nFk4u`, `UPa9N`)
+are from the **retired P1 file** and do **not** exist. The `.pen` stays **read-only**
+(verified byte-identical after the P3 build), and P3 visuals derive from the existing
+Warm Right Rail vocabulary.
+
+### Locked decisions (user-confirmed)
+
+| # | Decision | Detail |
+|---|---|---|
+| P3-1 | Locked home rows = **Time, Date, Weather** | The other rows (Search/Music/Calendar/Battery-Storage/Notes) are user-toggleable; the home never renders empty |
+| P3-2 | Reorder = **up/down buttons** now | Drag-and-drop reorder **deferred to P4** (with the P2-deferred app?folder drag) |
+| P3-3 | Long-press targets = **drawer tiles + rail icons** | Row-style menu, not the platform `PopupMenu` |
+| P3-4 | Uninstall of system apps | Row shown **greyed/disabled**; App Info always available; never attempt a throwing uninstall |
+| P3-5 | Active icon pack **persists + rehydrates** | Closes #36; falls back to auto-mask on a missing/corrupt pack |
+| P3-6 | Wallpaper = **flat default + system picker** | Live-wallpaper **engine** stays deferred (#12) |
+
+### Resolved questions (Q1–Q5)
+
+| # | Question | Decision |
+|---|---|---|
+| Q1 | Settings entry point | Rail `panel-left` icon opens **our** panel; a "System settings" row opens the OS screen |
+| Q2 | "Remove" semantics | **Hide from drawer** (reversible `hiddenApps` set + "Hidden apps" manager) |
+| Q3 | Spacing values | **Multiplier** Compact ×0.88 / Normal ×1.0 / Roomy ×1.12 |
+| Q4 | Edit Icon depth | Pick from the active pack's drawables (rich editor ? P4) |
+| Q5 | Move-buttons placement | **Inline** on each Widgets row (?/? next to the toggle) |
+
+### Documented assumptions
+
+| # | Gap found in P3 | Assumption taken (as built) | Where reflected | Status |
+|---|---|---|---|---|
+| 60 | `.pen` has no status-bar spec | Transparent bars; icon color requested from the app theme (`isAppearanceLight*Bars`) | `app/.../SystemBarAppearance.kt` | ?? |
+| 61 | `.pen` has no nav-bar handling spec | Hide (transient) under gesture nav (`Settings.Secure navigation_mode == 2`); minimal transparent bar otherwise; degrade to "show" on failure | `app/.../SystemBarAppearance.kt` | ?? |
+| 62 | No long-press menu mock | Row-style cream r24 `AppContextMenu` (Open/App Info/Edit Icon/Remove/Uninstall/Shortcuts); anchored to a centered card in P3 | `core/designsystem/atom/AppContextMenu.kt`, rail + drawer | ?? |
+| 63 | Uninstall availability varies | Greyed when `isSystem` or not removable; never throws; App Info always present | `core:model/AppActionLogic`, `AppActionsRepository` | ?? |
+| 64 | No settings-panel mock | Sectioned panel built from `SettingsRow` + `SoftToggle`; lives in `:app` (thin shell, no new Gradle module) | `app/.../settings/SettingsPanel.kt` | ?? |
+| 65 | No custom-toggle mock | `SoftToggle` 42×22 pill from tokens; reuses `railMotion` (220ms) for the knob | `core/designsystem/atom/SoftToggle.kt` | ?? |
+| 66 | No row reorder gesture spec | Up/down buttons (P3-2); drag deferred to P4 | `SettingsRow` reorder buttons | ?? |
+| 67 | "Grid size"/"spacing" vs the row-based home | Applied to the **drawer** grid (the only grid surface) + row vertical rhythm; home row layout unchanged | `SettingsPanel` Appearance section | ?? |
+| 68 | Active icon pack lost on restart (#36) | Persist `activeIconPackId`; rehydrate on cold start (zip ? installed ? newest-zip fallback); clear a dead id | `feature/iconpack/.../IconPackRepositoryImpl.kt` | ?? |
+| 69 | Wallpaper scope | Flat warm default + system picker (`ACTION_CHANGE_LIVE_WALLPAPER` ? `ACTION_SET_WALLPAPER`); engine deferred | `app/.../WallpaperIntents.kt` | ?? |
+
+### P3 verification evidence (emulator, Android 15 / API 35, `soft_home_pixel`)
+
+Real screenshots in `docs/screenshots/`:
+
+| Evidence | File |
+|---|---|
+| Home Idle (status icons dark on cream — F1 light) | `p3-home-idle.png` |
+| Home in Dark theme (status icons light on warm-dark — F1) | `p3-home-dark.png` |
+| "Quick notes" toggled off ? row gone; survives force-stop | `p3-home-notes-hidden.png` |
+| Settings: Appearance (theme/grid/spacing/System settings/Hidden apps) | `p3-settings-appearance.png` |
+| Settings: Widgets (locked rows non-toggle, inline ?/?) + Wallpaper + Gestures | `p3-settings-widgets-wallpaper-gestures.png` |
+| Rail long-press ? row-style menu | `p3-rail-longpress-menu.png` |
+| Drawer long-press ? menu; **Uninstall greyed** for the system "Settings" app | `p3-drawer-longpress-menu.png` |
+
+- **Tests:** 160 JVM unit tests pass; 20 instrumented Compose tests pass on the AVD.
+- **F1:** status-bar icons are dark on cream and light on warm-dark (screenshots).
+- **F2:** nav bar hidden under gesture navigation (edge-to-edge home).
+- **F3:** rail + drawer long-press open the row-style menu; Uninstall is greyed for a
+  system app (P3-4).
+- **G:** the four settings sections render; toggling "Quick notes" off hides the home
+  row and the choice survives `am force-stop`; Clock/Date/Weather show "Always shown"
+  with a disabled toggle.
+
+### Deferred (recorded, NOT deleted from scope)
+
+| Item | Status | Reason |
+|---|---|---|
+| **Drag-and-drop row reorder** | ? **Deferred to P4** | Gesture subsystem (P3-2 ships up/down buttons). |
+| **Drag-and-drop app ? folder** | ? **Deferred to P4** | Carried from P2. |
+| **Rich icon editor** (upload/crop custom) | ? **Deferred to P4** | P3 ships pick-from-pack (Q4). |
+| **Live-wallpaper engine** | ? **Deferred** | Flat default + system picker only (P3-6). |
+| **Backup & restore settings (G4)** | ? **Deferred to P4** | Out of P3 scope. |
+| **Real gesture actions** (swipe-down / double-tap) | ? **Deferred** | Needs notification access / Device Admin (@15); settings rows show "Coming soon". |
+| **MediaSession (#39)**, **KkPN3 dark editorial**, **live calendar** | ? **Deferred** (still) | Carried from P2. |

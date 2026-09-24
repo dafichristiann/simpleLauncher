@@ -5,6 +5,71 @@ Append-only.
 
 ---
 
+### D-031 - Home rows are user-configurable with a locked minimum (P3 / Widgets)
+- **What:** `HomeRowLogic` + `LauncherPrefs.homeRows` (visibility + order). Locked set =
+  Time / Date / Weather (P3-1); the rest toggleable. Reorder via **up/down buttons** in
+  the settings Widgets section (P3-2); drag-and-drop deferred to P4.
+- **Why:** after the redesign the home is a row list; users want to control which rows
+  show. A locked set guarantees the home never renders empty.
+- **Impact:** `HomeStateTest`/`HomeRowLogicTest`; `HomeScreen` renders `visibleRows`.
+
+---
+
+### D-030 - Long-press menus are row-style cards on rail icons + drawer tiles (P3 / F3)
+- **What:** long-press a rail icon or a drawer tile → `AppContextMenu` (cream r24 card
+  over a dim scrim, 1px divider rows): Open / App Info / Edit Icon / Remove / Uninstall /
+  Shortcuts. **Uninstall is greyed** for system/non-removable apps (P3-4). Not the
+  platform `PopupMenu`.
+- **Why:** the Warm Right Rail system has no card/shadow language; a row-style card keeps
+  one visual vocabulary. Greyed uninstall avoids throwing `ACTION_DELETE` on system apps.
+- **Impact:** `AppContextMenu` atom; `AppActionLogic` + `AppActionsRepository`;
+  verified on device (greyed Uninstall for the system "Settings" app).
+
+---
+
+### D-029 - Settings panel + custom pill toggle (P3 / G)
+- **What:** sectioned settings (Appearance / Widgets / Wallpaper / Gestures) built from
+  `SettingsRow` + the `SoftToggle` pill (42×22, charcoal, `Role.Switch`); the rail
+  `panel-left` icon opens it (Q1); a "System settings" row opens the OS screen.
+  `ThemeMode` persists and is applied app-wide.
+- **Why:** the `UPa9N` toggle/settings mocks are from the retired P1 file; the panel is
+  built from the current token set. Custom toggle keeps the charcoal language.
+- **Impact:** `SettingsViewModel`/`SettingsPanel`; `SettingsCyclesTest`.
+
+---
+
+### D-028 - Active icon pack persists and rehydrates on cold start (P3-5, closes #36)
+- **What:** `IconPackRepositoryImpl` persists the chosen pack id and rehydrates it on
+  cold start (imported zip → installed pack → newest-zip fallback); a dead id is cleared
+  and the launcher falls back to auto-mask. Never crashes.
+- **Why:** P1.5 kept the active pack in memory only; the choice must survive process death.
+- **Impact:** `IconPackPersistenceTest`; `IconPackRef` is the single zip-id derivation.
+
+---
+
+### D-027 - Status/nav bar follow the app theme; nav bar hides under gesture nav (P3 / F1/F2)
+- **What:** `SystemBarAppearance` sets `isAppearanceLightStatusBars`/
+  `isAppearanceLightNavigationBars` from `ThemeMode` (dark icons on cream, light on
+  warm-dark) over transparent bars, and hides the nav bar with transient reveal under
+  gesture navigation (best-effort detection; degrades to "show").
+- **Why:** the design's status content is a mockup; the real bar must read as "quiet" on
+  the cream surface and must not fight the home.
+- **Impact:** `SystemBarAppearanceTest`; verified light + dark on device.
+
+---
+
+### D-026 - "Remove" hides an app from the drawer; wallpapers use the system picker (P3 / Q2, P3-6)
+- **What:** the drawer long-press "Remove" adds the component key to a persisted
+  `hiddenApps` set (restorable from the settings "Hidden apps" manager); the Wallpaper
+  section opens the **system** picker (`ACTION_CHANGE_LIVE_WALLPAPER` →
+  `ACTION_SET_WALLPAPER`) over a flat warm default. The live-wallpaper engine stays
+  deferred.
+- **Why:** Q2 chose reversible hide-from-drawer (folders already cover
+  remove-from-folder); P3-6 keeps wallpaper selection without a wallpaper engine.
+- **Impact:** `PrefsRepository.hideApp/unhideApp`; `WallpaperIntents`.
+
+---
+
 ### D-025 - P2 widgets are Warm Right Rail rows (old cream-card widgets removed)
 - **What:** calendar / battery-storage / quick-notes are full-width `HomeRow`s
   (`HomeWidgetRows.kt`), not cards. Removed `SoftWidgets.kt` (`SoftWidgetCard`,

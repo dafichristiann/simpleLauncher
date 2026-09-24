@@ -81,17 +81,44 @@ Master table of every requested feature -> priority -> backing design node -> st
 
 ---
 
-## Priority 3 - System UI (F) + Settings (G)  ·  NOT STARTED
+## Priority 3 - System UI (F) + Settings (G)  ·  DONE (2026-09-25)
+
+> **P3 is implemented under the Warm Right Rail design system.** The `.pen` has **no**
+> status/nav/long-press/settings/toggle mock; the node IDs previously listed here
+> (`ogMkZ`, `Fzobx`/`pu2gg`, `nFk4u`, `UPa9N`) are from the **retired P1 file** and do
+> not exist. P3 is authored as documented assumptions — see
+> [`04` section J](04-ASSUMPTIONS.md) and the
+> [P3 spec](superpowers/specs/2026-09-25-p3-systemui-and-settings-design.md).
 
 | ID | Feature | Design node | Status | Notes |
 |---|---|---|---|---|
-| F1 | Status bar icon color follows theme (charcoal, transparent) | `ogMkZ` | [~] | light/dark appearance wired in theme |
-| F2 | Nav bar: hide on gesture nav / minimal on button nav | - | [ ] | |
-| F3 | Long-press menu near icon (App Info, Uninstall, Edit Icon, Shortcuts) | `Fzobx` / `pu2gg` | [ ] | anchored, not centered |
-| G1 | Settings sections: Appearance / Widgets / Wallpaper / Gestures | `nFk4u` | **stub** | shell built (`SettingsStubActivity`) |
-| G2 | Custom pill toggle (charcoal, not system default) | `UPa9N` | **stub** | full in P3 |
-| G3 | Dark/light mode (warm dark palette) | *(assumption)* | [~] | tokens + theme ready |
-| G4 | Backup & restore settings | - | [ ] | |
+| F1 | Status bar icon color follows theme (charcoal, transparent) | *(assumption)* | [x] | `SystemBarAppearance`: dark icons on cream, light on warm-dark; transparent bars. Verified light + dark |
+| F2 | Nav bar: hide on gesture nav / minimal on button nav | *(assumption)* | [x] | hidden with transient reveal under gesture nav; minimal transparent bar otherwise |
+| F3 | Long-press menu near icon (App Info, Uninstall, Edit Icon, Shortcuts) | *(assumption)* | [x] | row-style r24 `AppContextMenu` on **rail icons + drawer tiles** (P3-3); Uninstall greyed for system apps (P3-4) |
+| G1 | Settings sections: Appearance / Widgets / Wallpaper / Gestures | *(assumption)* | [x] | `SettingsPanel` (4 sections); `SettingsRow` + `SoftToggle`; opened from the rail settings icon (Q1) |
+| G2 | Custom pill toggle (charcoal, not system default) | *(assumption)* | [x] | `SoftToggle` atom (42×22, charcoal, `Role.Switch`) |
+| G3 | Dark/light mode (warm dark palette) | *(assumption)* | [x] | `ThemeMode` persisted + applied app-wide (Theme setting cycles Light/Dark/System) |
+| G4 | Backup & restore settings | - | [ ] | **deferred to P4** |
+
+### Home Widgets (P3 addition to G1/Widgets)
+
+| ID | Feature | Status | Notes |
+|---|---|---|---|
+| G-W | Row visibility + order (locked set Time/Date/Weather) | [x] | `HomeRowLogic` (P3-1); toggle + inline ↑/↓ (P3-2 ships move buttons; drag → P4) |
+| G-H | Hidden apps manager ("Remove" from drawer, reversible) | [x] | `hiddenApps` set persisted; restore from the Appearance section (Q2) |
+| G-S | Spacing preset (Compact/Normal/Roomy ×0.88/1.0/1.12) | [x] | `SpacingScale` (Q3) |
+| G-IP | Icon pack persists + rehydrates on cold start | [x] | closes `04` #36 (P3-5) |
+
+### P3 deferred (recorded, not removed from scope)
+
+| Item | Status |
+|---|---|
+| Drag-and-drop row reorder | ⛔ deferred to **P4** (P3-2) |
+| Drag-and-drop app → folder (from P2) | ⛔ deferred to **P4** |
+| Rich icon editor (upload/crop custom icon) | ⛔ deferred to **P4** (P3 ships pick-from-pack, Q4) |
+| Live-wallpaper engine | ⛔ deferred (flat default + system picker in P3, P3-6) |
+| Backup & restore settings (G4) | ⛔ deferred to **P4** |
+| Real gesture actions (swipe-down / double-tap) | ⛔ deferred (settings rows show "Coming soon") |
 
 ---
 
