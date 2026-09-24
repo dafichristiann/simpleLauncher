@@ -2,6 +2,8 @@ package com.softhome.core.data.di
 
 import com.softhome.core.common.DefaultDispatcherProvider
 import com.softhome.core.common.DispatcherProvider
+import com.softhome.core.data.repository.AppActionsRepository
+import com.softhome.core.data.repository.AppActionsRepositoryImpl
 import com.softhome.core.data.repository.AppRepository
 import com.softhome.core.data.repository.AppRepositoryImpl
 import com.softhome.core.data.repository.DeviceStatusRepository
@@ -32,6 +34,9 @@ object DispatcherModule {
 abstract class RepositoryModule {
     @Binds
     abstract fun bindAppRepository(impl: AppRepositoryImpl): AppRepository
+
+    @Binds
+    abstract fun bindAppActionsRepository(impl: AppActionsRepositoryImpl): AppActionsRepository
 
     @Binds
     abstract fun bindPrefsRepository(impl: PrefsRepositoryImpl): PrefsRepository
