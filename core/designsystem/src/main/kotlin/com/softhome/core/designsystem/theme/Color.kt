@@ -71,11 +71,31 @@ val SoftProgressTrack = Color(0xFFB9AA98)  // music progress track (pvQO0)
 val SoftIndexActive = Color(0xFFB06F52)    // alphabet rail active letter (fZMbk)
 val SoftRailBgDark = Color(0xFF2E3134)     // dark editorial rail (q0n2Wd) -- dark reference only
 
-// Drawer accent palette -- example/fallback tints only (see spec Q8)
-val DrawerTintClay = Color(0xFFB06F52)
-val DrawerTintAmber = Color(0xFFD19B62)
-val DrawerTintPine = Color(0xFF5F7A72)
-val DrawerTintSage = Color(0xFF6E8B86)
+// --- P3.5: drawer icon palette (from homeApp.pen frame TpzL1) ---
+// The drawer renders cream tiles + per-category colored glyphs (not the monochrome
+// charcoal squircle). See docs/superpowers/specs/2026-09-24-p35-drawer-icon-redesign-design.md.
+val DrawerTileCream = Color(0xFFF6F0E7)      // $tile-cream   (default tile bg)
+val DrawerTileSelected = Color(0xFFD19B62)   // $selected-tile (active/selected tile bg)
+val DrawerIconOnSelected = Color(0xFFF5EFE6) // $selected-icon (glyph on a selected tile)
+val DrawerIconCommunication = Color(0xFF5F7A72) // $icon-communication
+val DrawerIconSocial = Color(0xFF6E8B86)        // $icon-social
+val DrawerIconProductivity = Color(0xFF8A5F43)  // $icon-productivity (== SoftAccent)
+val DrawerIconMedia = Color(0xFFD19B62)         // $icon-media       (== selected tile)
+val DrawerIconTravel = Color(0xFFB06F52)        // $icon-travel      (== SoftIndexActive)
+val DrawerIconFinance = Color(0xFF4D7C8A)       // $icon-finance
+val DrawerIconNeutral = Color(0xFF625B52)       // $icon-neutral     (== SoftTextBody)
+
+// Dark adaptations (the .pen has no dark drawer palette; warm-derived per docs/02).
+val DarkDrawerTileCream = Color(0xFF33302B)
+val DarkDrawerTileSelected = Color(0xFF8A6440)
+val DarkDrawerIconOnSelected = Color(0xFFF5EFE6)
+val DarkDrawerIconCommunication = Color(0xFF7FA79B)
+val DarkDrawerIconSocial = Color(0xFF8FAFA8)
+val DarkDrawerIconProductivity = Color(0xFFC89A78)
+val DarkDrawerIconMedia = Color(0xFFD9A972)
+val DarkDrawerIconTravel = Color(0xFFC98B6E)
+val DarkDrawerIconFinance = Color(0xFF7FA6B2)
+val DarkDrawerIconNeutral = Color(0xFFC9BFB0)
 
 // --- P3 (System UI + Settings) semantic tokens ---
 // The warm palette has no red by design (docs/00); "destructive" (uninstall) is a

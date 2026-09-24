@@ -7,11 +7,53 @@
 hardened glyph uniqueness (D-016). **Session 5 redesigned the home + drawer into the
 "Warm Right Rail" system.** **Session 6 delivered P2: custom widgets (calendar /
 battery-storage / quick notes) + the folder system, under the Warm Right Rail design
-system.** Stopped for review.
+system.** **Session 8 fixed the drawer BACK regression.** **Session 9 delivered P3.5:
+the drawer icon color system (cream tiles + per-category colored glyphs + amber
+selected state), rendering the `TpzL1` frame faithfully.** Stopped for review.
 
 ---
 
 ## Session log
+
+### Session 9 - P3.5 Drawer Icon Redesign (color + labels) — DONE (2026-09-25)
+
+**Why:** the `TpzL1` frame "Warm App Drawer — Unique Icon Grid" specifies cream tiles
+with per-category colored glyphs and labels, but P1–P3 rendered the drawer
+monochrome (charcoal squircle + cream). P3.5 renders the frame faithfully, as a
+**separate phase before P4** so P4's Edit Icon editor builds on the final model.
+
+**Spec:** [`superpowers/specs/2026-09-24-p35-drawer-icon-redesign-design.md`](superpowers/specs/2026-09-24-p35-drawer-icon-redesign-design.md).
+
+**Re-audit:** the `.pen` was edited by the user after the spec was drafted (file grew
+to 176KB). Re-audited before Step 0: `TpzL1` is byte-identical (same tiles, labels,
+color variables). A **new frame `ciHU3` "Warm Right Rail — Icon Language Library"**
+(144 monochrome glyphs, 8 groups) was added — confirmed **out of scope** (rail asset
+library, not a drawer color spec). No tokens invented.
+
+**What changed:**
+- `Color.kt` + `SoftColors`: 10 new drawer color fields (light + dark), verbatim from
+  `TpzL1`'s 7 icon variables + `tile-cream`/`selected-tile`/`selected-icon`. Removed
+  the placeholder `DrawerTintClay/Amber/Pine/Sage` (dead after the port).
+- `DrawerIconColor` (pure, `feature:iconpack/domain`): category→color-token mapper
+  with the communication-glyph heuristic.
+- `DrawerIconTile` (designsystem atom): color-parameterized tile (background + optional
+  painter tint + symbol tint). The monochrome `AppIconTile` path is unchanged.
+- `DrawerAppIcon` (iconpack UI): the drawer icon composable — pack apps render
+  untinted real artwork; non-pack apps render a category-colored glyph; selected
+  tiles use the amber background.
+- `AppDrawerScreen`: `AppCell`/`FolderMiniGrid`/folder popup switched from `AppIcon`
+  to `DrawerAppIcon`; folder members are `selected = true`. Dead `bitmapProvider`
+  parameter removed from the drawer render chain.
+
+**Tests:** 176 unit (was 161; +15 new), 25 instrumented (was 22; +3 new). The 7
+existing icon-pipeline tests (AutoMask, IconResolver, IconMasker, GlyphUniqueness,
+Importer, Persistence, AppFilterParser) stayed green throughout.
+
+**Evidence:** `docs/screenshots/p35-drawer-all.png` (cream tiles + colored glyphs,
+no charcoal remaining), `p35-folder-amber-selected.png` (amber selected state),
+`p35-back-still-works.png` (Session 8 BACK fix intact).
+
+**Decisions:** D-032 (drawer color system), D-033 (pack-vs-glyph hybrid).
 
 ### Session 8 - Patch: drawer BACK regression fix (2026-09-25)
 

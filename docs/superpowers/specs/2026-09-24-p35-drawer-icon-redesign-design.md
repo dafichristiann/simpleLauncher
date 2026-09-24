@@ -42,6 +42,22 @@ These four answers were given explicitly and are **not** open for re-litigation:
 
 ## 1. `.pen` audit — frame `TpzL1` (source of truth)
 
+> **Re-audit note (2026-09-24, pre-implementation).** The `.pen` was edited by the
+> user after this spec was first drafted (file grew to 176,128 bytes,
+> SHA256 `08DB2A81…CA6201`). Re-audited before Step 0:
+> - **`TpzL1` is byte-identical** — same geometry, tiles, labels, and all 7 icon
+>   color variables + `tile-cream`/`selected-tile`/`selected-icon`. **The §3.1
+>   tokens and §3.2 mapping below stand unchanged.**
+> - **New frame `ciHU3` "Warm Right Rail — Icon Language Library"** (520×844,
+>   x=12181; 144 glyphs, all monochrome `#2B2B2B`) was added. It is an **asset /
+>   library board for the right rail**, grouped into 8 semantic groups
+>   (Communication · Social & Entertainment · Productivity & Tools · Browser &
+>   Search · Camera & Media · Maps & Travel · Finance & Shopping · Food & Lifestyle).
+>   **Confirmed out of scope for P3.5:** its name and monochrome fill mark it as the
+>   rail's icon library, **not** a drawer color spec. No new color tokens are
+>   invented (that would be scope creep beyond `TpzL1`). If a later phase touches
+>   rail icons, `ciHU3` — not `TpzL1` — is its reference.
+
 Frame `TpzL1`, 430×860, r36, fill `#DCCDBA`. Grid tiles are **68×68 r21**, glyph
 24×24 centered, **11pt label** centered below each tile. Representative tiles:
 
@@ -359,8 +375,8 @@ next until the previous passes.
 ### Step 4 — Cleanup + docs
 - Remove dead `DrawerTint*`/unused charcoal paths **if** confirmed unused.
 - Update docs `02` (tokens), `03` (drawer C1–C4), `05` (session log), `09`
-  (decisions: **D-020** drawer color system, **D-021** pack-vs-glyph hybrid). The
-  log's current highest is D-019.
+  (decisions: **D-032** drawer color system, **D-033** pack-vs-glyph hybrid). The
+  log's current highest is D-031.
 - **Exit:** docs consistent; build clean; all tests green.
 
 ### Step 5 — Verify + STOP

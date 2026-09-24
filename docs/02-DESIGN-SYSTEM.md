@@ -203,8 +203,40 @@ val SoftProgressTrack = Color(0xFFB9AA98) // music progress track
 val SoftIndexActive   = Color(0xFFB06F52) // alphabet active letter
 val SoftRailBgDark    = Color(0xFF2E3134) // dark editorial rail (reference only)
 // Drawer tint fallbacks (optional; icons use the icon-pack pipeline):
-val DrawerTintClay/Amber/Pine/Sage = #B06F52 / #D19B62 / #5F7A72 / #6E8B86
+// REMOVED in P3.5 — replaced by the drawer color system below.
 ```
+
+### P3.5: Drawer icon color system (2026-09-25)
+
+Source: `.pen` frame `TpzL1` "Warm App Drawer — Unique Icon Grid". The drawer
+renders **cream tiles + per-category colored glyphs** (not monochrome charcoal).
+Full detail: [`superpowers/specs/2026-09-24-p35-drawer-icon-redesign-design.md`](superpowers/specs/2026-09-24-p35-drawer-icon-redesign-design.md).
+
+```kotlin
+// Tile backgrounds
+val DrawerTileCream    = Color(0xFFF6F0E7) // $tile-cream (default)
+val DrawerTileSelected = Color(0xFFD19B62) // $selected-tile (active/selected)
+val DrawerIconOnSelected = Color(0xFFF5EFE6) // $selected-icon
+
+// Per-category glyph colors
+val DrawerIconCommunication = Color(0xFF5F7A72) // $icon-communication
+val DrawerIconSocial        = Color(0xFF6E8B86) // $icon-social
+val DrawerIconProductivity  = Color(0xFF8A5F43) // $icon-productivity
+val DrawerIconMedia         = Color(0xFFD19B62) // $icon-media
+val DrawerIconTravel        = Color(0xFFB06F52) // $icon-travel
+val DrawerIconFinance       = Color(0xFF4D7C8A) // $icon-finance
+val DrawerIconNeutral       = Color(0xFF625B52) // $icon-neutral (fallback)
+```
+
+Semantic fields added to `SoftColors`: `drawerTileCream`, `drawerTileSelected`,
+`drawerIconOnSelected`, `drawerIconCommunication`, `drawerIconSocial`,
+`drawerIconProductivity`, `drawerIconMedia`, `drawerIconTravel`,
+`drawerIconFinance`, `drawerIconNeutral` (light + warm-dark values).
+
+Category→color mapping (`DrawerIconColor`, pure):
+`SOCIAL`/`IMAGE`→Social, `PRODUCTIVITY`→Productivity, `GAME`/`AUDIO`/`VIDEO`→Media,
+`NEWS`→Finance, `MAPS`→Travel, unknown→Neutral (with a communication-glyph
+heuristic: `Phone`/`Mail`/`CalendarDays` + unknown category → Communication).
 
 Semantic fields added to `SoftColors`: `railBg`, `divider`, `tileWarm`,
 `categoryWash`, `drawerBg`, `drawerStroke`, `progressTrack`, `indexActive`

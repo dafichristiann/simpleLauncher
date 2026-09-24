@@ -41,12 +41,13 @@ Master table of every requested feature -> priority -> backing design node -> st
 
 | ID | Feature | Design node | Status | Notes |
 |---|---|---|---|---|
-| C1 | Separate drawer, swipe-up trigger, 4-column grid | `TpzL1` | [x] | **REDESIGNED**: tile 68 r21 (was 104 r30), bg `#DCCDBA` |
+| C1 | Separate drawer, swipe-up trigger, 4-column grid | `TpzL1` | [x] | **REDESIGNED**: tile 68 r21 (was 104 r30), bg `#DCCDBA`. **P3.5**: cream tile + per-category colored glyphs (was charcoal mono) |
 | C2 | Alphabetical index on right | `czxh4` | [x] | active `#B06F52`, idle `#81796D` |
 | C3 | Search/filter apps inside drawer | `V7udUl` | [x] | **REDESIGNED**: h56 r28 `#E8DFD0` stroke `#C8B8A6` |
 | C4 | Drawer header (label + "All apps") | `lasU6` | [x] | no eyebrow; "All apps" + "Icon pack" action |
 | C5 | **Category nav (All/Communication/Entertainment/Tools)** | `B6gGM` | [x] | **NEW**: mapped from `ApplicationInfo.category` |
 | C6 | **App labels under tiles** | `J3Lb4`… | [x] | **NEW**: 11pt `#3A3A3A` |
+| C7 | **Color icon system** (P3.5) | `TpzL1` | [x] | **P3.5**: cream tile + pack artwork or category-colored glyph + amber selected state |
 
 ---
 

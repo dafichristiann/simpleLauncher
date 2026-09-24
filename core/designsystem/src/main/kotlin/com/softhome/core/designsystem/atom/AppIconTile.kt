@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -95,6 +96,69 @@ const val ICON_SYMBOL_RATIO = 0.49f
 
 /** Line-art glyph ratio used for the fallback category symbol. */
 const val ICON_GLYPH_RATIO = 0.42f
+
+/**
+ * P3.5: a **color-parameterized** icon tile for the app drawer ("Unique Icon Grid",
+ * design/homeApp.pen frame `TpzL1`).
+ *
+ * Unlike [AppIconTile] -- which is monochrome by construction (charcoal squircle +
+ * cream mark) -- this atom takes an explicit [background] and an **optional**
+ * [painterTint]:
+ *  - [painterTint] `null` renders the painter's own colors (a real icon-pack drawable),
+ *  - a non-null [painterTint] recolors it,
+ *  - [symbolTint] colors the category glyph.
+ *
+ * Rendering precedence mirrors [AppIconTile]: full-bleed painter > painter > symbol.
+ * The monochrome [AppIconTile] path is left unchanged for every non-drawer surface.
+ */
+@Composable
+fun DrawerIconTile(
+    size: Dp,
+    background: Color,
+    modifier: Modifier = Modifier,
+    symbol: LineIcon? = null,
+    symbolTint: Color = Color.Unspecified,
+    painter: Painter? = null,
+    painterTint: Color? = null,
+    fullBleedPainter: Painter? = null,
+    contentDescription: String? = null,
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .softShadow(TileShadow, iconShape(size))
+            .background(background, iconShape(size)),
+        contentAlignment = Alignment.Center,
+    ) {
+        when {
+            fullBleedPainter != null -> {
+                Image(
+                    painter = fullBleedPainter,
+                    contentDescription = contentDescription,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(iconShape(size)),
+                )
+            }
+            painter != null -> {
+                Image(
+                    painter = painter,
+                    contentDescription = contentDescription,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = painterTint?.let { ColorFilter.tint(it) },
+                    modifier = Modifier.size(size * ICON_SYMBOL_RATIO),
+                )
+            }
+            symbol != null -> {
+                LineIconImage(
+                    icon = symbol,
+                    size = size * ICON_GLYPH_RATIO,
+                    tint = symbolTint,
+                    contentDescription = contentDescription,
+                )
+            }
+        }
+    }
+}
 
 /**
  * Cream "one quiet signal" notification badge (design node ha6OA / docs/08 ?4):

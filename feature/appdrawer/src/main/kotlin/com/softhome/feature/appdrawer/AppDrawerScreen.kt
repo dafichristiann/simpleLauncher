@@ -61,7 +61,7 @@ import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.DrawerCategory
-import com.softhome.feature.iconpack.ui.AppIcon
+import com.softhome.feature.iconpack.ui.DrawerAppIcon
 import com.softhome.feature.iconpack.ui.IconPackImportSheet
 import kotlinx.coroutines.launch
 
@@ -134,13 +134,12 @@ fun AppDrawerScreen(
                         modifier = Modifier.padding(top = Spacing.xxl),
                     )
                 } else {
-                    AppGridContent(
-                        state = state,
-                        gridState = gridState,
-                        activePack = state.activePack,
-                        drawableLoader = viewModel.drawableLoader,
-                        bitmapProvider = viewModel.bitmapProvider,
-                        onLaunch = {
+                AppGridContent(
+                    state = state,
+                    gridState = gridState,
+                    activePack = state.activePack,
+                    drawableLoader = viewModel.drawableLoader,
+                    onLaunch = {
                             viewModel.launchApp(it.app)
                             onAppLaunched()
                         },
@@ -183,7 +182,6 @@ fun AppDrawerScreen(
                 allApps = state.allApps,
                 activePack = state.activePack,
                 drawableLoader = viewModel.drawableLoader,
-                bitmapProvider = viewModel.bitmapProvider,
                 onClose = viewModel::closeFolder,
                 onRename = { viewModel.renameFolder(folder.id, it) },
                 onAddApp = { viewModel.addAppToFolder(folder.id, it) },
@@ -401,7 +399,6 @@ private fun AppGridContent(
     gridState: LazyGridState,
     activePack: com.softhome.core.model.IconPack?,
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
-    bitmapProvider: com.softhome.feature.iconpack.domain.IconBitmapProvider,
     onLaunch: (DrawerEntry) -> Unit,
     onLongPress: (DrawerEntry) -> Unit,
     onOpenFolder: (String) -> Unit,
@@ -430,7 +427,6 @@ private fun AppGridContent(
                     item = cell.entry,
                     activePack = activePack,
                     drawableLoader = drawableLoader,
-                    bitmapProvider = bitmapProvider,
                     onLaunch = onLaunch,
                     onLongPress = onLongPress,
                 )
@@ -443,7 +439,6 @@ private fun AppGridContent(
                         entries = cell.preview,
                         activePack = activePack,
                         drawableLoader = drawableLoader,
-                        bitmapProvider = bitmapProvider,
                     )
                 }
             }
@@ -457,7 +452,6 @@ private fun AppCell(
     item: DrawerEntry,
     activePack: com.softhome.core.model.IconPack?,
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
-    bitmapProvider: com.softhome.feature.iconpack.domain.IconBitmapProvider,
     onLaunch: (DrawerEntry) -> Unit,
     onLongPress: (DrawerEntry) -> Unit,
 ) {
@@ -478,12 +472,13 @@ private fun AppCell(
             contentAlignment = Alignment.Center,
         ) {
             val tileSide = minOf(maxWidth, Dimens.drawerTileNew)
-            AppIcon(
+            // P3.5: color system (cream tile + pack artwork or category-colored glyph).
+            DrawerAppIcon(
                 resolved = item.resolved,
                 size = tileSide,
                 activePack = activePack,
                 drawableLoader = drawableLoader,
-                bitmapProvider = bitmapProvider,
+                category = item.app.category,
                 contentDescription = null,
             )
         }
@@ -507,7 +502,6 @@ private fun FolderMiniGrid(
     entries: List<DrawerEntry>,
     activePack: com.softhome.core.model.IconPack?,
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
-    bitmapProvider: com.softhome.feature.iconpack.domain.IconBitmapProvider,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -517,12 +511,12 @@ private fun FolderMiniGrid(
         entries.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 row.forEach { entry ->
-                    AppIcon(
+                    DrawerAppIcon(
                         resolved = entry.resolved,
                         size = Dimens.folderMiniIcon,
                         activePack = activePack,
                         drawableLoader = drawableLoader,
-                        bitmapProvider = bitmapProvider,
+                        category = entry.app.category,
                         contentDescription = null,
                     )
                 }
@@ -573,7 +567,6 @@ private fun FolderPopup(
     allApps: List<DrawerEntry>,
     activePack: com.softhome.core.model.IconPack?,
     drawableLoader: com.softhome.feature.iconpack.data.IconPackDrawableLoader,
-    bitmapProvider: com.softhome.feature.iconpack.domain.IconBitmapProvider,
     onClose: () -> Unit,
     onRename: (String) -> Unit,
     onAddApp: (String) -> Unit,
@@ -630,12 +623,13 @@ private fun FolderPopup(
                                         .clickable { onRemoveApp(item.app.componentKey) },
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
-                                    AppIcon(
+                                    DrawerAppIcon(
                                         resolved = item.resolved,
                                         size = Dimens.drawerTileNew,
                                         activePack = activePack,
                                         drawableLoader = drawableLoader,
-                                        bitmapProvider = bitmapProvider,
+                                        category = item.app.category,
+                                        selected = true,
                                         contentDescription = null,
                                     )
                                     Text(
@@ -672,12 +666,12 @@ private fun FolderPopup(
                                         .padding(vertical = Spacing.sm),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    AppIcon(
+                                    DrawerAppIcon(
                                         resolved = item.resolved,
                                         size = 32.dp,
                                         activePack = activePack,
                                         drawableLoader = drawableLoader,
-                                        bitmapProvider = bitmapProvider,
+                                        category = item.app.category,
                                         contentDescription = null,
                                     )
                                     Spacer(Modifier.width(Spacing.md))

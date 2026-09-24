@@ -5,6 +5,29 @@ Append-only.
 
 ---
 
+### D-033 - Drawer icons use a hybrid color source (P3.5)
+- **What:** in the app drawer, an app with an active-pack entry renders the **real
+  drawable untinted** (its own colors); an app **not** in the pack renders a
+  **category-colored lucide glyph** (`DrawerIconColor` → `SoftColors` drawer token).
+  The charcoal auto-mask is **not used in the drawer** (kept for other surfaces).
+- **Why:** the `TpzL1` frame specifies a colorful grid; auto-mask charcoal would
+  clash with cream tiles. The hybrid keeps pack artwork faithful while giving every
+  app a colored fallback.
+- **Impact:** `DrawerAppIcon` (new), `DrawerIconColor` (pure, tested); 7 existing
+  pipeline tests untouched.
+
+### D-032 - Drawer icon color system (P3.5)
+- **What:** the drawer renders **cream `#F6F0E7` tiles** with **per-category colored
+  glyphs** (7 color tokens from `TpzL1`), replacing the monochrome charcoal squircle.
+  A **selected/active tile** uses **amber `#D19B62`** + cream glyph. The placeholder
+  `DrawerTint*` tokens are removed.
+- **Why:** `TpzL1` is titled "Unique Icon Grid" — it was always meant to be colorful;
+  P1–P3 deferred the tint. P3.5 renders the frame faithfully before P4's Edit Icon.
+- **Impact:** 10 new `SoftColors` fields (light + dark), `DrawerIconTile` atom,
+  `DrawerColorsTest` (token coverage), `DrawerIconColorTest` (mapping).
+
+---
+
 ### D-031 - Home rows are user-configurable with a locked minimum (P3 / Widgets)
 - **What:** `HomeRowLogic` + `LauncherPrefs.homeRows` (visibility + order). Locked set =
   Time / Date / Weather (P3-1); the rest toggleable. Reorder via **up/down buttons** in

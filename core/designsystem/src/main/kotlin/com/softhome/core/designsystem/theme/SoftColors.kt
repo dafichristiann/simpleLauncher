@@ -37,6 +37,17 @@ data class SoftColors(
     // --- P3 semantic fields (system UI + settings) ---
     val destructive: Color,     // uninstall / remove emphasis (warm clay, no red)
     val disabled: Color,        // greyed rows (system app, unavailable action)
+    // --- P3.5 semantic fields (drawer icon color system) ---
+    val drawerTileCream: Color,       // default drawer tile background
+    val drawerTileSelected: Color,    // active/selected drawer tile background
+    val drawerIconOnSelected: Color,  // glyph on a selected tile
+    val drawerIconCommunication: Color,
+    val drawerIconSocial: Color,
+    val drawerIconProductivity: Color,
+    val drawerIconMedia: Color,
+    val drawerIconTravel: Color,
+    val drawerIconFinance: Color,
+    val drawerIconNeutral: Color,     // fallback glyph color
     val isLight: Boolean,
 ) {
     /** Shadow color used behind tiles/cards in the current theme. */
@@ -69,6 +80,16 @@ val LightSoftColors = SoftColors(
     indexActive = SoftIndexActive,
     destructive = SoftDestructive,
     disabled = SoftDisabled,
+    drawerTileCream = DrawerTileCream,
+    drawerTileSelected = DrawerTileSelected,
+    drawerIconOnSelected = DrawerIconOnSelected,
+    drawerIconCommunication = DrawerIconCommunication,
+    drawerIconSocial = DrawerIconSocial,
+    drawerIconProductivity = DrawerIconProductivity,
+    drawerIconMedia = DrawerIconMedia,
+    drawerIconTravel = DrawerIconTravel,
+    drawerIconFinance = DrawerIconFinance,
+    drawerIconNeutral = DrawerIconNeutral,
     isLight = true,
 )
 
@@ -98,6 +119,16 @@ val DarkSoftColors = SoftColors(
     indexActive = DarkIndexActive,
     destructive = DarkDestructive,
     disabled = DarkDisabled,
+    drawerTileCream = DarkDrawerTileCream,
+    drawerTileSelected = DarkDrawerTileSelected,
+    drawerIconOnSelected = DarkDrawerIconOnSelected,
+    drawerIconCommunication = DarkDrawerIconCommunication,
+    drawerIconSocial = DarkDrawerIconSocial,
+    drawerIconProductivity = DarkDrawerIconProductivity,
+    drawerIconMedia = DarkDrawerIconMedia,
+    drawerIconTravel = DarkDrawerIconTravel,
+    drawerIconFinance = DarkDrawerIconFinance,
+    drawerIconNeutral = DarkDrawerIconNeutral,
     isLight = false,
 )
 
