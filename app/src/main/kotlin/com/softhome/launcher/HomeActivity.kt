@@ -2,6 +2,7 @@ package com.softhome.launcher
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -46,6 +47,12 @@ import dagger.hilt.android.AndroidEntryPoint
  *  - P3 (F1/F2): status-bar icons follow the theme; the nav bar hides under gesture
  *    navigation. The app theme itself follows [com.softhome.core.model.ThemeMode]
  *    from settings (wired in Phase 6).
+ *  - Back is routed through the Activity's `OnBackPressedDispatcher` (see
+ *    [LauncherRoot]): the drawer's overlays and the home states register their own
+ *    handlers, and a last-resort root handler keeps a Back press from ever exiting
+ *    the launcher. We deliberately do NOT override `onBackPressed()` -- overriding it
+ *    without delegating to `super` bypasses the dispatcher and breaks every
+ *    `BackHandler` in the tree (this was the drawer Back regression).
  */
 @AndroidEntryPoint
 class HomeActivity : ComponentActivity() {
@@ -56,11 +63,6 @@ class HomeActivity : ComponentActivity() {
         setContent {
             LauncherRoot()
         }
-    }
-
-    override fun onBackPressed() {
-        // A launcher must not exit on Back; consume it (stay on Home).
-        // (Left as a no-op intentionally -- see docs/04 #11.)
     }
 }
 
@@ -100,6 +102,12 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
     }
 
     SoftHomeTheme(darkTheme = darkTheme) {
+        // Last-resort Back handler: a launcher must never exit on Back. This is
+        // registered *first* (outermost), so the drawer's overlay handler -- composed
+        // later, deeper in the tree -- takes precedence while the drawer is open, and
+        // this one only fires when nothing else consumes Back (docs/04 #11).
+        BackHandler(enabled = true) { /* consume: stay on Home */ }
+
         Box(modifier = Modifier.fillMaxSize()) {
             // Swipe-up layer (BEHIND the home content): opening the drawer. The home row
             // list scrolls; this layer still receives drags in the area the content does
@@ -132,7 +140,10 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
                 enter = slideInVertically(tween(220)) { it } + fadeIn(tween(220)),
                 exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(180)),
             ) {
-                AppDrawerScreen(onAppLaunched = { drawerOpen = false })
+                AppDrawerScreen(
+                    onAppLaunched = { drawerOpen = false },
+                    onClose = { drawerOpen = false },
+                )
             }
         }
     }

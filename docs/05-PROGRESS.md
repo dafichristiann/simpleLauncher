@@ -13,6 +13,37 @@ system.** Stopped for review.
 
 ## Session log
 
+### Session 8 - Patch: drawer BACK regression fix (2026-09-25)
+
+**Why:** A small regression from before P3 -- with the app drawer open, the system
+BACK button did nothing (the drawer stayed open) instead of closing it and returning
+to home. Fixed as an isolated patch ahead of P3.5, per user instruction.
+
+**Root cause:** `HomeActivity` overrode `onBackPressed()` with an empty body (to stop
+a launcher exiting on Back) **without delegating to `super`**. That bypasses the
+Activity's `OnBackPressedDispatcher`, so every `BackHandler` in the Compose tree was
+dead -- including the drawer's. Compounding it, `AppDrawerScreen` had no top-level
+`BackHandler` at all (only the folder popup had one).
+
+**Fix:**
+- `HomeActivity`: removed the `onBackPressed()` override. Added a last-resort
+  `BackHandler` in `LauncherRoot` (registered outermost) so a Back press still never
+  exits the launcher, while the drawer/home handlers take precedence when active.
+- `AppDrawerScreen`: added a top-level `BackHandler` and an explicit `onClose` param.
+  It pops the drawer's layer stack in order: long-press menu -> folder popup -> close
+  drawer. Removed the now-redundant inner `BackHandler` in `FolderPopup`.
+- `HomeActivity` passes `onClose = { drawerOpen = false }`.
+
+**Tests / verification:**
+- `DrawerBackHandlerTest` (instrumented, 2 cases): renders the drawer overlay through
+  the real back dispatcher and asserts BACK closes it (`Espresso.pressBack`).
+- `HomeActivityBackContractTest` (Robolectric): asserts `HomeActivity` does not
+  declare `onBackPressed()` -- locks the root cause in.
+- Full suites green: **161 unit tests**, **22 instrumented tests**.
+- On-device before/after: `docs/screenshots/backfix-BEFORE-back-stuck.png` (BACK left
+  the drawer open) vs `backfix-AFTER-back-home.png` (BACK returns to home);
+  `backfix-drawer-open-context.png` shows the open drawer.
+
 ### Session 7 - P3 System UI + Settings — DONE (2026-09-25)
 
 **Why:** P3 = System UI (F) + Settings (G), built on the Warm Right Rail design system

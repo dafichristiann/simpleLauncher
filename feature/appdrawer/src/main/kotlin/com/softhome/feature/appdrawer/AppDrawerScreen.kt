@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppDrawerScreen(
     onAppLaunched: () -> Unit,
+    onClose: () -> Unit,
     viewModel: AppDrawerViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,6 +85,19 @@ fun AppDrawerScreen(
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     var iconPackSheetOpen by remember { mutableStateOf(false) }
+
+    // BACK pops the drawer's own layer stack, topmost first: an open long-press
+    // menu, then an open folder popup, and finally the drawer overlay itself
+    // (returning to home). Without this the drawer had no top-level handler and BACK
+    // fell through to the launcher's intentional no-op onBackPressed, so the drawer
+    // stayed open. One place owns the stack, so precedence is unambiguous.
+    BackHandler {
+        when {
+            state.menuEntry != null -> viewModel.closeMenu()
+            state.openFolder != null -> viewModel.closeFolder()
+            else -> onClose()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -566,7 +580,6 @@ private fun FolderPopup(
     onRemoveApp: (String) -> Unit,
 ) {
     val colors = MaterialTheme.softColors
-    BackHandler { onClose() }
     val members = folder.apps.mapNotNull { key -> allApps.firstOrNull { it.app.componentKey == key } }
     val addable = allApps.filterNot { it.app.componentKey in folder.apps }
 
