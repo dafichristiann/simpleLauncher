@@ -24,8 +24,8 @@ Master table of every requested feature -> priority -> backing design node -> st
 | A7 | Date on home | `ApuhU` `KkRQg` `ftENm` | [x] | **REDESIGNED**: number 60 normal + spaced day/month |
 | A8 | Weather row on home | `lLPZS` | [x] | **REDESIGNED**: "Current 8°C", 28 normal; **P8**: abstract fallback `condition = Clear` + condition cross-fade + ambient icon (D-060) |
 | A9 | **Right icon rail (8 shortcuts)** | `hrsLU` / `B6633e` | [x] | **NEW**: 72dp, `#D8C8B6`, line icons → default device apps; **P8**: press/drag/drop feedback on the single existing drag engine |
-| A10 | **Music player row** | `QTwqr`… `pvQO0` `d41sbp` | [x] | **NEW**: title/artist/album/controls/progress; **P8**: real local `PlaybackState` via `PlaybackController` (play/pause/seek/progress); MediaSession deferred (D-059) |
-| A11 | **3 interaction states (Idle/Search/Music)** | `Az7qs` `m9OlxQ` `T8AA1` | [x] | **NEW**: tap-row trigger, tokenized motion (`MotionTokens`) |
+| A10 | ~~Music player row~~ | `QTwqr`… `pvQO0` `d41sbp` | [x] | **REMOVED** (Session 24 / D-062): the home no longer renders a music row (P8 music reverted); the `.pen` node remains the design source |
+| A11 | **3 interaction states (Idle/Search/Music)** | `Az7qs` `m9OlxQ` `T8AA1` | [x] | **NEW**: tap-row trigger, tokenized motion (`MotionTokens`) — now Idle/Search/Notes (the Music state was removed) |
 
 ### B. Custom Icon Pack System
 
@@ -78,7 +78,7 @@ Master table of every requested feature -> priority -> backing design node -> st
 | Drag-and-drop app → folder | ⛔ deferred to **P3** (gesture subsystem) |
 | Live calendar events (`CalendarContract` + `READ_CALENDAR`) | ⛔ deferred |
 | Battery change callback stream (vs re-read on resume) | ⛔ deferred to **P3** |
-| Real music playback / MediaSession | ⛔ still deferred; **P8** ships a local `PlaybackController` demo (play/pause/seek/progress) behind the same interface (D-059) |
+| Real music playback / MediaSession | ⛔ deferred (the home music row itself was removed in Session 24 / D-062) |
 | KkPN3 dark editorial mode | ⛔ deferred (still) |
 
 ---

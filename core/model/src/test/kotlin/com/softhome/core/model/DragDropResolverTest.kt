@@ -22,7 +22,6 @@ class DragDropResolverTest {
             HomeRowKind.Time,
             HomeRowKind.Date,
             HomeRowKind.Search,
-            HomeRowKind.Music,
             HomeRowKind.Calendar,
             HomeRowKind.BatteryStorage,
             HomeRowKind.Notes,
@@ -37,7 +36,6 @@ class DragDropResolverTest {
             HomeRowKind.Weather,
             HomeRowKind.Search,
             HomeRowKind.Time,
-            HomeRowKind.Music,
             HomeRowKind.Calendar,
             HomeRowKind.BatteryStorage,
             HomeRowKind.Notes,
@@ -51,7 +49,6 @@ class DragDropResolverTest {
             HomeRowKind.Date,
             HomeRowKind.Weather,
             HomeRowKind.Search,
-            HomeRowKind.Music,
             HomeRowKind.Calendar,
             HomeRowKind.BatteryStorage,
             HomeRowKind.Notes,
@@ -61,24 +58,24 @@ class DragDropResolverTest {
 
     @Test
     fun `reorder to the same index is a no-op`() {
-        assertThat(HomeRowDropResolver.reorder(defaultRows, HomeRowKind.Music, 4))
+        assertThat(HomeRowDropResolver.reorder(defaultRows, HomeRowKind.Notes, 6))
             .isEqualTo(defaultRows)
     }
 
     @Test
     fun `reorder preserves visibility and count`() {
-        val hidden = HomeRowLogic.toggle(defaultRows, HomeRowKind.Music)
+        val hidden = HomeRowLogic.toggle(defaultRows, HomeRowKind.Search)
         val result = HomeRowDropResolver.reorder(hidden, HomeRowKind.Notes, 0)
         assertThat(result).hasSize(defaultRows.size)
-        assertThat(result.first { it.kind == HomeRowKind.Music }.visible).isFalse()
+        assertThat(result.first { it.kind == HomeRowKind.Search }.visible).isFalse()
         assertThat(result.first().kind).isEqualTo(HomeRowKind.Notes)
     }
 
     @Test
     fun `reorder of an unknown kind is a no-op`() {
-        // A list without Music: dragging Music resolves to no change.
-        val noMusic = defaultRows.filterNot { it.kind == HomeRowKind.Music }
-        assertThat(HomeRowDropResolver.reorder(noMusic, HomeRowKind.Music, 0)).isEqualTo(noMusic)
+        // A list without Notes: dragging Notes resolves to no change.
+        val noNotes = defaultRows.filterNot { it.kind == HomeRowKind.Notes }
+        assertThat(HomeRowDropResolver.reorder(noNotes, HomeRowKind.Notes, 0)).isEqualTo(noNotes)
     }
 
     // --- App -> folder --------------------------------------------------------

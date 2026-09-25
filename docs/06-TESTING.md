@@ -51,13 +51,14 @@ the main flows. Not all tests exist yet — this file is the target and the trac
 | Manual | TalkBack navigation | on device | ⬜ |
 | Manual | WCAG contrast (title/body/muted on cream) | tooling | ⬜ |
 
-**Current total: 280 unit tests, 0 failures (P5 + motion demo); 50 instrumented Compose tests execute
+**Current total: 275 unit tests, 0 failures (P5 + motion demo, music row removed); 50 instrumented Compose tests execute
 for the app, including the P5 pager/gesture coverage.** P4b added: `IconOverridesCodecTest` (10),
 `IconEditorTest` (10) as unit; `IconEditorSheetTest` (2), `IconEditorScreenshotTest` (2),
 `IconOverrideEndToEndTest` (2) as instrumented. `IconResolverTest` grew 8→10. P5 adds
 `DrawerSwipeCategoryTest` (6) and `DrawerSwipeDownTest` (2). The 7
 icon-pipeline tests (AutoMask, IconResolver, IconMasker, GlyphUniqueness, Importer,
-Persistence, AppFilterParser) stayed green throughout. *(P8 re-verified 2026-09-25 on
+Persistence, AppFilterParser) stayed green throughout. *(Session 24 (D-062) removed the
+Music player row: the JVM total fell 280 → 275; instrumented stays 50.)* *(P8 re-verified 2026-09-25 on
 TECNO CN7c: 280 unit + 50 instrumented, 0 failures — see "Motion system verification".)*
 
 *(History: 124 after P2; 160 + 20 instrumented after P3; 176 + 25 after P3.5; P4a added
@@ -200,15 +201,13 @@ have **distinct** fingerprint values. Evidence screenshot:
 
 ## Motion system verification (Session 23 — P8)
 
-- `:feature:home:testDebugUnitTest` covers deterministic demo playback advance, pause,
-  resume, seek clamping, progress ratio, and end-of-track stop (`PlaybackControllerTest`).
 - `:core:designsystem:testDebugUnitTest`, `:app:assembleDebug`, and `:app:lintDebug`
   passed after integrating the shared drag/press interaction source.
-- **Verified on Tecno CN7c (API 36, 2026-09-25):** `.\gradlew.bat testDebugUnitTest` →
-  **280 unit, 0 failures**; `.\gradlew.bat :app:connectedDebugAndroidTest` →
-  **50 instrumented, 0 failures**.
-- TECNO CN7c visual smoke: idle home, play/pause progress, long-press expansion,
-  full-track seek, clock digit update, weather fallback, and rounded rail capture are
-  retained in `docs/screenshots/p8-motion-*.png`; the recorded playback/expand sequence is
-  `docs/videos/p8-motion-playback-expand.mp4` (play → progress moves → pause → seek →
-  resume-from-seek).
+- **Verified on Tecno CN7c (API 36, 2026-09-25):** JVM `.\gradlew.bat testDebugUnitTest`
+  → green; the Music player row was later removed (Session 24 / D-062), so the JVM total
+  dropped from 280 to **275 unit** (the playback tests and music home-state cases were
+  removed). Instrumented suite unchanged at **50, 0 failures**.
+- TECNO CN7c visual smoke: idle home, clock digit update, weather fallback, and rounded
+  rail capture are retained in `docs/screenshots/p8-motion-*.png`. *(The music
+  playback recording `docs/videos/p8-motion-playback-expand.mp4` no longer describes
+  shipped behaviour — the row was removed.)*

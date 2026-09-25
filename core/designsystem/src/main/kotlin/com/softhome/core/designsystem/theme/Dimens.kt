@@ -20,10 +20,6 @@ object Dimens {
     val homeRowPaddingX = 42.dp       // row content x (znb90 text x=42)
     val dividerHeight = 1.dp          // row divider thickness
     val searchRowIcon = 24.dp         // N7ICqS search row icon
-    val albumArt = 64.dp              // mdsQP album artwork circle
-    val expandedAlbumArt = 148.dp     // local demo player expanded focal artwork
-    val musicControl = 18.dp          // play (largest control)
-    val musicControlSmall = 16.dp     // skip-back / skip-forward
     val progressHeight = 5.dp         // pvQO0 progress bar
     val iconLibTile = 68.dp           // QBhow icon library tile
 

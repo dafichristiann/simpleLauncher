@@ -34,11 +34,9 @@ class HomeScreenTest {
     }
 
     @Test
-    fun shows_weather_and_music_rows() {
+    fun shows_weather_and_notes_rows() {
         setHome()
         composeRule.onNodeWithText("Current 8\u00B0C").assertIsDisplayed()
-        composeRule.onNodeWithText("play music.").assertIsDisplayed()
-        composeRule.onNodeWithText("Djo").assertIsDisplayed()
     }
 
     @Test
@@ -89,14 +87,14 @@ class HomeScreenTest {
 
     @Test
     fun default_home_hides_calendar_battery_and_notes() {
-        // P2: the default home shows only Time/Date/Weather/Search/Music.
+        // P2: the default home shows only Time/Date/Weather/Search (music row removed).
         setHome()
         composeRule.onNodeWithText("No upcoming events").assertDoesNotExist()   // Calendar row
         composeRule.onNodeWithText("Battery").assertDoesNotExist()              // Battery row
         composeRule.onNodeWithContentDescription("Quick notes").assertDoesNotExist() // Notes row
-        // The five kept rows are present.
+        // The four kept rows are present.
         composeRule.onNodeWithText("Current 8\u00B0C").assertIsDisplayed()      // Weather
-        composeRule.onNodeWithText("play music.").assertIsDisplayed()          // Music
+        composeRule.onNodeWithText("f i n d  s o m e t h i n g").assertIsDisplayed() // Search
     }
 
     // --- P3 (Q2): tap launches, long-press expands ---------------------------------
@@ -173,10 +171,11 @@ class HomeScreenTest {
 
     @Test
     fun hidden_row_is_not_rendered() {
-        val rows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Music)
+        // Search is visible by default; toggling it off hides the row, while another
+        // kept row (weather) still renders.
+        val rows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Search)
         setHome(HomeUiState(homeRows = rows))
-        // Music row hidden -> its static title is gone; another kept row is still present.
-        composeRule.onNodeWithText("play music.").assertDoesNotExist()
+        composeRule.onNodeWithText("f i n d  s o m e t h i n g").assertDoesNotExist()
         composeRule.onNodeWithText("Current 8\u00B0C").assertExists()
     }
 
@@ -188,8 +187,8 @@ class HomeScreenTest {
             if (rows.first { it.kind == kind }.visible) rows = HomeRowLogic.toggle(rows, kind)
         }
         setHome(HomeUiState(homeRows = rows))
-        // Weather (locked) still renders; music (hidden) does not.
+        // Weather (locked) still renders; search (hidden) does not.
         composeRule.onNodeWithText("Current 8\u00B0C").assertExists()
-        composeRule.onNodeWithText("play music.").assertDoesNotExist()
+        composeRule.onNodeWithText("f i n d  s o m e t h i n g").assertDoesNotExist()
     }
 }

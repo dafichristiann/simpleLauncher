@@ -110,19 +110,52 @@ directional micro-slide, 280ms, dan `FastOutSlowInEasing`. `AppDrawerScreen` now
 `MotionTokens.categoryLauncher()` for category enter/exit; the grid geometry and
 AlphabetRail behavior remain unchanged. The Tecno device has the final Opsi B APK installed.
 
-**Session 23: P8 — motion demo (music playback / weather / clock / rail) DONE
-(2026-09-25).** The home's live motion now runs on honest local state: the Music row is
-driven by a `PlaybackController` abstraction (local `DemoPlaybackController`), the Weather
-row renders an abstract fallback condition (`Clear`), the Clock uses a local minute ticker
-with a per-digit transition, and the right rail keeps its single drag engine with
-press/drag/drop feedback. **No MediaSession / Spotify / weather API is used.** Verified on
-Tecno CN7c: 280 JVM unit + 50 instrumented green; new recording
-`docs/videos/p8-motion-playback-expand.mp4`. See the Session 23 log below and
-`docs/09` D-059/D-060/D-061.
+**Session 24: P8 music reverted — Music player row removed (2026-09-25).** Per user
+request, the home Music player row was removed entirely: `PlaybackController` /
+`DemoPlaybackController`, `MusicPlayerRow`, the `Music` `HomeRowKind`/`HomeRowId`, the
+`HomeState.Music` state, and the Spotify deep link are all gone (D-062, supersedes D-059).
+The default home is now **Time → Date → Weather → Search**. Weather (D-060) and Clock
+(D-061) are unchanged. JVM suite: **275 unit, 0 failures**.
+
+**Session 23: P8 — motion demo (weather / clock / rail) DONE (2026-09-25).**
+*(Music part since removed in Session 24 / D-062.)* The home's live motion runs on honest
+local state: the Weather row renders an abstract fallback condition (`Clear`), the Clock
+uses a local minute ticker with a per-digit transition, and the right rail keeps its single
+drag engine with press/drag/drop feedback. **No MediaSession / Spotify / weather API is
+used.** See the Session 23 log below and `docs/09` D-060/D-061.
 
 ---
 
 ## Session log
+
+### Session 24 - P8 music reverted: Music player row removed (2026-09-25)
+
+**Why:** the user asked to drop the music section from the home.
+
+**What changed:**
+- Deleted `feature/home/.../PlaybackController.kt` and `PlaybackControllerTest.kt`.
+- `core/designsystem/atom/HomeRows.kt` — removed `MusicPlayerRow`, `MusicProgressBar`,
+  `MusicControl`, `formatPlaybackTime`, and their now-unused imports.
+- `feature/home/HomeScreen.kt` — removed the `DemoPlaybackController` + playback state,
+  the music `MusicRow` composable, the `HomeRowKind.Music` / `HomeRowId.Music` branches,
+  the "Music" drag label, and the music import.
+- `feature/home/HomeState.kt` — removed `HomeState.Music` (`isMusicOpen`) and
+  `HomeRowId.Music`.
+- `core/model/HomeRowPref.kt` — removed `HomeRowKind.Music` (default order is now 7 kinds).
+- `feature/home/RowLaunchResolver.kt` — removed the Music/Spotify path and the
+  `SPOTIFY` constant.
+- `core/designsystem/theme/Dimens.kt` — removed the four dead music dimens.
+- `SettingsPanel` label map and tests updated to drop Music.
+
+**Tests:** **275 JVM unit, 0 failures** (`.\gradlew.bat testDebugUnitTest`); removed the
+playback tests and the music home-state cases; home-row logic/drag tests updated.
+
+**Decisions:** D-062 (music row removed; supersedes D-059).
+
+**Blocked / needs decision**
+- None.
+
+---
 
 ### Session 23 - P8 Motion demo: music playback abstraction + weather fallback + clock ticker + rail feedback — DONE (2026-09-25)
 

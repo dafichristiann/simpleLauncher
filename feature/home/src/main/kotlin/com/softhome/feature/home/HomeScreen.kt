@@ -14,7 +14,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,7 +43,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,7 +70,6 @@ import com.softhome.core.designsystem.atom.HomeDivider
 import com.softhome.core.designsystem.atom.HomeRow
 import com.softhome.core.designsystem.atom.LineIcon
 import com.softhome.core.designsystem.atom.LineIconImage
-import com.softhome.core.designsystem.atom.MusicPlayerRow
 import com.softhome.core.designsystem.atom.NotesRowContent
 import com.softhome.core.designsystem.atom.RailIcon
 import com.softhome.core.designsystem.atom.warmPress
@@ -138,14 +135,7 @@ fun HomeScreen(
     val date = remember(minuteKey) { homeDate(Date(minuteKey * 60_000L)) }
     val reducedMotion = rememberReducedMotion()
     val weather = remember { WeatherUiState() }
-    val playbackController = remember { DemoPlaybackController() }
-    val playbackState by playbackController.state.collectAsState()
-    LaunchedEffect(playbackController) {
-        while (isActive) {
-            delay(50L)
-            playbackController.advanceBy(50L)
-        }
-    }
+
 
     val railResolver = rememberRailResolver(context)
     val onShortcut: (RailShortcut) -> Unit = { shortcut ->
@@ -218,7 +208,7 @@ fun HomeScreen(
                     // expanded row reachable, while at rest the list fits and the swipe-up
                     // gesture reaches the drawer layer behind the content.
                     .then(
-                        if (homeState.isNotesOpen || homeState.isMusicOpen) Modifier.verticalScroll(scrollState) else Modifier,
+                        if (homeState.isNotesOpen) Modifier.verticalScroll(scrollState) else Modifier,
                     )
                     .dropTarget(targetId = "rowlist", controller = dragController)
                     .padding(
@@ -239,10 +229,7 @@ fun HomeScreen(
                         state = state,
                         homeState = homeState,
                         weather = weather,
-                        playbackState = playbackState,
                         reducedMotion = reducedMotion,
-                        onPlaybackToggle = playbackController::togglePlayPause,
-                        onSeekPlayback = playbackController::seekTo,
                         onNotesChange = onNotesChange,
                         onTapRow = { homeState = homeState.onTapRow(it) },
                         onLaunchRow = launchRow,
@@ -301,7 +288,6 @@ private fun homeRowLabel(kind: HomeRowKind): String = when (kind) {
     HomeRowKind.Date -> "Date"
     HomeRowKind.Weather -> "Weather"
     HomeRowKind.Search -> "Search"
-    HomeRowKind.Music -> "Music"
     HomeRowKind.Calendar -> "Calendar"
     HomeRowKind.BatteryStorage -> "Battery & Storage"
     HomeRowKind.Notes -> "Quick notes"
@@ -337,10 +323,7 @@ private fun HomeRowSlot(
     state: HomeUiState,
     homeState: HomeState,
     weather: WeatherUiState,
-    playbackState: PlaybackState,
     reducedMotion: Boolean,
-    onPlaybackToggle: () -> Unit,
-    onSeekPlayback: (Long) -> Unit,
     onNotesChange: (String) -> Unit,
     onTapRow: (HomeRowId) -> Unit,
     onLaunchRow: (HomeRowKind) -> Unit,
@@ -357,15 +340,6 @@ private fun HomeRowSlot(
                 focused = homeState.isSearching,
                 onClick = { onLaunchRow(kind) },
                 onLongClick = { onTapRow(HomeRowId.Search) },
-            )
-            HomeRowKind.Music -> MusicRow(
-                expanded = homeState.isMusicOpen,
-                playbackState = playbackState,
-                reducedMotion = reducedMotion,
-                onPlaybackToggle = onPlaybackToggle,
-                onSeekPlayback = onSeekPlayback,
-                onClick = { onLaunchRow(kind) },
-                onLongClick = { onTapRow(HomeRowId.Music) },
             )
             HomeRowKind.Calendar -> CalendarRowContent(
                 dayOfMonth = date.day,
@@ -559,51 +533,10 @@ private fun SearchRow(
     }
 }
 
-@Composable
-private fun MusicRow(
-    expanded: Boolean,
-    playbackState: PlaybackState,
-    reducedMotion: Boolean,
-    onPlaybackToggle: () -> Unit,
-    onSeekPlayback: (Long) -> Unit,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
-    // MUSIC state grows the row in-place (MUSIC_RISE 280ms); other rows stay.
-    val grow by animateDpAsState(
-        targetValue = if (expanded) 16.dp else 0.dp,
-        animationSpec = if (reducedMotion) snap() else MotionTokens.musicRise(),
-        label = "musicRise",
-    )
-    HomeRow(
-        showDivider = false,
-        contentDescription = "Music player",
-        onClick = onClick,
-        onClickLabel = "Open music",
-        onLongClick = onLongClick,
-        onLongClickLabel = "Music in place",
-    ) {
-        MusicPlayerRow(
-            title = "play music.",
-            artist = "Djo",
-            track = "End of Beginning \u00B7 Live from Chicago",
-            expanded = expanded,
-            progress = playbackState.progress,
-            reducedMotion = reducedMotion,
-            isPlaying = playbackState.isPlaying,
-            currentTimeMs = playbackState.currentTimeMs,
-            durationMs = playbackState.durationMs,
-            onPlayToggle = onPlaybackToggle,
-            onSeek = onSeekPlayback,
-            modifier = Modifier.padding(top = Spacing.xl + grow, bottom = Spacing.xl + grow),
-        )
-    }
-}
-
 /**
  * Quick-notes row (P2 / E5). **Long-press** toggles Idle <-> NOTES (Q2: tap is reserved
  * for launching; notes has no app target so its tap is a no-op). When expanded the row
- * grows in-place (same motion family as music) and reveals the editor.
+ * grows in-place (same motion family as the search row) and reveals the editor.
  */
 @Composable
 private fun NotesRow(

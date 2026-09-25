@@ -83,20 +83,6 @@ class RowLaunchResolverTest {
     }
 
     @Test
-    fun music_prefers_spotify_deeplink() {
-        val r = resolverAccepting(pkg(RowLaunchResolver.SPOTIFY))
-        val intent = r.intentFor(HomeRowKind.Music)
-        assertThat(intent).isNotNull()
-        assertThat(intent!!.`package`).isEqualTo(RowLaunchResolver.SPOTIFY)
-    }
-
-    @Test
-    fun music_with_no_target_returns_null() {
-        // Music has no browser-style fallback -- a dead tap must be a null, not a crash.
-        assertThat(resolverAccepting().intentFor(HomeRowKind.Music)).isNull()
-    }
-
-    @Test
     fun non_launching_rows_return_null() {
         val r = resolverAccepting()
         assertThat(r.intentFor(HomeRowKind.Calendar)).isNull()
@@ -114,7 +100,7 @@ class RowLaunchResolverTest {
         )
         listOf(
             HomeRowKind.Time, HomeRowKind.Date, HomeRowKind.Weather,
-            HomeRowKind.Search, HomeRowKind.Music,
+            HomeRowKind.Search,
         ).forEach { kind ->
             val intent = r.intentFor(kind)
             assertThat(intent).isNotNull()

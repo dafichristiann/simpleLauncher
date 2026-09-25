@@ -415,7 +415,6 @@ private fun HomeRowKind.displayLabel(): String = when (this) {
     HomeRowKind.Date -> "Date"
     HomeRowKind.Weather -> "Weather"
     HomeRowKind.Search -> "Search"
-    HomeRowKind.Music -> "Music"
     HomeRowKind.Calendar -> "Calendar"
     HomeRowKind.BatteryStorage -> "Battery & storage"
     HomeRowKind.Notes -> "Quick notes"

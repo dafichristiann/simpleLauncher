@@ -6,7 +6,6 @@ package com.softhome.feature.home
  *
  *  - [Idle]   "Home at rest"  -- clock + weather visible, rail minimal.
  *  - [Search] "rail expands"  -- search row focused; rail slides open.
- *  - [Music]  "player rises"  -- music row grows in-place.
  *  - [Notes]  (P2 / E5)       -- quick-notes row grows in-place into an editor.
  *
  * Triggered by tapping the corresponding row; tapping elsewhere / Back returns
@@ -15,14 +14,10 @@ package com.softhome.feature.home
 enum class HomeState {
     Idle,
     Search,
-    Music,
     Notes;
 
     /** Whether the search row should show its focused affordance. */
     val isSearching: Boolean get() = this == Search
-
-    /** Whether the music row should be expanded. */
-    val isMusicOpen: Boolean get() = this == Music
 
     /** Whether the notes row should be expanded into its editor (P2). */
     val isNotesOpen: Boolean get() = this == Notes
@@ -34,7 +29,6 @@ enum class HomeState {
     fun onTapRow(row: HomeRowId): HomeState {
         val target = when (row) {
             HomeRowId.Search -> Search
-            HomeRowId.Music -> Music
             HomeRowId.Notes -> Notes
             else -> Idle
         }
@@ -46,6 +40,6 @@ enum class HomeState {
 
 /** Identifiable home rows that participate in state changes. */
 enum class HomeRowId {
-    Time, Date, Weather, Search, Music, Calendar, BatteryStorage, Notes,
+    Time, Date, Weather, Search, Calendar, BatteryStorage, Notes,
 }
 

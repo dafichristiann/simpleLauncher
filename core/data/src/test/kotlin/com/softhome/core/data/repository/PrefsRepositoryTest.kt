@@ -78,10 +78,10 @@ class PrefsRepositoryTest {
         val repo = newRepo(); reset(repo)
         val prefs = repo.prefs.first()
         assertThat(prefs.homeRows.map { it.kind }).isEqualTo(HomeRowLogic.DEFAULT_ORDER)
-        // P2: Calendar/Battery/Notes are hidden by default; the other five are visible.
+        // P2: Calendar/Battery/Notes are hidden by default; the other four are visible.
         assertThat(prefs.homeRows.filter { it.visible }.map { it.kind }).containsExactly(
             HomeRowKind.Time, HomeRowKind.Date, HomeRowKind.Weather,
-            HomeRowKind.Search, HomeRowKind.Music,
+            HomeRowKind.Search,
         ).inOrder()
     }
 
@@ -102,13 +102,13 @@ class PrefsRepositoryTest {
         val repo = newRepo(); reset(repo)
         var rows = HomeRowLogic.default()
         rows = HomeRowLogic.toggle(rows, HomeRowKind.Notes)  // notes: hidden -> visible
-        rows = HomeRowLogic.moveUp(rows, HomeRowKind.Music)  // reorder music
+        rows = HomeRowLogic.moveUp(rows, HomeRowKind.Search)  // reorder search
         repo.setHomeRows(rows)
         val got = repo.prefs.first().homeRows
         assertThat(got.first { it.kind == HomeRowKind.Notes }.visible).isTrue()
-        // Music moved before Weather (it was after Search originally).
-        assertThat(got.map { it.kind }.indexOf(HomeRowKind.Music))
-            .isLessThan(HomeRowLogic.DEFAULT_ORDER.indexOf(HomeRowKind.Music))
+        // Search moved earlier than its default position.
+        assertThat(got.map { it.kind }.indexOf(HomeRowKind.Search))
+            .isLessThan(HomeRowLogic.DEFAULT_ORDER.indexOf(HomeRowKind.Search))
     }
 
     @Test
@@ -179,7 +179,7 @@ class PrefsRepositoryTest {
                 darkTheme = ThemeMode.Dark,
                 showNotificationBadges = false,
                 iconOverrides = mapOf("com.a/Main" to IconOverride.Pack("x")),
-                homeRows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Music),
+                homeRows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Notes),
                 spacing = SpacingScale.Roomy,
                 hiddenApps = setOf("com.h/One"),
             ),
@@ -194,7 +194,7 @@ class PrefsRepositoryTest {
         assertThat(p.spacing).isEqualTo(SpacingScale.Roomy)
         assertThat(p.hiddenApps).containsExactly("com.h/One")
         assertThat(p.iconOverrides).containsExactly("com.a/Main", IconOverride.Pack("x"))
-        assertThat(p.homeRows.first { it.kind == HomeRowKind.Music }.visible).isFalse()
+        assertThat(p.homeRows.first { it.kind == HomeRowKind.Notes }.visible).isTrue()
     }
 
     @Test

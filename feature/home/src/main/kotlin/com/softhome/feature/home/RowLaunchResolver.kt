@@ -69,10 +69,6 @@ class RowLaunchResolver(
             // Honors the user's default browser/search app; no app is hardcoded (Q3 spirit).
             Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")),
         )
-        HomeRowKind.Music -> listOf(
-            // Spotify deep link first; falls through to the known packages / chooser.
-            Intent(Intent.ACTION_VIEW, Uri.parse("spotify:")).setPackage(SPOTIFY),
-        )
         // Non-launching rows in the current design.
         HomeRowKind.Calendar, HomeRowKind.BatteryStorage, HomeRowKind.Notes -> emptyList()
     }
@@ -88,7 +84,6 @@ class RowLaunchResolver(
         HomeRowKind.Weather -> listOf(
             "com.rlk.weathers", "com.google.android.apps.weather", "com.transsion.weather",
         )
-        HomeRowKind.Music -> listOf(SPOTIFY)
         else -> emptyList()
     }
 
@@ -112,8 +107,6 @@ class RowLaunchResolver(
         intent.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
 
     companion object {
-        const val SPOTIFY = "com.spotify.music"
-
         /**
          * Real resolver bound to a `(Intent) -> ComponentName?` (typically
          * `context.packageManager.resolveActivity(intent, MATCH_DEFAULT_ONLY)?.activityInfo

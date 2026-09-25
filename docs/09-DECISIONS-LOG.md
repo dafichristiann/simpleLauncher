@@ -5,6 +5,29 @@ Append-only.
 
 ---
 
+### D-062 - The Music player row is removed from the home (P8 music reverted)
+- **What:** The home Music player row is removed entirely (per user request). Deleted:
+  `PlaybackController.kt` / `PlaybackControllerTest.kt`, the `MusicPlayerRow` +
+  `MusicProgressBar` + `MusicControl` + `formatPlaybackTime` atoms in `HomeRows.kt`,
+  the `MusicRow` composable and its wiring in `HomeScreen.kt`, the `Music` value of
+  `HomeRowKind` and `HomeRowId`, and the `HomeState.Music` state (`isMusicOpen`). The
+  Spotify deep link / `SPOTIFY` constant is gone from `RowLaunchResolver`. The four
+  now-dead music `Dimens` (`albumArt`, `expandedAlbumArt`, `musicControl`,
+  `musicControlSmall`) are removed.
+- **Why:** The user asked to drop the music section. With no music row, the local
+  `PlaybackController`/`DemoPlaybackController` demo (D-059) has no consumer, so keeping
+  it would be dead code.
+- **Impact:** The default home is now **Time → Date → Weather → Search** (Calendar /
+  Battery-Storage / Notes remain hidden-by-default and re-enablable in Settings). The
+  Weather (D-060) and Clock (D-061) parts of P8 are unaffected. `HomeRowKind` and its
+  default order drop `Music` (7 kinds); the shared motion tokens `musicRise`/`notesExpand`/
+  `dragReorder` and the `ThinWarmProgressBar` (battery/storage) are unchanged. Tests
+  updated: JVM suite is **275 unit, 0 failures** (was 280; the playback + music home-state
+  cases are gone). **Supersedes D-059** (and the P8 music evidence
+  `docs/videos/p8-motion-playback-expand.mp4` no longer describes shipped behaviour).
+
+---
+
 ### D-061 - Clock uses a local minute ticker with a digit-level transition
 - **What:** The Time row is driven by `rememberMinuteKey()` (a coroutine that sleeps to
   the next minute boundary and bumps an epoch-minute key) rather than a broadcast or
@@ -35,6 +58,9 @@ Append-only.
 ---
 
 ### D-059 - Music player uses a PlaybackController abstraction (local demo state)
+> **Superseded by D-062.** The Music player row (and with it `PlaybackController` /
+> `DemoPlaybackController` / `PlaybackState`) has been removed from the home. Kept for
+> history.
 - **What:** The home Music row depends only on a `PlaybackController` interface
   (`state: StateFlow<PlaybackState>`, `togglePlayPause()`, `seekTo(positionMs)`), where
   `PlaybackState(isPlaying, currentTimeMs, durationMs)` exposes a derived

@@ -15,7 +15,6 @@ enum class HomeRowKind {
     Date,
     Weather,
     Search,
-    Music,
     Calendar,
     BatteryStorage,
     Notes,
@@ -46,7 +45,6 @@ object HomeRowLogic {
         HomeRowKind.Date,
         HomeRowKind.Weather,
         HomeRowKind.Search,
-        HomeRowKind.Music,
         HomeRowKind.Calendar,
         HomeRowKind.BatteryStorage,
         HomeRowKind.Notes,
@@ -54,7 +52,7 @@ object HomeRowLogic {
 
     /**
      * P2 (2026-09-25): rows that are **hidden by default** on a fresh install, so the home
-     * opens lean -- only Time -> Date -> Weather -> Search -> Music. These are NOT removed:
+     * opens lean -- only Time -> Date -> Weather -> Search. These are NOT removed:
      * they stay reorderable/visible via Settings -> Widgets ([canHide] returns true).
      *
      * Locked rows (Time/Date/Weather) are always visible and are never in this set.
@@ -144,7 +142,7 @@ object HomeRowLogic {
 
     /**
      * P2 migration helper (pure). Existing installs persisted the **legacy all-visible
-     * default** (all 8 kinds, every one visible). We can't distinguish "user deliberately
+     * default** (every known kind, all visible). We can't distinguish "user deliberately
      * turned everything on" from the old default, so per the P2 decision (Q1 = apply-once)
      * this detects the exact legacy shape and maps it to the new [default] exactly once.
      *
