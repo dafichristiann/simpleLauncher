@@ -55,6 +55,14 @@ fun DrawerAppIcon(
      */
     colorToken: DrawerIconColor.Token? = null,
     selected: Boolean = false,
+    /** Sidebar app icons can opt out of the drawer tile elevation effect. */
+    showShadow: Boolean = true,
+    /**
+     * Optional rail normalization. The drawer keeps its designed inset ratios, while
+     * the compact rail can give the glyph/painter the same visual bounds as a system
+     * shortcut without changing the app asset or its touch container.
+     */
+    normalizedContentSize: Dp? = null,
     contentDescription: String? = null,
 ) {
     val colors = MaterialTheme.softColors
@@ -98,6 +106,9 @@ fun DrawerAppIcon(
             symbolTint = symbolTint,
             painter = packPainter,
             painterTint = null, // real pack artwork keeps its own colors
+            showShadow = showShadow,
+            symbolSize = normalizedContentSize ?: (size * com.softhome.core.designsystem.atom.ICON_GLYPH_RATIO),
+            painterSize = normalizedContentSize ?: (size * com.softhome.core.designsystem.atom.ICON_SYMBOL_RATIO),
             contentDescription = contentDescription,
         )
     }
