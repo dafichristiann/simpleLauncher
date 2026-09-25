@@ -3,7 +3,6 @@ package com.softhome.core.designsystem.theme
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
 
@@ -35,8 +34,6 @@ object MotionTokens {
     const val THEME_TRANSITION_MS = 220
     const val CLOCK_DIGIT_MS = 240
     const val WEATHER_TRANSITION_MS = 320
-    const val MUSIC_EXPAND_MS = 360
-    const val MUSIC_PROGRESS_MS = 120
 
     /** cubic-bezier(0.2, 0.8, 0.2, 1) */
     val WarmEase: Easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
@@ -62,11 +59,6 @@ object MotionTokens {
     fun <T> clockDigit(): TweenSpec<T> = tween(CLOCK_DIGIT_MS, easing = WarmEase)
 
     fun <T> weatherTransition(): TweenSpec<T> = tween(WEATHER_TRANSITION_MS, easing = WarmEase)
-
-    fun <T> musicExpand(): TweenSpec<T> = tween(MUSIC_EXPAND_MS, easing = WarmEase)
-
-    /** Playback progress is time-based by nature, so its interpolation remains linear. */
-    fun <T> musicProgress(): TweenSpec<T> = tween(MUSIC_PROGRESS_MS, easing = LinearEasing)
 
     /**
      * P2: the quick-notes row grows in-place on tap-to-expand. Same motion family

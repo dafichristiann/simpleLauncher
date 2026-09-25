@@ -478,54 +478,6 @@ private fun AppMenu(
     AppContextMenu(items = items, onDismiss = onDismiss)
 }
 
-@Composable
-private fun DrawerHeader(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onOpenIconPack: () -> Unit,
-    onNewFolder: () -> Unit,
-    dragController: DragController,
-) {
-    val colors = MaterialTheme.softColors
-    val newFolderLabel = stringResource(R.string.drawer_new_folder)
-    val iconPackLabel = stringResource(R.string.drawer_icon_pack)
-    val newFolderHovered = dragController.state.hoveredTargetId == "newfolder"
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "All apps",
-                style = MaterialTheme.typography.titleLarge,
-                color = colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = newFolderLabel,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (newFolderHovered) colors.accent else colors.accent,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .dropTarget(targetId = "newfolder", controller = dragController)
-                    .background(if (newFolderHovered) colors.accent.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
-                    .clickable(role = Role.Button, onClickLabel = newFolderLabel, onClick = onNewFolder)
-                    .padding(horizontal = Spacing.md, vertical = Spacing.xs),
-            )
-            Text(
-                text = iconPackLabel,
-                style = MaterialTheme.typography.labelMedium,
-                color = colors.textBody,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable(role = Role.Button, onClickLabel = iconPackLabel, onClick = onOpenIconPack)
-                    .padding(horizontal = Spacing.md, vertical = Spacing.xs),
-            )
-        }
-        DrawerSearchPill(query = query, onQueryChange = onQueryChange)
-    }
-}
-
 /**
  * Search pill (V7udUl): h56, r28, fill #E8DFD0, stroke #C8B8A6, search icon 24
  * + vertical ellipsis.
