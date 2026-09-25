@@ -237,7 +237,12 @@ fun HomeScreen(
                         modifier = Modifier
                             .onGloballyPositioned { coords ->
                                 val b = coords.boundsInWindow()
-                                rowBoundsByIndex = rowBoundsByIndex + (index to b)
+                                // Only write when the bounds actually changed, so a layout
+                                // pass that leaves a row in place does not invalidate the
+                                // snapshot state (and recompose every row reading it).
+                                if (rowBoundsByIndex[index] != b) {
+                                    rowBoundsByIndex = rowBoundsByIndex + (index to b)
+                                }
                             }
                             .dragSourceAlpha(beingDragged)
                             .dragSource(

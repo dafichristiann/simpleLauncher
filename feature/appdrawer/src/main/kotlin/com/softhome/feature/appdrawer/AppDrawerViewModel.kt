@@ -175,25 +175,43 @@ class AppDrawerViewModel @Inject constructor(
         val openId: String?,
     )
 
-    private fun buildState(
+    /**
+     * Audit P5: the per-app `DrawerEntry` (glyph + color assignment + resolved icon) is
+     * the expensive part of [buildState] -- it runs the design-map lookup, the
+     * uniqueness pass, and the icon resolver for every visible app. It only depends on
+     * the app list, the active pack and the icon/visibility prefs -- NOT on the query,
+     * category, or which overlay is open. So we memoize it and only recompute when one
+     * of those inputs actually changes. Before this, typing in the search box re-ran the
+     * whole derivation on every keystroke.
+     */
+    private data class EntriesKey(
+        val apps: List<AppInfo>,
+        val packId: String?,
+        val hidden: Set<String>,
+        val overrides: Map<String, com.softhome.core.model.IconOverride>,
+        val maskUnsupported: Boolean,
+    )
+
+    private var cachedEntriesKey: EntriesKey? = null
+    private var cachedEntries: Map<String, DrawerEntry> = emptyMap()
+    private var cachedVisibleApps: List<AppInfo> = emptyList()
+
+    /** Compute (or reuse) the per-app entries for the current inputs. */
+    private fun entriesFor(
         apps: List<AppInfo>,
-        query: String,
-        category: DrawerCategory,
-        loading: Boolean,
-        prefs: com.softhome.core.model.LauncherPrefs,
         pack: IconPack?,
-        folders: List<Folder>,
-        openFolderId: String?,
-        menuKey: String?,
-        editingKey: String?,
-    ): DrawerUiState {
-        // P3/Q2: hidden apps are filtered out of the drawer entirely.
-        val hidden = prefs.hiddenApps
-        val visibleApps = apps.filterNot { it.componentKey in hidden }
-        // P4: deterministic per-package glyph+color, with a uniqueness guarantee over the
-        // WHOLE visible set (not the filtered view) so the assignment is stable while the
-        // user switches categories. The design table (DrawerIconMap) wins; the IconMasker
-        // heuristic + OS-category color are the fallback for unknown packages.
+        prefs: com.softhome.core.model.LauncherPrefs,
+    ): Pair<List<AppInfo>, Map<String, DrawerEntry>> {
+        val key = EntriesKey(
+            apps = apps,
+            packId = pack?.id,
+            hidden = prefs.hiddenApps,
+            overrides = prefs.iconOverrides,
+            maskUnsupported = prefs.maskUnsupportedApps,
+        )
+        if (key == cachedEntriesKey) return cachedVisibleApps to cachedEntries
+
+        val visibleApps = apps.filterNot { it.componentKey in prefs.hiddenApps }
         val byPackage = visibleApps.associateBy { it.packageName }
         val assignments = DrawerIconAssignment.assign(
             identities = visibleApps.map { it.componentKey to it.packageName },
@@ -207,8 +225,6 @@ class AppDrawerViewModel @Inject constructor(
             glyphFallbacks = GLYPH_FALLBACKS,
         )
         val entries = visibleApps.associate { app ->
-            // The assignment's glyph is a lucide kebab name; resolve it to the bundled
-            // LineIcon enum name (what the renderer + editor speak) once, here.
             val assigned = assignments[app.componentKey]
             val symbol = assigned?.glyph?.let { LineIcon.fromLucide(it).name }
                 ?: IconMasker.symbolFor(app)
@@ -222,6 +238,28 @@ class AppDrawerViewModel @Inject constructor(
                         .tokenFor(app.category, symbol),
             )
         }
+        cachedEntriesKey = key
+        cachedEntries = entries
+        cachedVisibleApps = visibleApps
+        return visibleApps to entries
+    }
+
+    private fun buildState(
+        apps: List<AppInfo>,
+        query: String,
+        category: DrawerCategory,
+        loading: Boolean,
+        prefs: com.softhome.core.model.LauncherPrefs,
+        pack: IconPack?,
+        folders: List<Folder>,
+        openFolderId: String?,
+        menuKey: String?,
+        editingKey: String?,
+    ): DrawerUiState {
+        // Audit P5: hidden-app filtering + the per-app entry/assignment derivation are
+        // memoized (see [entriesFor]); only the cheap query/category/folder projection
+        // below runs on every state emission.
+        val (visibleApps, entries) = entriesFor(apps, pack, prefs)
         val matchesQuery: (AppInfo) -> Boolean =
             { query.isBlank() || it.label.contains(query, ignoreCase = true) }
 
@@ -276,7 +314,7 @@ class AppDrawerViewModel @Inject constructor(
             openFolder = openFolder,
             menuEntry = menuKey?.let { entries[it] },
             editingEntry = editingKey?.let { entries[it] },
-            hiddenApps = hidden,
+            hiddenApps = prefs.hiddenApps,
             iconOverrides = prefs.iconOverrides,
             spacingFactor = prefs.spacing.factor,
         )
