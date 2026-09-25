@@ -23,6 +23,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +66,7 @@ fun SettingsPanel(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.softColors
     val context = LocalContext.current
+    var customizeSidebar by remember { mutableStateOf(false) }
 
     // P4d: SAF launchers. Export -> CreateDocument; Import -> OpenDocument. Both mirror
     // the P1.5 icon-pack flow (no storage permission needed on any API level).
@@ -75,6 +79,20 @@ fun SettingsPanel(
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri != null) viewModel.loadBackupForRestore(context.contentResolver, uri)
+    }
+
+    if (customizeSidebar) {
+        CustomizeSidebarScreen(
+            state = state,
+            onBack = { customizeSidebar = false },
+            onAddApp = viewModel::addRailApp,
+            onAddShortcut = viewModel::addRailShortcut,
+            onRemove = viewModel::removeRailItem,
+            onMove = viewModel::moveRailItem,
+            onReset = viewModel::resetRailItems,
+            modifier = modifier.fillMaxSize(),
+        )
+        return
     }
 
     Box(
@@ -113,6 +131,7 @@ fun SettingsPanel(
                 onColumns = viewModel::setGridColumns,
                 onSpacing = viewModel::setSpacing,
                 onUnhide = viewModel::unhideApp,
+                onCustomizeSidebar = { customizeSidebar = true },
                 onOpenSystemSettings = { context.startActivity(SettingsIntents.systemSettings(context)) },
             )
 
@@ -200,6 +219,7 @@ private fun AppearanceSection(
     onColumns: (Int) -> Unit,
     onSpacing: (SpacingScale) -> Unit,
     onUnhide: (String) -> Unit,
+    onCustomizeSidebar: () -> Unit,
     onOpenSystemSettings: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -236,6 +256,14 @@ private fun AppearanceSection(
             label = stringResource(R.string.settings_spacing),
             supporting = spacing.name,
             onClick = { onSpacing(SettingsCycles.nextSpacing(spacing)) },
+        )
+
+        SettingsRow(
+            label = "Customize Sidebar",
+            supporting = "Choose apps and shortcuts for the right rail.",
+            showChevron = true,
+            onClick = onCustomizeSidebar,
+            onClickLabel = "Open Customize Sidebar",
         )
 
         // System settings entry (Q1).

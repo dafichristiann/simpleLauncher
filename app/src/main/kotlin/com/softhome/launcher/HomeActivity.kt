@@ -1,6 +1,7 @@
 package com.softhome.launcher
 
 import android.os.Bundle
+import android.view.Display
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -63,8 +64,30 @@ class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // P8: Request 120Hz refresh rate for smooth scrolling
+        // Use Surface.setFrameRate() API (Android 10+) for more reliable refresh rate request
+        requestHighRefreshRate()
+        
         setContent {
             LauncherRoot()
+        }
+    }
+    
+    private fun requestHighRefreshRate() {
+        try {
+            // API 31+ (Android 12+): Use window.attributes to set preferred display mode
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                val display = display ?: return
+                val modes = display.supportedModes
+                // Find 120Hz mode
+                val mode120Hz = modes.firstOrNull { it.refreshRate >= 120f } ?: return
+                window?.attributes = window?.attributes?.apply {
+                    preferredDisplayModeId = mode120Hz.modeId
+                }
+            }
+        } catch (e: Exception) {
+            // Silently fail if not supported
         }
     }
 }
@@ -144,6 +167,8 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
                     onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
                     onReorderRow = viewModel::reorderHomeRow,
                     onReorderRail = viewModel::reorderRail,
+                    onLaunchApp = viewModel::launchApp,
+                    drawerDrawableLoader = viewModel.drawableLoader,
                 )
             }
 

@@ -39,4 +39,7 @@ object RailOrderLogic {
         val destination = targetIndex.coerceIn(0, without.size)
         return without.toMutableList().apply { add(destination, item) }
     }
+
+    /** Compatibility bridge for the unified rail configuration. */
+    fun sanitizeItems(raw: List<RailItemId>?): List<RailItemId> = RailConfigLogic.sanitize(raw)
 }

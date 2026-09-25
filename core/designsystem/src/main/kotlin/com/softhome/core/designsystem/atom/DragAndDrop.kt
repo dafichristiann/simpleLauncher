@@ -85,6 +85,10 @@ class DragController internal constructor() {
         internal set
 
     private val targets = mutableMapOf<String, Rect>()
+    
+    // P7.2: throttle drag state updates to 16ms (1 frame at 60 FPS) to reduce recomposition storm
+    private var lastUpdateTimeMs = 0L
+    private val throttleIntervalMs = 16L
 
     internal fun registerTarget(id: String, bounds: Rect) {
         targets[id] = bounds
@@ -96,9 +100,17 @@ class DragController internal constructor() {
 
     internal fun begin(id: String, originWindow: Offset) {
         state = DragUiState(draggingId = id, originWindowPx = originWindow, pointerWindowPx = originWindow)
+        lastUpdateTimeMs = System.currentTimeMillis()
     }
 
     internal fun drag(newPointerWindow: Offset) {
+        // P7.2: throttle to 16ms to avoid recomposition storm during scroll/swipe
+        val currentTimeMs = System.currentTimeMillis()
+        if (currentTimeMs - lastUpdateTimeMs < throttleIntervalMs) {
+            return  // Skip this update; pointer moved too soon after last update
+        }
+        lastUpdateTimeMs = currentTimeMs
+        
         val hovered = targets.entries.firstOrNull { (_, r) -> r.contains(newPointerWindow) }?.key
         val moved = state.didMove || (newPointerWindow - state.originWindowPx).getDistance() > 8f
         state = state.copy(pointerWindowPx = newPointerWindow, hoveredTargetId = hovered, didMove = moved)

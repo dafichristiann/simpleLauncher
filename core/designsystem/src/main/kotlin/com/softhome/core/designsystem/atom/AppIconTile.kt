@@ -121,12 +121,17 @@ fun DrawerIconTile(
     painter: Painter? = null,
     painterTint: Color? = null,
     fullBleedPainter: Painter? = null,
+    /** Whether the tile should cast the drawer's soft elevation shadow. */
+    showShadow: Boolean = true,
+    /** Optional normalized content bounds for compact surfaces such as the right rail. */
+    symbolSize: Dp = size * ICON_GLYPH_RATIO,
+    painterSize: Dp = size * ICON_SYMBOL_RATIO,
     contentDescription: String? = null,
 ) {
     Box(
         modifier = modifier
             .size(size)
-            .softShadow(TileShadow, iconShape(size))
+            .then(if (showShadow) Modifier.softShadow(TileShadow, iconShape(size)) else Modifier)
             .background(background, iconShape(size)),
         contentAlignment = Alignment.Center,
     ) {
@@ -145,13 +150,13 @@ fun DrawerIconTile(
                     contentDescription = contentDescription,
                     contentScale = ContentScale.Fit,
                     colorFilter = painterTint?.let { ColorFilter.tint(it) },
-                    modifier = Modifier.size(size * ICON_SYMBOL_RATIO),
+                    modifier = Modifier.size(painterSize),
                 )
             }
             symbol != null -> {
                 LineIconImage(
                     icon = symbol,
-                    size = size * ICON_GLYPH_RATIO,
+                    size = symbolSize,
                     tint = symbolTint,
                     contentDescription = contentDescription,
                 )

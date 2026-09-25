@@ -2,12 +2,14 @@ package com.softhome.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
 import com.softhome.core.data.repository.AppRepository
 import com.softhome.core.data.repository.DeviceStatusRepository
 import com.softhome.core.data.repository.NotesRepository
 import com.softhome.core.data.repository.PrefsRepository
 import com.softhome.core.model.AppInfo
 import com.softhome.core.model.DeviceStatusSnapshot
+import com.softhome.core.model.DrawerIconAssignment
 import com.softhome.core.model.GridConfig
 import com.softhome.core.model.HomeRowDropResolver
 import com.softhome.core.model.HomeRowKind
@@ -17,6 +19,8 @@ import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconSource
 import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.RailOrderLogic
+import com.softhome.core.model.RailConfigLogic
+import com.softhome.core.model.RailItemIdCodec
 import com.softhome.core.model.ResolvedIcon
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
@@ -24,6 +28,7 @@ import com.softhome.feature.iconpack.data.IconPackDrawableLoader
 import com.softhome.feature.iconpack.data.IconPackRepository
 import com.softhome.feature.iconpack.domain.IconBitmapProvider
 import com.softhome.feature.iconpack.domain.IconMasker
+import com.softhome.feature.iconpack.domain.DrawerIconColor
 import com.softhome.feature.iconpack.domain.IconResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,9 +44,12 @@ data class AppIconUi(
     val app: AppInfo,
     val resolved: ResolvedIcon,
     val symbolName: String,
+    /** Same glyph/color assignment used by the All Apps drawer. */
+    val drawerColorToken: DrawerIconColor.Token = DrawerIconColor.Token.Neutral,
     val showBadge: Boolean = false,
 )
 
+@Stable
 data class HomeUiState(
     val apps: List<AppIconUi> = emptyList(),
     val grid: GridConfig = GridConfig.Default,
@@ -60,6 +68,10 @@ data class HomeUiState(
     val themeMode: ThemeMode = ThemeMode.System,
     /** P7: persisted right-rail order as stable shortcut names. */
     val railOrder: List<String> = RailOrderLogic.DEFAULT,
+    /** Unified rail IDs; this is the canonical view consumed by the rail. */
+    val railItems: List<com.softhome.core.model.RailItemId> = RailConfigLogic.DEFAULT_ITEMS,
+    /** Installed app icons indexed by stable component key for rail resolution. */
+    val railApps: Map<String, AppIconUi> = emptyMap(),
 ) {
     /** Rows the home should render, in order (locked rows always included). */
     val visibleRows: List<HomeRowKind> get() = HomeRowLogic.visibleInOrder(homeRows)
@@ -93,8 +105,17 @@ class HomeViewModel @Inject constructor(
     ) { apps, prefs, loading, pack -> Core(apps, prefs, loading, pack) }
         .combine(notesRepository.notes) { core, notes -> core to notes }
         .combine(deviceStatusFlow) { (core, notes), status ->
+            val drawerAssignments = drawerAssignments(core.apps, core.prefs)
+            val appIcons = core.apps.associate { app ->
+                app.componentKey to toUi(
+                    app = app,
+                    prefs = core.prefs,
+                    pack = core.pack,
+                    drawerAssignment = drawerAssignments[app.componentKey],
+                )
+            }
             HomeUiState(
-                apps = core.apps.map { toUi(it, core.prefs, core.pack) },
+                apps = appIcons.values.toList(),
                 grid = core.prefs.grid,
                 loading = core.loading,
                 activePack = core.pack,
@@ -104,7 +125,9 @@ class HomeViewModel @Inject constructor(
                 homeRows = core.prefs.homeRows,
                 spacing = core.prefs.spacing,
                 themeMode = core.prefs.darkTheme,
-                railOrder = RailOrderLogic.sanitize(core.prefs.railOrder),
+                railOrder = core.prefs.railOrder,
+                railItems = RailConfigLogic.sanitize(core.prefs.railItems),
+                railApps = appIcons,
             )
         }
         .stateIn(
@@ -185,9 +208,15 @@ class HomeViewModel @Inject constructor(
 
     /** P7: reorder a right-rail shortcut and persist it through the existing DataStore. */
     fun reorderRail(shortcutName: String, targetIndex: Int) {
-        val next = RailOrderLogic.move(uiState.value.railOrder, shortcutName, targetIndex)
-        if (next != uiState.value.railOrder) {
-            viewModelScope.launch { prefsRepository.setRailOrder(next) }
+        val item = RailItemIdCodec.parse(shortcutName) ?:
+            com.softhome.core.model.RailShortcutId.entries
+                .firstOrNull { it.name == shortcutName }
+                ?.let(com.softhome.core.model.RailItemId::System)
+        if (item != null) {
+            val next = RailConfigLogic.move(uiState.value.railItems, item, targetIndex)
+            if (next != uiState.value.railItems) {
+                viewModelScope.launch { prefsRepository.setRailItems(next) }
+            }
         }
     }
 
@@ -198,6 +227,7 @@ class HomeViewModel @Inject constructor(
         app: AppInfo,
         prefs: LauncherPrefs,
         pack: IconPack?,
+        drawerAssignment: DrawerIconAssignment.Assignment? = null,
     ): AppIconUi {
         val source = iconResolver.resolve(
             app = app,
@@ -205,7 +235,12 @@ class HomeViewModel @Inject constructor(
             overrides = prefs.iconOverrides,
             maskUnsupported = prefs.maskUnsupportedApps,
         )
-        val symbol = IconMasker.symbolFor(app)
+        // All Apps is the source of truth for application glyphs. The assignment is
+        // deterministic over the complete visible app list, so the same component gets
+        // the same mapped glyph on the drawer and the sidebar.
+        val symbol = drawerAssignment?.glyph
+            ?.let { com.softhome.core.designsystem.atom.LineIcon.fromLucide(it).name }
+            ?: IconMasker.symbolFor(app)
         val drawableName = when (source) {
             is IconSource.FromPack -> source.drawableName
             is IconSource.Override -> source.drawableName
@@ -226,6 +261,37 @@ class HomeViewModel @Inject constructor(
             className = app.className,
             overrideColorToken = overrideToken,
         )
-        return AppIconUi(app = app, resolved = resolved, symbolName = symbolName)
+        val drawerColor = drawerAssignment?.colorToken
+            ?.let(DrawerIconColor::tokenForName)
+            ?: DrawerIconColor.tokenFor(app.category, symbol)
+        return AppIconUi(
+            app = app,
+            resolved = resolved,
+            symbolName = symbolName,
+            drawerColorToken = drawerColor,
+        )
+    }
+
+    /** Mirrors AppDrawerViewModel's assignment inputs exactly. */
+    private fun drawerAssignments(
+        apps: List<AppInfo>,
+        prefs: LauncherPrefs,
+    ): Map<String, DrawerIconAssignment.Assignment> {
+        val visibleApps = apps.filterNot { it.componentKey in prefs.hiddenApps }
+        val byPackage = visibleApps.associateBy { it.packageName }
+        return DrawerIconAssignment.assign(
+            identities = visibleApps.map { it.componentKey to it.packageName },
+            heuristicGlyph = { pkg -> byPackage[pkg]?.let(IconMasker::symbolFor) ?: "AppWindow" },
+            heuristicColor = { pkg ->
+                val app = byPackage[pkg]
+                DrawerIconColor.nameOf(
+                    DrawerIconColor.tokenFor(
+                        app?.category,
+                        app?.let(IconMasker::symbolFor) ?: "AppWindow",
+                    ),
+                )
+            },
+            glyphFallbacks = DrawerIconAssignment.DEFAULT_GLYPH_FALLBACKS,
+        )
     }
 }

@@ -18,6 +18,10 @@ import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import com.softhome.core.model.Folder
+import com.softhome.core.model.RailConfigLogic
+import com.softhome.core.model.RailItemId
+import com.softhome.core.model.RailItemIdCodec
+import com.softhome.core.model.RailShortcutId
 import com.softhome.feature.iconpack.data.IconPackRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +48,8 @@ data class SettingsUiState(
     val backupMessage: String? = null,
     /** P4d: true when a valid backup file is loaded and awaiting the user's confirm. */
     val pendingRestore: Boolean = false,
+    val railItems: List<RailItemId> = RailConfigLogic.DEFAULT_ITEMS,
+    val installedApps: List<AppInfo> = emptyList(),
 ) {
     val visibleRowOrder: List<HomeRowKind> get() = homeRows.map { it.kind }
 }
@@ -77,6 +83,8 @@ class SettingsViewModel @Inject constructor(
             hiddenApps = prefs.hiddenApps.map { key ->
                 HiddenApp(key, apps.firstOrNull { it.componentKey == key }?.label ?: key)
             },
+            railItems = RailConfigLogic.sanitize(prefs.railItems),
+            installedApps = apps,
             backupMessage = message,
             pendingRestore = pending,
         )
@@ -97,6 +105,31 @@ class SettingsViewModel @Inject constructor(
     fun setSpacing(scale: SpacingScale) = viewModelScope.launch { prefsRepository.setSpacing(scale) }
 
     fun unhideApp(componentKey: String) = viewModelScope.launch { prefsRepository.unhideApp(componentKey) }
+
+    fun addRailApp(componentKey: String) {
+        val next = RailConfigLogic.add(uiState.value.railItems, RailItemId.App(componentKey))
+        if (next != uiState.value.railItems) viewModelScope.launch { prefsRepository.setRailItems(next) }
+    }
+
+    fun addRailShortcut(shortcut: RailShortcutId) {
+        val next = RailConfigLogic.add(uiState.value.railItems, RailItemId.System(shortcut))
+        if (next != uiState.value.railItems) viewModelScope.launch { prefsRepository.setRailItems(next) }
+    }
+
+    fun removeRailItem(item: RailItemId) {
+        val next = RailConfigLogic.remove(uiState.value.railItems, item)
+        if (next != uiState.value.railItems) viewModelScope.launch { prefsRepository.setRailItems(next) }
+    }
+
+    fun moveRailItem(storageId: String, targetIndex: Int) {
+        val item = RailItemIdCodec.parse(storageId) ?: return
+        val next = RailConfigLogic.move(uiState.value.railItems, item, targetIndex)
+        if (next != uiState.value.railItems) viewModelScope.launch { prefsRepository.setRailItems(next) }
+    }
+
+    fun resetRailItems() {
+        viewModelScope.launch { prefsRepository.setRailItems(RailConfigLogic.DEFAULT_ITEMS) }
+    }
 
     fun createFolder() = viewModelScope.launch {
         val current = folderRepository.folders.first()

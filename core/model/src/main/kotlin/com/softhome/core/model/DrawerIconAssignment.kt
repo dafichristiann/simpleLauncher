@@ -23,6 +23,16 @@ package com.softhome.core.model
  */
 object DrawerIconAssignment {
 
+    /**
+     * Resolvable fallback glyphs shared by every surface that mirrors the drawer icon.
+     * Keeping this list here prevents Home/rail from drifting away from All Apps when
+     * the uniqueness pass has to nudge a duplicate pair.
+     */
+    val DEFAULT_GLYPH_FALLBACKS: List<String> = listOf(
+        "AppWindow", "Square", "Box", "CircleDot", "Sparkles",
+        "Shield", "Tag", "Bot", "Store", "Wrench",
+    )
+
     /** One app's resolved glyph + color. */
     data class Assignment(val glyph: String, val colorToken: DrawerIconTokenName)
 

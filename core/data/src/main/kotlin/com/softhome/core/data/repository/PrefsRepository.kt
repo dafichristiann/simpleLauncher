@@ -17,6 +17,9 @@ import com.softhome.core.model.IconOverride
 import com.softhome.core.model.DrawerIconTokenName
 import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.RailOrderLogic
+import com.softhome.core.model.RailConfigLogic
+import com.softhome.core.model.RailItemId
+import com.softhome.core.model.RailItemIdCodec
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -54,6 +57,8 @@ interface PrefsRepository {
     suspend fun applyAll(prefs: LauncherPrefs)
     /** P7: persist the user-defined right-rail order. */
     suspend fun setRailOrder(order: List<String>) { }
+    /** Unified rail configuration; this is the canonical write path. */
+    suspend fun setRailItems(items: List<RailItemId>) { }
 }
 
 @Singleton
@@ -77,6 +82,7 @@ class PrefsRepositoryImpl @Inject constructor(
         // --- P4b ---
         val ICON_OVERRIDES = stringPreferencesKey("icon_overrides_json")
         val RAIL_ORDER = stringPreferencesKey("rail_order")
+        val RAIL_ITEMS_V2 = stringPreferencesKey("rail_items_v2")
     }
 
     /**
@@ -84,6 +90,7 @@ class PrefsRepositoryImpl @Inject constructor(
      * most once per repository instance. A `@Singleton` repo means once per process.
      */
     private val legacyRowMigrationDone = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val legacyRailMigrationDone = java.util.concurrent.atomic.AtomicBoolean(false)
 
     /**
      * P2 (Q1 = apply-once): if the backing store still holds the **legacy all-visible**
@@ -103,8 +110,23 @@ class PrefsRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun migrateLegacyRailOnce() {
+        if (!legacyRailMigrationDone.compareAndSet(false, true)) return
+        context.launcherDataStore.edit { p ->
+            if (!p.contains(Keys.RAIL_ITEMS_V2)) {
+                val migrated = RailConfigLogic.fromLegacyShortcutNames(
+                    p[Keys.RAIL_ORDER]?.split(',').orEmpty(),
+                )
+                p[Keys.RAIL_ITEMS_V2] = RailItemIdCodec.encode(migrated)
+            }
+        }
+    }
+
     override val prefs: Flow<LauncherPrefs> = context.launcherDataStore.data
-        .onStart { migrateLegacyHomeRowsOnce() }
+        .onStart {
+            migrateLegacyHomeRowsOnce()
+            migrateLegacyRailOnce()
+        }
         .map { p ->
             val default = GridConfig.Default
             LauncherPrefs(
@@ -126,7 +148,22 @@ class PrefsRepositoryImpl @Inject constructor(
                     .getOrDefault(SpacingScale.Normal),
                 hiddenApps = p[Keys.HIDDEN_APPS] ?: emptySet(),
                 iconOverrides = IconOverridesCodec.decode(p[Keys.ICON_OVERRIDES]),
-                railOrder = RailOrderLogic.sanitize(p[Keys.RAIL_ORDER]?.split(',')),
+                railOrder = legacyShortcutNames(
+                    RailConfigLogic.sanitize(
+                        if (p.contains(Keys.RAIL_ITEMS_V2)) {
+                            RailItemIdCodec.decode(p[Keys.RAIL_ITEMS_V2])
+                        } else {
+                            RailConfigLogic.fromLegacyShortcutNames(p[Keys.RAIL_ORDER]?.split(','))
+                        },
+                    ),
+                ),
+                railItems = RailConfigLogic.sanitize(
+                    if (p.contains(Keys.RAIL_ITEMS_V2)) {
+                        RailItemIdCodec.decode(p[Keys.RAIL_ITEMS_V2])
+                    } else {
+                        RailConfigLogic.fromLegacyShortcutNames(p[Keys.RAIL_ORDER]?.split(','))
+                    },
+                ),
             )
         }
 
@@ -196,8 +233,15 @@ class PrefsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setRailOrder(order: List<String>) {
+        setRailItems(RailConfigLogic.fromLegacyShortcutNames(order))
+    }
+
+    override suspend fun setRailItems(items: List<RailItemId>) {
+        val sanitized = RailConfigLogic.sanitize(items)
         context.launcherDataStore.edit { p ->
-            p[Keys.RAIL_ORDER] = RailOrderLogic.sanitize(order).joinToString(",")
+            p[Keys.RAIL_ITEMS_V2] = RailItemIdCodec.encode(sanitized)
+            // Keep the old key as a readable compatibility view for one upgrade window.
+            p[Keys.RAIL_ORDER] = legacyShortcutNames(sanitized).joinToString(",")
         }
     }
 
@@ -226,9 +270,17 @@ class PrefsRepositoryImpl @Inject constructor(
 
             if (prefs.iconOverrides.isEmpty()) p.remove(Keys.ICON_OVERRIDES)
             else p[Keys.ICON_OVERRIDES] = IconOverridesCodec.encode(prefs.iconOverrides)
-            p[Keys.RAIL_ORDER] = RailOrderLogic.sanitize(prefs.railOrder).joinToString(",")
+            val railItems = RailConfigLogic.sanitize(
+                if (prefs.railItems != RailConfigLogic.DEFAULT_ITEMS) prefs.railItems
+                else RailConfigLogic.fromLegacyShortcutNames(prefs.railOrder),
+            )
+            p[Keys.RAIL_ITEMS_V2] = RailItemIdCodec.encode(railItems)
+            p[Keys.RAIL_ORDER] = legacyShortcutNames(railItems).joinToString(",")
         }
     }
+
+    private fun legacyShortcutNames(items: List<RailItemId>): List<String> =
+        items.mapNotNull { (it as? RailItemId.System)?.shortcut?.name }
 }
 
 /**

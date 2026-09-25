@@ -17,6 +17,8 @@ data class LauncherPrefs(
     val hiddenApps: Set<String> = emptySet(),
     /** P7: stable right-rail order; an empty/invalid value recovers to the design default. */
     val railOrder: List<String> = RailOrderLogic.DEFAULT,
+    /** Unified P8+ right-rail configuration. `railOrder` remains a legacy read view. */
+    val railItems: List<RailItemId> = RailConfigLogic.DEFAULT_ITEMS,
 )
 
 enum class ThemeMode { Light, Dark, System }

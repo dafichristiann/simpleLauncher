@@ -90,7 +90,12 @@ import com.softhome.core.designsystem.theme.TweakLabel
 import com.softhome.core.designsystem.theme.TweakLabelLean
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.HomeRowKind
-import com.softhome.core.model.RailOrderLogic
+import com.softhome.core.model.AppInfo
+import com.softhome.core.model.RailConfigLogic
+import com.softhome.core.model.RailItemId
+import com.softhome.core.model.RailShortcutId
+import com.softhome.feature.iconpack.data.IconPackDrawableLoader
+import com.softhome.feature.iconpack.ui.DrawerAppIcon
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -122,6 +127,9 @@ fun HomeScreen(
     onOpenSettings: () -> Unit = {},
     onReorderRow: (HomeRowKind, Int) -> Unit = { _, _ -> },
     onReorderRail: (String, Int) -> Unit = { _, _ -> },
+    onLaunchApp: (AppInfo) -> Unit = {},
+    /** Loader used to mirror the All Apps icon-pack artwork in the right rail. */
+    drawerDrawableLoader: IconPackDrawableLoader? = null,
     /**
      * P3: invoked with the row whose **tap** should launch an app. When null (default)
      * the real [RowLaunchResolver] opens the related app; pass a lambda in tests to
@@ -275,8 +283,12 @@ fun HomeScreen(
                 onShortcut = onShortcut,
                 onOpenSettings = onOpenSettings,
                 expanded = homeState.isSearching,
-                railOrder = state.railOrder,
+                railItems = state.railItems,
+                railApps = state.railApps,
+                activePack = state.activePack,
+                drawableLoader = drawerDrawableLoader,
                 onReorder = onReorderRail,
+                onLaunchApp = onLaunchApp,
             )
         }
 
@@ -340,7 +352,7 @@ private fun HomeRowSlot(
             // P3: each of these rows **taps to launch** its related app.
             HomeRowKind.Time -> TimeRow(time, reducedMotion, onLaunch = { onLaunchRow(kind) })
             HomeRowKind.Date -> DateRow(date, onLaunch = { onLaunchRow(kind) })
-            HomeRowKind.Weather -> WeatherRow(weather, reducedMotion, onLaunch = { onLaunchRow(kind) })
+            HomeRowKind.Weather -> WeatherRow(weather, reducedMotion, isVisible = true, onLaunch = { onLaunchRow(kind) })
             // Q2: tap launches; the in-place expand moves to **long-press**.
             HomeRowKind.Search -> SearchRow(
                 focused = homeState.isSearching,
@@ -447,7 +459,7 @@ private fun DateRow(date: HomeDate, onLaunch: () -> Unit) {
 }
 
 @Composable
-private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, onLaunch: () -> Unit) {
+private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, isVisible: Boolean, onLaunch: () -> Unit) {
     val colors = MaterialTheme.softColors
     HomeRow(
         showDivider = false,
@@ -459,7 +471,7 @@ private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, onLaunch
             modifier = Modifier.padding(vertical = Spacing.xl),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val iconScale = rememberWeatherScale(reducedMotion)
+            val iconScale = rememberWeatherScale(reducedMotion, isVisible)
             AnimatedContent(
                 targetState = weather.condition,
                 transitionSpec = {
@@ -487,8 +499,10 @@ private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, onLaunch
 }
 
 @Composable
-private fun rememberWeatherScale(reducedMotion: Boolean): Float {
-    if (reducedMotion) return 1f
+private fun rememberWeatherScale(reducedMotion: Boolean, weatherRowVisible: Boolean): Float {
+    // P8: Skip animation entirely if reduced motion or row not visible
+    if (reducedMotion || !weatherRowVisible) return 1f
+    
     val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "weatherAmbient")
     val scale by transition.animateFloat(
         initialValue = 0.97f,
@@ -599,8 +613,12 @@ private fun HomeRightRail(
     onShortcut: (RailShortcut) -> Unit,
     onOpenSettings: () -> Unit,
     expanded: Boolean,
-    railOrder: List<String>,
+    railItems: List<RailItemId>,
+    railApps: Map<String, AppIconUi>,
+    activePack: com.softhome.core.model.IconPack?,
+    drawableLoader: IconPackDrawableLoader?,
     onReorder: (String, Int) -> Unit,
+    onLaunchApp: (AppInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
@@ -616,13 +634,9 @@ private fun HomeRightRail(
     val dragController = rememberDragController()
     val dragState = dragController.state
     var railOriginInWindow by remember { mutableStateOf(Offset.Zero) }
-    val ordered = remember(railOrder) {
-        RailOrderLogic.sanitize(railOrder).mapNotNull { name ->
-            RailShortcut.entries.firstOrNull { it.name == name }
-        }
-    }
+    val ordered = remember(railItems) { RailConfigLogic.sanitize(railItems) }
     val draggingName = dragState.draggingId?.removePrefix("rail:")
-    val draggingIndex = ordered.indexOfFirst { it.name == draggingName }
+    val draggingIndex = ordered.indexOfFirst { it.storageId == draggingName }
     val hoveredIndex = dragState.hoveredTargetId
         ?.removePrefix("rail:")
         ?.toIntOrNull()
@@ -660,10 +674,18 @@ private fun HomeRightRail(
                     verticalArrangement = Arrangement.spacedBy(Spacing.railGap),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    ordered.forEachIndexed { index, shortcut ->
-                        androidx.compose.runtime.key(shortcut.name) {
-                            val sourceIndex = ordered.indexOf(shortcut)
-                            val enabled = resolver.intentFor(shortcut) != null
+                    ordered.forEachIndexed { index, item ->
+                        androidx.compose.runtime.key(item.storageId) {
+                            val sourceIndex = ordered.indexOf(item)
+                            val shortcut = (item as? RailItemId.System)?.shortcut
+                                ?.let(::toRailShortcut)
+                            val app = (item as? RailItemId.App)?.let { railApps[it.componentKey] }
+                            val appInfo = app?.app
+                            val enabled = when {
+                                shortcut != null -> resolver.intentFor(shortcut) != null
+                                appInfo != null -> true
+                                else -> false
+                            }
                             val showDropIndicator = dragState.isDragging &&
                                 hoveredIndex == index && draggingIndex != index
                             val shiftTarget = when {
@@ -675,7 +697,7 @@ private fun HomeRightRail(
                             val shift by animateDpAsState(
                                 targetValue = shiftTarget,
                                 animationSpec = MotionTokens.dragReorder(),
-                                label = "railReorderShift_${shortcut.name}",
+                                label = "railReorderShift_${item.storageId}",
                             )
                             if (showDropIndicator) {
                                 RailDropIndicator()
@@ -685,18 +707,19 @@ private fun HomeRightRail(
                                 modifier = Modifier
                                     .dropTarget("rail:$index", dragController)
                                     .offset(y = slide + shift)
-                                    .dragSourceAlpha(draggingName == shortcut.name)
+                                    .dragSourceAlpha(draggingName == item.storageId)
                                     .warmPress(railInteractionSource)
                                     .dragSource(
-                                        id = "rail:${shortcut.name}",
+                                        id = "rail:${item.storageId}",
                                         controller = dragController,
                                         interactionSource = railInteractionSource,
                                         onTap = when {
                                             shortcut == RailShortcut.PanelLeft -> onOpenSettings
-                                            enabled -> { { onShortcut(shortcut) } }
+                                            shortcut != null && enabled -> { { onShortcut(shortcut) } }
+                                            appInfo != null -> { { onLaunchApp(appInfo) } }
                                             else -> null
                                         },
-                                        onLongPress = { menuFor = shortcut },
+                                        onLongPress = { if (shortcut != null) menuFor = shortcut },
                                         onDrop = { target, _ ->
                                             val targetIndex = target
                                                 ?.removePrefix("rail:")
@@ -707,16 +730,32 @@ private fun HomeRightRail(
                                                 sourceIndex < targetIndex -> targetIndex - 1
                                                 else -> targetIndex
                                             }
-                                            onReorder(shortcut.name, destination)
+                                            onReorder(item.storageId, destination)
                                         },
                                     ),
                             ) {
                                 // Gesture ownership lives on dragSource so tap, stationary
                                 // long-press, and long-press+drag cannot fire together.
-                                RailIcon(
-                                    icon = shortcut.lineIcon(),
-                                    contentDescription = shortcut.label(),
-                                )
+                                if (app != null && drawableLoader != null) {
+                                    DrawerAppIcon(
+                                        resolved = app.resolved,
+                                        size = Dimens.railIcon,
+                                        activePack = activePack,
+                                        drawableLoader = drawableLoader,
+                                        category = app.app.category,
+                                        colorToken = app.drawerColorToken,
+                                        showShadow = false,
+                                        normalizedContentSize = Dimens.railIcon,
+                                        contentDescription = app.app.label,
+                                    )
+                                } else {
+                                    RailIcon(
+                                        icon = shortcut?.lineIcon()
+                                            ?: app?.let { LineIcon.fromLucide(it.resolved.symbolName) }
+                                            ?: LineIcon.AppWindow,
+                                        contentDescription = shortcut?.label() ?: app?.app?.label ?: "Unavailable app",
+                                    )
+                                }
                             }
                         }
                     }
@@ -735,14 +774,31 @@ private fun HomeRightRail(
                     }
                 }
                 // The preview follows the pointer using only transform/opacity-friendly motion.
-            DragPreviewLayer(controller = dragController, windowOrigin = railOriginInWindow) { id ->
-                val shortcut = id.removePrefix("rail:").let { name ->
-                    RailShortcut.entries.firstOrNull { it.name == name }
+                DragPreviewLayer(controller = dragController, windowOrigin = railOriginInWindow) { id ->
+                    val item = ordered.firstOrNull { it.storageId == id.removePrefix("rail:") }
+                    val shortcut = (item as? RailItemId.System)?.shortcut?.let(::toRailShortcut)
+                    val app = (item as? RailItemId.App)?.let { railApps[it.componentKey] }
+                    if (app != null && drawableLoader != null) {
+                        DrawerAppIcon(
+                            resolved = app.resolved,
+                            size = Dimens.railIcon,
+                            activePack = activePack,
+                            drawableLoader = drawableLoader,
+                            category = app.app.category,
+                            colorToken = app.drawerColorToken,
+                            showShadow = false,
+                            normalizedContentSize = Dimens.railIcon,
+                            contentDescription = app.app.label,
+                        )
+                    } else {
+                        RailIcon(
+                            icon = shortcut?.lineIcon()
+                                ?: app?.let { LineIcon.fromLucide(it.resolved.symbolName) }
+                                ?: LineIcon.AppWindow,
+                            contentDescription = shortcut?.label() ?: app?.app?.label ?: "Unavailable app",
+                        )
+                    }
                 }
-                shortcut?.let {
-                    RailIcon(icon = it.lineIcon(), contentDescription = it.label())
-                }
-            }
             }
         }
     }
@@ -804,6 +860,9 @@ private fun RailShortcut.lineIcon(): LineIcon = when (this) {
     RailShortcut.PanelLeft -> LineIcon.PanelLeft
     RailShortcut.Phone -> LineIcon.Phone
 }
+
+private fun toRailShortcut(id: RailShortcutId): RailShortcut =
+    RailShortcut.entries.first { it.name == id.name }
 
 private fun RailShortcut.label(): String = when (this) {
     RailShortcut.Sparkles -> "More"

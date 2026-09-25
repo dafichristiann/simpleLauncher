@@ -8,6 +8,7 @@ import com.softhome.core.common.DispatcherProvider
 import com.softhome.core.model.AppInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,7 +51,12 @@ class AppRepositoryImpl @Inject constructor(
                 )
             }
             .distinctBy { it.componentKey }
-            .sortedBy { it.label.lowercase() }
+            // Keep alphabet/index positions stable when labels differ only by case or
+            // multiple activities expose the same label.
+            .sortedWith(
+                compareBy<AppInfo> { it.label.trim().lowercase(Locale.ROOT) }
+                    .thenBy { it.componentKey.lowercase(Locale.ROOT) },
+            )
             .toList()
     }
 

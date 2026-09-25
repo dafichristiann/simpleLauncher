@@ -202,6 +202,15 @@ class AppDrawerViewModel @Inject constructor(
     private var cachedEntriesKey: EntriesKey? = null
     private var cachedEntries: Map<String, DrawerEntry> = emptyMap()
     private var cachedVisibleApps: List<AppInfo> = emptyList()
+    
+    // P7.2: memoize page derivation to avoid O(n*m) recomputation on every query change
+    private data class PagesKey(
+        val visibleAppKeys: Set<String>,
+        val folderIds: Set<String>,
+        val queryHash: Int,
+    )
+    private var cachedPagesKey: PagesKey? = null
+    private var cachedPages: List<DrawerPage> = emptyList()
 
     /** Compute (or reuse) the per-app entries for the current inputs. */
     private fun entriesFor(
@@ -270,44 +279,62 @@ class AppDrawerViewModel @Inject constructor(
         val matchesQuery: (AppInfo) -> Boolean =
             { query.isBlank() || it.label.contains(query, ignoreCase = true) }
 
-        // P5: build one page per category (All + the 8 design groups). Global search
-        // (`matchesQuery`) applies to every page; folders lead each page (P2-1).
-        val pagerTabs = DrawerCategoryResolver.pagerTabs
-        val pages = pagerTabs.map { tab ->
-            val inTab = visibleApps.filter { DrawerCategoryResolver.matches(it, tab) }
-                .map { it.componentKey }
-                .toSet()
+        // P7.2: memoize page derivation (O(n*m) operation). Only recompute when:
+        // - visible app set changes, OR
+        // - folder set changes, OR
+        // - query changes
+        val pagesKey = PagesKey(
+            visibleAppKeys = visibleApps.map { it.componentKey }.toSet(),
+            folderIds = folders.map { it.id }.toSet(),
+            queryHash = query.hashCode(),
+        )
+        
+        val pages = if (pagesKey == cachedPagesKey) {
+            cachedPages
+        } else {
+            // P5: build one page per category (All + the 8 design groups). Global search
+            // (`matchesQuery`) applies to every page; folders lead each page (P2-1).
+            val pagerTabs = DrawerCategoryResolver.pagerTabs
+            val computedPages = pagerTabs.map { tab ->
+                val inTab = visibleApps.filter { DrawerCategoryResolver.matches(it, tab) }
+                    .map { it.componentKey }
+                    .toSet()
 
-            val tabEntries = visibleApps
-                .filter { it.componentKey in inTab && matchesQuery(it) }
-                .mapNotNull { entries[it.componentKey] }
+                val tabEntries = visibleApps
+                    .filter { it.componentKey in inTab && matchesQuery(it) }
+                    .mapNotNull { entries[it.componentKey] }
 
-            val folderCells = folders.mapNotNull { folder ->
-                val memberEntries = folder.apps.mapNotNull { entries[it] }
-                    .filter { it.app.componentKey in inTab && matchesQuery(it.app) }
-                if (memberEntries.isEmpty()) return@mapNotNull null
-                DrawerCell.FolderCell(
-                    folder = folder,
-                    preview = FoldersPreview.entriesFor(folder, memberEntries).take(FolderLogic.PREVIEW_CAPACITY),
+                val folderCells = folders.mapNotNull { folder ->
+                    val memberEntries = folder.apps.mapNotNull { entries[it] }
+                        .filter { it.app.componentKey in inTab && matchesQuery(it.app) }
+                    if (memberEntries.isEmpty()) return@mapNotNull null
+                    DrawerCell.FolderCell(
+                        folder = folder,
+                        preview = FoldersPreview.entriesFor(folder, memberEntries).take(FolderLogic.PREVIEW_CAPACITY),
+                    )
+                }
+
+                val appCells = tabEntries
+                    .filterNot { FolderLogic.isInsideFolder(folders, it.app.componentKey) }
+                    .map { DrawerCell.AppEntry(it) }
+
+                DrawerPage(
+                    category = tab,
+                    label = tab.label,
+                    cells = folderCells + appCells,
+                    // Index only apps that are actually rendered as grid cells. Apps
+                    // inside folders are not standalone All Apps entries and must not
+                    // create alphabet letters that jump to an unrelated row.
+                    // Keep the visual rail stable (A-Z/#); the screen separately marks
+                    // unavailable buckets so empty letters never disappear or shift layout.
+                    indexLetters = AlphabetIndex.allBuckets,
                 )
             }
-
-            val appCells = tabEntries
-                .filterNot { FolderLogic.isInsideFolder(folders, it.app.componentKey) }
-                .map { DrawerCell.AppEntry(it) }
-
-            DrawerPage(
-                category = tab,
-                label = tab.label,
-                cells = folderCells + appCells,
-                // Index only apps that are actually rendered as grid cells. Apps
-                // inside folders are not standalone All Apps entries and must not
-                // create alphabet letters that jump to an unrelated row.
-                // Keep the visual rail stable (A-Z/#); the screen separately marks
-                // unavailable buckets so empty letters never disappear or shift layout.
-                indexLetters = AlphabetIndex.allBuckets,
-            )
+            cachedPagesKey = pagesKey
+            cachedPages = computedPages
+            computedPages
         }
+        
         val currentPage = pages.firstOrNull { it.category == category } ?: pages.firstOrNull()
 
         val openFolder = folders.firstOrNull { it.id == openFolderId }

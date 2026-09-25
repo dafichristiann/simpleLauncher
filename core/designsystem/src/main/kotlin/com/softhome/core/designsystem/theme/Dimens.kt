@@ -10,9 +10,11 @@ import androidx.compose.ui.unit.dp
 object Dimens {
     // --- Home (Warm Right Rail) -- from .pen znb90 / L7ZAp ---
     val railWidth = 72.dp             // hrsLU / B6633e rail width
-    val railIcon = 20.dp              // rail icons 20x20
+    // Visual icon size is independent from the 48dp touch target. Keep this aligned
+    // with the drawer's visual glyph scale instead of shrinking icons to fit the rail.
+    val railIcon = 28.dp              // rail visual icons; touch target remains 48dp
     val railCornerRadius = 20.dp      // soft edge where rail meets the home surface
-    val railTouchTarget = 48.dp       // comfortable hit target; visual glyph remains 20dp
+    val railTouchTarget = 48.dp       // comfortable hit target; visual icon remains 28dp
     val railDropIndicatorWidth = 40.dp
     val railDropIndicatorGap = 4.dp
     val railPadTop = 58.dp            // hrsLU padding top
