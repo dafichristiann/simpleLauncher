@@ -1,5 +1,6 @@
 package com.softhome.feature.appdrawer
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.softhome.core.data.repository.AppActionsRepository
@@ -37,12 +38,9 @@ import javax.inject.Inject
  * P4: extra **resolvable** glyphs the uniqueness pass cycles through when a whole glyph's
  * color column is already taken. These are the generic lucide glyphs that always have a
  * bundled drawable, so a de-duplicated tile is still renderable (never a fake name).
+ * P7: marked @Stable so Compose skips recomposition of children when this is passed.
  */
-private val GLYPH_FALLBACKS: List<String> = listOf(
-    "AppWindow", "Square", "Box", "CircleDot", "Sparkles",
-    "Shield", "Tag", "Bot", "Store", "Wrench",
-)
-
+@Stable
 data class DrawerEntry(
     val app: AppInfo,
     val resolved: ResolvedIcon,
@@ -57,7 +55,8 @@ data class DrawerEntry(
     val colorToken: com.softhome.feature.iconpack.domain.DrawerIconColor.Token,
 )
 
-/** One cell in the drawer grid: an app, or a folder (P2 / D1). */
+/** One cell in the drawer grid: an app, or a folder (P2 / D1). P7: marked @Stable. */
+@Stable
 sealed interface DrawerCell {
     data class AppEntry(val entry: DrawerEntry) : DrawerCell
     data class FolderCell(val folder: Folder, val preview: List<DrawerEntry>) : DrawerCell
@@ -66,8 +65,9 @@ sealed interface DrawerCell {
 /**
  * P5: one page of the drawer category pager. Each page holds the cells (folders-first)
  * and the alphabet letters for its own category, so swiping shows that category's grid
- * without re-deriving it in the composable.
+ * without re-deriving it in the composable. P7: marked @Stable.
  */
+@Stable
 data class DrawerPage(
     val category: DrawerCategory,
     val label: String,
@@ -75,6 +75,7 @@ data class DrawerPage(
     val indexLetters: List<Char>,
 )
 
+@Stable
 data class DrawerUiState(
     val allApps: List<DrawerEntry> = emptyList(),
     val cells: List<DrawerCell> = emptyList(),
@@ -107,6 +108,12 @@ data class DrawerUiState(
      * vertical gap honours this factor.
      */
     val spacingFactor: Float = 1f,
+    /**
+     * Audit P6: the drawer column count from settings (P3 "Drawer grid size", persisted
+     * in `LauncherPrefs.grid.columns`). Previously persisted but never applied -- the
+     * drawer always used a fixed 4 columns.
+     */
+    val gridColumns: Int = 4,
 )
 
 /** Per-app facts the context menu needs (P3 / F3), computed on demand. */
@@ -222,7 +229,7 @@ class AppDrawerViewModel @Inject constructor(
                     DrawerIconColor.tokenFor(app?.category, app?.let { IconMasker.symbolFor(it) } ?: "AppWindow"),
                 )
             },
-            glyphFallbacks = GLYPH_FALLBACKS,
+            glyphFallbacks = DrawerIconAssignment.DEFAULT_GLYPH_FALLBACKS,
         )
         val entries = visibleApps.associate { app ->
             val assigned = assignments[app.componentKey]
@@ -293,13 +300,21 @@ class AppDrawerViewModel @Inject constructor(
                 category = tab,
                 label = tab.label,
                 cells = folderCells + appCells,
-                indexLetters = AlphabetIndex.lettersPresentIn(tabEntries.map { it.app.label }),
+                // Index only apps that are actually rendered as grid cells. Apps
+                // inside folders are not standalone All Apps entries and must not
+                // create alphabet letters that jump to an unrelated row.
+                // Keep the visual rail stable (A-Z/#); the screen separately marks
+                // unavailable buckets so empty letters never disappear or shift layout.
+                indexLetters = AlphabetIndex.allBuckets,
             )
         }
         val currentPage = pages.firstOrNull { it.category == category } ?: pages.firstOrNull()
 
         val openFolder = folders.firstOrNull { it.id == openFolderId }
 
+        // P7: pre-coerce grid columns here so it's not recalculated on every Compose recomposition.
+        val coercedGridColumns = prefs.grid.columns.coerceIn(3, 7)
+        
         return DrawerUiState(
             allApps = entries.values.toList(),
             cells = currentPage?.cells ?: emptyList(),
@@ -317,6 +332,7 @@ class AppDrawerViewModel @Inject constructor(
             hiddenApps = prefs.hiddenApps,
             iconOverrides = prefs.iconOverrides,
             spacingFactor = prefs.spacing.factor,
+            gridColumns = coercedGridColumns,
         )
     }
 
@@ -520,4 +536,3 @@ internal object FoldersPreview {
             memberEntries.firstOrNull { it.app.componentKey == key }
         }
 }
-

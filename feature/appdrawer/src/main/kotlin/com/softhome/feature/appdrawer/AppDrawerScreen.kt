@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -48,6 +49,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -140,10 +142,26 @@ fun AppDrawerScreen(
     var categorySlideDirection by remember { mutableIntStateOf(1) }
     // The "current" grid drives the swipe-down-to-close at-top check.
     val currentGridState = gridStates.getOrPut(state.category) { LazyGridState() }
+    val density = LocalDensity.current
+    // The IME can resize the LazyGrid after the query effect has already run. Include
+    // the live inset in the key so the first result is brought into the new viewport.
+    val imeBottom = WindowInsets.ime.getBottom(density)
+    // A newly opened drawer must start at the top of the All Apps list. Without
+    // this reset, a previous overlay/session (or the opening swipe itself) can
+    // leave the user in the middle of the alphabet, making the All tab appear
+    // to be missing apps. Category-specific scroll positions remain preserved
+    // while the drawer is open.
+    LaunchedEffect(Unit) {
+        currentGridState.scrollToItem(0)
+    }
+    // A new query must reveal its first matching cell instead of retaining the
+    // previous all-apps scroll offset behind the keyboard.
+    LaunchedEffect(state.category, state.query, state.cells.size, imeBottom) {
+        if (state.query.isNotBlank()) currentGridState.scrollToItem(0)
+    }
     val categoryMicroSlidePx = with(LocalDensity.current) {
         MotionTokens.CATEGORY_MICRO_SLIDE_DP.dp.roundToPx()
     }
-    val density = LocalDensity.current
     // P4b: the editor's live state, keyed by the app being edited so reopening re-seeds.
     var editorState by remember { mutableStateOf<com.softhome.feature.iconpack.domain.IconEditor.State?>(null) }
     val editingEntry = state.editingEntry
@@ -341,6 +359,7 @@ fun AppDrawerScreen(
                                 onOpenFolder = viewModel::openFolder,
                                 onDropOnFolder = viewModel::assignToFolder,
                                 onDropOnNewFolder = viewModel::createFolderWith,
+                                gridColumns = state.gridColumns,
                                 endInset = gridEndInset,
                                 modifier = Modifier.fillMaxSize(),
                             )
@@ -359,10 +378,17 @@ fun AppDrawerScreen(
             if (state.category == DrawerCategory.All) {
                 AlphabetRail(
                     letters = state.indexLetters,
+                    availableLetters = AlphabetIndex.lettersPresentIn(
+                        state.cells.mapNotNull { (it as? DrawerCell.AppEntry)?.entry?.app?.label },
+                    ).toSet(),
                     onLetter = { letter ->
-                        val idx = AlphabetIndex.firstIndexFor(
-                            state.cells.filterIsInstance<DrawerCell.AppEntry>()
-                                .map { it.entry.app.label }, letter,
+                        // Scroll against the exact cells rendered by this page. This keeps
+                        // folder offsets, search filtering, and category projections in sync
+                        // with LazyGrid instead of using a raw installed-app position.
+                        val idx = AlphabetIndex.firstRenderedRowStartFor(
+                            cells = state.cells,
+                            bucket = letter,
+                            columns = state.gridColumns,
                         )
                         scope.launch {
                             gridStates.getOrPut(state.category) { LazyGridState() }
@@ -653,6 +679,7 @@ private fun AppGridContent(
     onOpenFolder: (String) -> Unit,
     onDropOnFolder: (folderId: String, componentKey: String) -> Unit,
     onDropOnNewFolder: (componentKey: String) -> Unit,
+    gridColumns: Int = 4,
     endInset: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
@@ -663,7 +690,8 @@ private fun AppGridContent(
     // value so the grid reads tighter and warmer, matching the .pen.
     val verticalGap = Spacing.drawerGap * spacingFactor
     LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
+        // Audit P6: honor the persisted "Drawer grid size" (3..7) instead of a fixed 4.
+        columns = GridCells.Fixed(gridColumns.coerceIn(3, 7)),
         state = gridState,
         // P6: no horizontal content padding; the animated category page must flow to
         // both edges of its drawer surface. Tile spacing remains internal to the grid.
@@ -824,6 +852,7 @@ private fun FolderMiniGrid(
 @Composable
 private fun AlphabetRail(
     letters: List<Char>,
+    availableLetters: Set<Char>,
     onLetter: (Char) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -841,9 +870,10 @@ private fun AlphabetRail(
             Text(
                 text = letter.toString(),
                 style = MaterialTheme.typography.labelMedium,
-                color = colors.indexLetter,
+                color = if (letter in availableLetters) colors.indexLetter else colors.textMuted.copy(alpha = 0.45f),
                 modifier = Modifier
-                    .minimumInteractiveComponentSize()
+                    .height(22.dp)
+                    .width(Dimens.alphabetRailWidth)
                     .clip(RoundedCornerShape(6.dp))
                     .clickable(
                         role = Role.Button,
