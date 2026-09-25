@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -101,6 +102,14 @@ import com.softhome.feature.iconpack.ui.IconPackImportSheet
 import kotlinx.coroutines.launch
 
 /**
+ * Horizontal-swipe fling threshold for the category switch (px/s). A quick flick past
+ * this switches even if the finger did not travel the full distance gate. Chosen to be
+ * clearly faster than a slow scroll gesture, comparable to `ViewConfiguration`'s
+ * minimum fling velocity.
+ */
+private const val FLING_VELOCITY_DP = 380f
+
+/**
  * The app drawer -- "Warm App Drawer" (design/homeApp.pen frame `TpzL1`).
  *
  * 430x860, r36, bg #DCCDBA. Contains a category nav ("All / Communication /
@@ -134,6 +143,7 @@ fun AppDrawerScreen(
     val categoryMicroSlidePx = with(LocalDensity.current) {
         MotionTokens.CATEGORY_MICRO_SLIDE_DP.dp.roundToPx()
     }
+    val density = LocalDensity.current
     // P4b: the editor's live state, keyed by the app being edited so reopening re-seeds.
     var editorState by remember { mutableStateOf<com.softhome.feature.iconpack.domain.IconEditor.State?>(null) }
     val editingEntry = state.editingEntry
@@ -247,30 +257,53 @@ fun AppDrawerScreen(
                             .fillMaxSize()
                             .testTag("drawer_pager")
                             // P6: horizontal swipe switches category without revealing the
-                            // neighbouring page. A fling left/right past the threshold steps
-                            // one category; vertical drags are untouched (they fall through
-                            // to the grid's own scroll and the surface's swipe-down-to-close).
+                            // neighbouring page. Vertical drags are untouched (they fall
+                            // through to the grid's own scroll and the surface's
+                            // swipe-down-to-close).
+                            //
+                            // Audit P4: switch on EITHER a past-threshold distance OR a
+                            // quick flick (velocity), so a fast short swipe feels instant
+                            // instead of being ignored for not crossing the 64dp gate.
+                            // Decided once per gesture (a latch), then the next category
+                            // commits so one gesture never over-scrolls several pages.
                             .pointerInput(state.availableCategories, state.category) {
                                 var dragX = 0f
+                                var committed = false
+                                val tracker = VelocityTracker()
+                                val flingPx = with(density) { FLING_VELOCITY_DP.dp.toPx() }
+                                fun step(direction: Int) {
+                                    val categories = state.availableCategories
+                                    val idx = categories.indexOf(state.category)
+                                    val target = if (direction > 0) idx + 1 else idx - 1
+                                    categories.getOrNull(target)?.let { next ->
+                                        categorySlideDirection = direction
+                                        viewModel.onCategoryChange(next)
+                                    }
+                                }
                                 detectHorizontalDragGestures(
-                                    onDragStart = { dragX = 0f },
-                                    onDragEnd = {
-                                        val threshold = 64.dp.toPx()
-                                        if (dragX <= -threshold) {
-                                            val idx = state.availableCategories.indexOf(state.category)
-                                            state.availableCategories.getOrNull(idx + 1)?.let { next ->
-                                                categorySlideDirection = 1
-                                                viewModel.onCategoryChange(next)
-                                            }
-                                        } else if (dragX >= threshold) {
-                                            val idx = state.availableCategories.indexOf(state.category)
-                                            state.availableCategories.getOrNull(idx - 1)?.let { prev ->
-                                                categorySlideDirection = -1
-                                                viewModel.onCategoryChange(prev)
-                                            }
+                                    onDragStart = { offset ->
+                                        dragX = 0f
+                                        committed = false
+                                        tracker.resetTracking()
+                                        tracker.addPosition(android.os.SystemClock.uptimeMillis(), offset)
+                                    },
+                                    onHorizontalDrag = { change, amount ->
+                                        dragX += amount
+                                        tracker.addPosition(change.uptimeMillis, change.position)
+                                        if (!committed) {
+                                            val threshold = 64.dp.toPx()
+                                            if (dragX <= -threshold) { committed = true; step(1) }
+                                            else if (dragX >= threshold) { committed = true; step(-1) }
                                         }
                                     },
-                                    onHorizontalDrag = { _, amount -> dragX += amount },
+                                    onDragEnd = {
+                                        if (!committed) {
+                                            val velocityX = tracker.calculateVelocity().x
+                                            if (velocityX <= -flingPx) { committed = true; step(1) }
+                                            else if (velocityX >= flingPx) { committed = true; step(-1) }
+                                        }
+                                    },
+                                    onDragCancel = { committed = true },
                                 )
                             },
                     ) { category ->
