@@ -1,6 +1,7 @@
 package com.softhome.feature.iconpack.domain
 
 import com.softhome.core.model.AppCategory
+import com.softhome.core.model.DrawerIconTokenName
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -74,5 +75,16 @@ class DrawerIconColorTest {
     fun `non-communication glyph with unknown category stays Neutral`() {
         assertEquals(DrawerIconColor.Token.Neutral, token(null, "Calculator"))
         assertEquals(DrawerIconColor.Token.Neutral, token(AppCategory.UNDEFINED, "AppWindow"))
+    }
+
+    @Test
+    fun `P4 name bridge is a total 1 to 1 round trip including Browser`() {
+        DrawerIconColor.Token.entries.forEach { t ->
+            assertEquals(t, DrawerIconColor.tokenForName(DrawerIconColor.nameOf(t)))
+        }
+        DrawerIconTokenName.entries.forEach { n ->
+            assertEquals(n, DrawerIconColor.nameOf(DrawerIconColor.tokenForName(n)))
+        }
+        assertEquals(DrawerIconColor.Token.Browser, DrawerIconColor.tokenForName(DrawerIconTokenName.Browser))
     }
 }

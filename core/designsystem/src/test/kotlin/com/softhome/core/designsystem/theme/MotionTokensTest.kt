@@ -1,6 +1,7 @@
 package com.softhome.core.designsystem.theme
 
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -20,6 +21,12 @@ class MotionTokensTest {
         assertEquals(220, MotionTokens.RAIL_SLIDE_MS)
         assertEquals(160, MotionTokens.SEARCH_FADE_MS)
         assertEquals(280, MotionTokens.MUSIC_RISE_MS)
+        assertEquals(160, MotionTokens.PRESS_FEEDBACK_MS)
+        assertEquals(10, MotionTokens.CATEGORY_MICRO_SLIDE_DP)
+        assertEquals(280, MotionTokens.CATEGORY_LAUNCHER_MS)
+        assertEquals(220, MotionTokens.OVERLAY_ENTER_MS)
+        assertEquals(180, MotionTokens.OVERLAY_EXIT_MS)
+        assertEquals(220, MotionTokens.THEME_TRANSITION_MS)
     }
 
     @Test
@@ -35,6 +42,11 @@ class MotionTokensTest {
         assertEquals(280, MotionTokens.musicRise<Float>().durationMillis)
         // P2: notes tap-to-expand reuses the in-place-grow family (280ms).
         assertEquals(280, MotionTokens.notesExpand<Float>().durationMillis)
+        assertEquals(160, MotionTokens.pressFeedback<Float>().durationMillis)
+        assertEquals(220, MotionTokens.overlayEnter<Float>().durationMillis)
+        assertEquals(180, MotionTokens.overlayExit<Float>().durationMillis)
+        assertEquals(220, MotionTokens.themeTransition<Float>().durationMillis)
+        assertEquals(280, MotionTokens.categoryLauncher<Float>().durationMillis)
     }
 
     @Test
@@ -43,5 +55,6 @@ class MotionTokensTest {
         assertEquals(MotionTokens.WarmEase, MotionTokens.searchFade<Float>().easing)
         assertEquals(MotionTokens.WarmEase, MotionTokens.musicRise<Float>().easing)
         assertEquals(MotionTokens.WarmEase, MotionTokens.notesExpand<Float>().easing)
+        assertEquals(FastOutSlowInEasing, MotionTokens.categoryLauncher<Float>().easing)
     }
 }

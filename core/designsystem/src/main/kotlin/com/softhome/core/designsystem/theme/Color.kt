@@ -90,6 +90,10 @@ val DrawerIconMedia = Color(0xFFD19B62)         // $icon-media       (== selecte
 val DrawerIconTravel = Color(0xFFB06F52)        // $icon-travel      (== SoftIndexActive)
 val DrawerIconFinance = Color(0xFF4D7C8A)       // $icon-finance
 val DrawerIconNeutral = Color(0xFF625B52)       // $icon-neutral     (== SoftTextBody)
+// P4: the 8th slot for "Browser & Search". The .pen has 8 categories but only 7 named
+// $icon-* colors; the TpzL1 mock tints Chrome (Browser) with $icon-finance (blue). This
+// dedicated token reuses that blue so browser apps read as a group (decision D-050).
+val DrawerIconBrowser = Color(0xFF4D7C8A)       // Chrome tile blue (== $icon-finance)
 
 // Dark adaptations (the .pen has no dark drawer palette; P4c aligns them to the
 // KkPN3 neutral dark family so the drawer reads consistently in dark mode).
@@ -103,6 +107,7 @@ val DarkDrawerIconMedia = Color(0xFFD9A972)
 val DarkDrawerIconTravel = Color(0xFFC98B6E)
 val DarkDrawerIconFinance = Color(0xFF7FA6B2)
 val DarkDrawerIconNeutral = Color(0xFFD2CBC1)
+val DarkDrawerIconBrowser = Color(0xFF7FA6B2)   // P4: Browser blue (== DarkDrawerIconFinance)
 
 // --- P3 (System UI + Settings) semantic tokens ---
 // The warm palette has no red by design (docs/00); "destructive" (uninstall) is a

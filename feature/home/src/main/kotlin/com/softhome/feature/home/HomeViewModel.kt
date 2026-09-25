@@ -16,6 +16,7 @@ import com.softhome.core.model.HomeRowPref
 import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconSource
 import com.softhome.core.model.LauncherPrefs
+import com.softhome.core.model.RailOrderLogic
 import com.softhome.core.model.ResolvedIcon
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
@@ -57,6 +58,8 @@ data class HomeUiState(
     val spacing: SpacingScale = SpacingScale.Normal,
     /** P3 (G/Appearance): theme mode (Light/Dark/System). */
     val themeMode: ThemeMode = ThemeMode.System,
+    /** P7: persisted right-rail order as stable shortcut names. */
+    val railOrder: List<String> = RailOrderLogic.DEFAULT,
 ) {
     /** Rows the home should render, in order (locked rows always included). */
     val visibleRows: List<HomeRowKind> get() = HomeRowLogic.visibleInOrder(homeRows)
@@ -101,6 +104,7 @@ class HomeViewModel @Inject constructor(
                 homeRows = core.prefs.homeRows,
                 spacing = core.prefs.spacing,
                 themeMode = core.prefs.darkTheme,
+                railOrder = RailOrderLogic.sanitize(core.prefs.railOrder),
             )
         }
         .stateIn(
@@ -176,6 +180,14 @@ class HomeViewModel @Inject constructor(
         val next = HomeRowDropResolver.reorder(uiState.value.homeRows, kind, targetIndex)
         if (next != uiState.value.homeRows) {
             viewModelScope.launch { prefsRepository.setHomeRows(next) }
+        }
+    }
+
+    /** P7: reorder a right-rail shortcut and persist it through the existing DataStore. */
+    fun reorderRail(shortcutName: String, targetIndex: Int) {
+        val next = RailOrderLogic.move(uiState.value.railOrder, shortcutName, targetIndex)
+        if (next != uiState.value.railOrder) {
+            viewModelScope.launch { prefsRepository.setRailOrder(next) }
         }
     }
 

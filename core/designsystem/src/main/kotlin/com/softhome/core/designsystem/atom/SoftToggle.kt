@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,6 +47,7 @@ fun SoftToggle(
     contentDescription: String? = null,
 ) {
     val colors = MaterialTheme.softColors
+    val haptics = LocalHapticFeedback.current
 
     // Track: charcoal (on) / warm track grey (off); dimmed when disabled.
     val trackColor = if (checked) colors.tile else colors.progressTrack
@@ -71,12 +74,18 @@ fun SoftToggle(
             .background(trackColor)
             .then(
                 if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        role = Role.Switch,
-                        onClickLabel = contentDescription,
-                    ) { onCheckedChange(!checked) }
+                    val interactionSource = remember { MutableInteractionSource() }
+                    Modifier
+                        .warmPress(interactionSource, enabled = enabled)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Switch,
+                            onClickLabel = contentDescription,
+                        ) {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onCheckedChange(!checked)
+                        }
                 } else {
                     Modifier
                 },

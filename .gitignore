@@ -29,3 +29,6 @@ keystore.properties
 
 # --- App-private test artifacts pulled from device ---
 *.preferences_pb
+
+# --- Large build artifacts kept out of git (evidence APKs) ---
+docs/videos/*.apk

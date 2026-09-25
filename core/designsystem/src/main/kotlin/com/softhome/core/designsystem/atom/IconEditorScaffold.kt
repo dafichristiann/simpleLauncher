@@ -86,11 +86,20 @@ fun IconEditorCard(
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
+                val closeInteractionSource = remember { MutableInteractionSource() }
                 Box(
+                    // Keep close feedback in the same Warm press language as editor tiles.
+                    // The shared source prevents the custom indication from competing with
+                    // the clickable gesture.
                     modifier = Modifier
                         .size(Dimens.menuIcon + 8.dp)
                         .clip(RoundedCornerShape(Dimens.choiceTileRadius))
-                        .clickable(onClick = onDismiss)
+                        .warmPress(closeInteractionSource)
+                        .clickable(
+                            interactionSource = closeInteractionSource,
+                            indication = null,
+                            onClick = onDismiss,
+                        )
                         .padding(4.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -122,6 +131,7 @@ fun ChoiceTile(
     val colors = MaterialTheme.softColors
     val shape = RoundedCornerShape(Dimens.choiceTileRadius)
     val bg = background ?: colors.tileWarm
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .size(size)
@@ -131,7 +141,8 @@ fun ChoiceTile(
                 if (selected) Modifier.border(Dimens.swatchRingWidth, colors.accent, shape)
                 else Modifier,
             )
-            .clickable(onClick = onClick),
+            .warmPress(interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         when {
@@ -168,6 +179,7 @@ fun ColorSwatchRow(
     ) {
         swatches.forEachIndexed { index, color ->
             val shape = RoundedCornerShape(Dimens.swatchRadius)
+            val interactionSource = remember(index) { MutableInteractionSource() }
             Box(
                 modifier = Modifier
                     .size(Dimens.swatch)
@@ -180,7 +192,11 @@ fun ColorSwatchRow(
                             Modifier
                         },
                     )
-                    .clickable { onSelect(index) },
+                    .warmPress(interactionSource)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                    ) { onSelect(index) },
             )
         }
     }

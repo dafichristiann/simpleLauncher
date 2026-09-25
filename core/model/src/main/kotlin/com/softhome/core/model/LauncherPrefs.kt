@@ -15,6 +15,8 @@ data class LauncherPrefs(
     val spacing: SpacingScale = SpacingScale.Normal,
     /** P3 (Q2): component keys hidden from the drawer (reversible "Remove"). */
     val hiddenApps: Set<String> = emptySet(),
+    /** P7: stable right-rail order; an empty/invalid value recovers to the design default. */
+    val railOrder: List<String> = RailOrderLogic.DEFAULT,
 )
 
 enum class ThemeMode { Light, Dark, System }
@@ -28,4 +30,3 @@ enum class SpacingScale(val factor: Float) {
     Normal(1.00f),
     Roomy(1.12f),
 }
-

@@ -41,6 +41,7 @@ enum class LineIcon(val resId: Int) {
     Compass(R.drawable.compass),
     AlarmClock(R.drawable.alarm_clock),
     Play(R.drawable.play),
+    Pause(R.drawable.pause),
     PenLine(R.drawable.pen_line),
     PhoneCall(R.drawable.phone_call),
     Sun(R.drawable.sun),
@@ -89,12 +90,69 @@ enum class LineIcon(val resId: Int) {
     ArrowUp(R.drawable.arrow_up),
     ArrowDown(R.drawable.arrow_down),
     X(R.drawable.x),
-    ExternalLink(R.drawable.external_link);
+    ExternalLink(R.drawable.external_link),
+
+    // --- P4 additions (per-app drawer glyphs, ported from .pen `ciHU3`) ---
+    MessageSquare(R.drawable.message_square),
+    ContactRound(R.drawable.contact_round),
+    Video(R.drawable.video),
+    Network(R.drawable.network),
+    PhoneOff(R.drawable.phone_off),
+    Share2(R.drawable.share_2),
+    Pin(R.drawable.pin),
+    Music2(R.drawable.music_2),
+    Gamepad2(R.drawable.gamepad_2),
+    Joystick(R.drawable.joystick),
+    UsersRound(R.drawable.users_round),
+    Languages(R.drawable.languages),
+    NotebookPen(R.drawable.notebook_pen),
+    CloudUpload(R.drawable.cloud_upload),
+    Settings2(R.drawable.settings_2),
+    Palette(R.drawable.palette),
+    CreditCard(R.drawable.credit_card),
+    Wrench(R.drawable.wrench),
+    ShieldCheck(R.drawable.shield_check),
+    Store(R.drawable.store),
+    Tv(R.drawable.tv),
+    Map(R.drawable.map),
+    Briefcase(R.drawable.briefcase),
+    Tag(R.drawable.tag),
+    CarFront(R.drawable.car_front),
+    Bike(R.drawable.bike),
+    Banknote(R.drawable.banknote),
+    WalletMinimal(R.drawable.wallet_minimal),
+    ShoppingCart(R.drawable.shopping_cart),
+    ShoppingBasket(R.drawable.shopping_basket),
+    Coffee(R.drawable.coffee),
+    Ticket(R.drawable.ticket),
+    BoxPackage(R.drawable.box_package);
 
     companion object {
         /** Safe lookup by enum name (used by the icon-masker heuristics). */
         fun fromName(name: String?): LineIcon =
             entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: AppWindow
+
+        /**
+         * P4: lookup by a **lucide kebab name** (e.g. "message-circle", "car-front"), as
+         * used by the `.pen` design library. Falls back to [fromName] (the PascalCase enum
+         * name) so existing callers keep working, then to [AppWindow].
+         */
+        fun fromLucide(kebabName: String?): LineIcon {
+            if (kebabName.isNullOrBlank()) return AppWindow
+            // A couple of lucide names clash with Kotlin/Java reserved words or were
+            // renamed for clarity; map them explicitly (drawable `package.xml` is illegal).
+            val aliased = when (kebabName.lowercase()) {
+                "package" -> "BoxPackage"
+                "box-package", "box_package" -> "BoxPackage"
+                else -> null
+            }
+            if (aliased != null) return entries.firstOrNull { it.name == aliased } ?: AppWindow
+            val pascal = kebabName.split('-', '_')
+                .filter { it.isNotBlank() }
+                .joinToString("") { part -> part.replaceFirstChar { it.uppercase() } }
+            return entries.firstOrNull { it.name.equals(pascal, ignoreCase = true) }
+                ?: fromName(kebabName)
+        }
     }
 }
 

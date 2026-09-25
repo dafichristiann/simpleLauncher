@@ -33,6 +33,9 @@ object DrawerIconColor {
         Travel,
         Finance,
         Neutral,
+
+        /** P4: the "Browser & Search" slot (the .pen tints Chrome with the blue). */
+        Browser,
     }
 
     /**
@@ -80,5 +83,22 @@ object DrawerIconColor {
         Token.Travel -> DrawerIconTokenName.Travel
         Token.Finance -> DrawerIconTokenName.Finance
         Token.Neutral -> DrawerIconTokenName.Neutral
+        Token.Browser -> DrawerIconTokenName.Browser
+    }
+
+    /**
+     * P4: the [DrawerIconMap] color slot -> the palette [Token]. When the per-package map
+     * knows the app, its **design** color wins (the tiles show, e.g., Chrome = blue); this
+     * is the single bridge between the persisted-model enum and the palette enum.
+     */
+    fun tokenForName(name: DrawerIconTokenName): Token = when (name) {
+        DrawerIconTokenName.Communication -> Token.Communication
+        DrawerIconTokenName.Social -> Token.Social
+        DrawerIconTokenName.Productivity -> Token.Productivity
+        DrawerIconTokenName.Media -> Token.Media
+        DrawerIconTokenName.Travel -> Token.Travel
+        DrawerIconTokenName.Finance -> Token.Finance
+        DrawerIconTokenName.Neutral -> Token.Neutral
+        DrawerIconTokenName.Browser -> Token.Browser
     }
 }

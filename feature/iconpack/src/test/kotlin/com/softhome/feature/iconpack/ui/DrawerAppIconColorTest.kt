@@ -23,6 +23,7 @@ class DrawerAppIconColorTest {
         assertEquals(c.drawerIconTravel, tokenColor(c, DrawerIconColor.Token.Travel))
         assertEquals(c.drawerIconFinance, tokenColor(c, DrawerIconColor.Token.Finance))
         assertEquals(c.drawerIconNeutral, tokenColor(c, DrawerIconColor.Token.Neutral))
+        assertEquals(c.drawerIconBrowser, tokenColor(c, DrawerIconColor.Token.Browser))
     }
 
     @Test
@@ -35,5 +36,6 @@ class DrawerAppIconColorTest {
         assertEquals(c.drawerIconTravel, tokenColor(c, DrawerIconColor.Token.Travel))
         assertEquals(c.drawerIconFinance, tokenColor(c, DrawerIconColor.Token.Finance))
         assertEquals(c.drawerIconNeutral, tokenColor(c, DrawerIconColor.Token.Neutral))
+        assertEquals(c.drawerIconBrowser, tokenColor(c, DrawerIconColor.Token.Browser))
     }
 }

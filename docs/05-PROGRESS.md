@@ -20,9 +20,211 @@ no-stop), stopping at the end of P4c.
 **Session 13: P4d — Backup & Restore — DONE (2026-09-25). P4 is COMPLETE. See the
 FINAL PROJECT REPORT at the end of this file.**
 
+**Session 14: On-device fixes P1–P4 — P1–P3 DONE earlier; P4 (drawer icon correctness:
+`DrawerIconMap` ported from the `.pen` + per-cell uniqueness) DONE (2026-09-25).** See
+`superpowers/specs/2026-09-25-onddevice-findings-fix-plan.md` §14.
+
+**Session 15: P5 — 8-category drawer pager DONE (2026-09-25).** Horizontal swipe and tab
+tap are implemented and verified on the Tecno and emulator. STOP #3 (docs + final review).
+
+**Session 16: drawer scroll tap-guard patch DONE (2026-09-25).** Starting a vertical scroll
+no longer launches the first app touched; tap is emitted only after a release without
+movement past touch-slop. Added scroll, tap, and stationary long-press regression tests
+and re-ran the JVM suite successfully.
+
+**Session 17: release/update safety DONE (2026-09-25).** Versioned the app as `0.1.1`
+(`versionCode 16`), added the version footer in Settings, and added the root
+`update.ps1` install helper. Audited all persisted state: existing DataStore names and
+keys remain unchanged; home rows and icon overrides have tolerant migrations/codecs;
+folders and notes retain their stable stores and round-trip tests. No destructive data
+migration is required for the next `installDebug` update.
+
+**Session 18: motion polish foundation + first pass DONE (2026-09-25).** Added
+tokenized press/overlay/theme motion, Warm press feedback, animated widget progress,
+animated drag lift, haptic feedback for long-press/toggle, and scale/fade transitions
+for drawer folder/menu/icon-editor overlays. Build and the Tecno drawer gesture suite
+remain green. A Tecno motion recording is retained under `docs/videos/`; frame timing
+showed 1.04% aggregate janky frames after reset during representative swipes.
+
+**Session 19: grid-first drawer layout DONE (2026-09-25).** Removed the redundant
+`All apps`/action header, moved the search pill below the icon grid, and moved New folder
+and Icon pack actions into the Settings panel's APP DRAWER section. The latest APK builds,
+the full 485-test JVM suite passes, and the Tecno screenshot is retained as
+`docs/screenshots/layout-latest2.png`.
+
+**Session 20: motion polish completion audit DONE (2026-09-25).** Added the remaining
+tokenized press feedback to Notes, Music, Settings actions, and drawer category tabs.
+Rebuilt and installed version `0.1.4` (`versionCode 19`) on Tecno. The full build/test
+verification is green; a fresh Tecno `gfxinfo` run measured 174 frames with 1 janky frame
+(0.57%) and 0 missed vsyncs while opening and scrolling the drawer. Remaining checklist
+items are documentation-only: formal before/after video captures, a future badge data
+source, and optional deeper first-decode profiling.
+
+**Session 21: device app coverage + glyph audit DONE (2026-09-25).** Confirmed the drawer
+queries Android's complete `MAIN` + `LAUNCHER` activity set (79 activities on the Tecno
+reference device, including SOFT/HOME itself), so newly installed launchable apps appear
+without a code update. Added explicit Warm glyph mappings for the remaining reference-device
+utilities (Niagara Launcher, Honest Bank, call blocker, GuitarTuna, and NFC Checker) so they
+use design-language icons instead of generic category fallback. Rebuilt, installed, and
+smoke-tested the drawer. This feature build is version `0.1.5` (`versionCode 20`);
+screenshot: `docs/screenshots/apps-mapped.png`.
+
+**Device check follow-up (2026-09-25).** A later screenshot that appeared to show
+brand-logo icons was verified to be the Tecno stock launcher (`com.transsion.launcher3`),
+not SOFT/HOME. When `HomeActivity` is opened explicitly, the app shows the intended Warm
+glyph drawer and all-app coverage (`docs/screenshots/explicit-home.png`). The Tecno phone is
+not currently using SOFT/HOME as its default Home app; this is a device role/picker issue,
+not a drawer icon-resolution regression.
+
+**Session 22: P6 — drawer category transition (no peek) DONE (2026-09-25).** Replaced the
+category `HorizontalPager` with an `AnimatedContent` keyed on `state.category`: a
+10dp directional micro-slide + 160ms fade, so a neighbouring category never peeks at the
+edge mid-swipe without changing the resting grid geometry.
+Added a `pointerInput` horizontal-drag detector for the swipe (tab taps run the same
+transition); the alphabet rail and `CategoryNav` now read `state.category`, with one
+`LazyGridState` per category. Root cause: `HorizontalPager`'s drag physics render the
+adjacent page during a swipe — not a `pageSpacing`/`contentPadding` setting. Verified on the
+Tecno by screen recording (60fps): swipe A→B, B→A, and a tab tap all show one full-width
+page, no peek; swipe-down-to-close and vertical grid scroll still work. Evidence:
+`docs/videos/p6-category-swipe-ab.mp4`, `docs/videos/p6-category-swipe-ba-and-tab.mp4`,
+`docs/screenshots/p6-transition-dense-frames.png`, `p6-transition-left-edge.png`,
+`p6-swipe-comm-to-all.png`, `p6-tab-tap-all-to-comm.png`. See D-058.
+
+**P6 revision (2026-09-25).** Restored the pre-P6 parent `padding(start = Spacing.xxl)` so
+the static `All` grid and chrome match the grid-first layout. `AlphabetRail` now renders
+only for `DrawerCategory.All`; non-All categories reclaim that space. The focused category
+instrumented suite passes 7/7 on TECNO CN7c. Evidence: `docs/screenshots/p6r-all-static.png`,
+`docs/screenshots/p6r-communication-no-rail.png`, and `docs/videos/p6r-micro-slide.mp4`.
+
+**P6 grid/tuning follow-up (2026-09-25).** Non-All pages now reserve the hidden alphabet
+rail's 20dp + spacing as grid `contentPadding`, keeping the same four column slot geometry,
+tile size, and centers as `All` without rendering the rail. Tecno evidence covers `All`,
+Communication, and Social & Entertainment: `docs/screenshots/p6g-all.png`,
+`p6g-communication.png`, and `p6g-social-settled.png`. Added two uncommitted motion candidates
+for device comparison: option A (240ms + WarmEase) and option B (280ms + FastOutSlowIn),
+both retaining the 10dp micro-slide. APK/video pairs are under `docs/videos/`.
+The focused category instrumented suite remains green at 7/7; no P6 commit has been made.
+
+**P6 motion finalization (2026-09-25).** Opsi B dipilih sebagai motion final: 10dp
+directional micro-slide, 280ms, dan `FastOutSlowInEasing`. `AppDrawerScreen` now uses
+`MotionTokens.categoryLauncher()` for category enter/exit; the grid geometry and
+AlphabetRail behavior remain unchanged. The Tecno device has the final Opsi B APK installed.
+
+**Session 23: P8 — motion demo (music playback / weather / clock / rail) DONE
+(2026-09-25).** The home's live motion now runs on honest local state: the Music row is
+driven by a `PlaybackController` abstraction (local `DemoPlaybackController`), the Weather
+row renders an abstract fallback condition (`Clear`), the Clock uses a local minute ticker
+with a per-digit transition, and the right rail keeps its single drag engine with
+press/drag/drop feedback. **No MediaSession / Spotify / weather API is used.** Verified on
+Tecno CN7c: 280 JVM unit + 50 instrumented green; new recording
+`docs/videos/p8-motion-playback-expand.mp4`. See the Session 23 log below and
+`docs/09` D-059/D-060/D-061.
+
 ---
 
 ## Session log
+
+### Session 23 - P8 Motion demo: music playback abstraction + weather fallback + clock ticker + rail feedback — DONE (2026-09-25)
+
+**Why:** the home's widgets should feel alive (progress that actually moves, pause that
+freezes, seek that jumps, a clock that ticks, a weather state that can animate) **without**
+claiming to control system media or depending on a weather API. This is a design/demo
+state layer with a clean seam for a future `MediaSession` implementation.
+
+**Scope / decisions:**
+- **Music** — `PlaybackController` interface + `PlaybackState(isPlaying, currentTimeMs,
+  durationMs, progress)`; the only implementation is `DemoPlaybackController` (50 ms ticker
+  → `advanceBy`, `togglePlayPause`, `seekTo` clamped). The UI reads
+  `playbackState.progress`/`currentTimeMs`; the play control reflects `isPlaying`. The
+  progress bar is a deterministic function of `duration`/`currentTime`, **not** a decorative
+  animation. **No `MediaSession`, no Spotify control, no notification** — the interface is
+  the swap seam (D-059; supersedes D-021's "static UI" premise).
+- **Weather** — `WeatherUiState(condition = WeatherCondition.Clear, temperatureLabel)`;
+  the row cross-fades between conditions and plays an ambient icon scale. A future
+  repository replaces the single state source without touching the animation (D-060).
+- **Clock** — `rememberMinuteKey()` (sleep-to-minute-boundary coroutine) + a per-character
+  `AnimatedContent` so only changed digits animate (D-061); reduced-motion = hard cut.
+- **Sidebar (right rail)** — kept the **existing** `dragSource`/`dropTarget`/`warmPress`
+  engine; press/drag/drop feedback (lift, insertion indicator, slot shift, dimmed source)
+  is integrated into that one gesture owner. **No second gesture handler** was added.
+
+**Bug found & fixed during smoke test:**
+- The progress bar initially rendered the static design value (0.31) instead of live state.
+  Corrected so both the collapsed and expanded layouts read `playbackState.progress`
+  (`HomeScreen.kt` → `MusicPlayerRow(progress = playbackState.progress, …)`), and the
+  elapsed/duration labels bind to `currentTimeMs`/`durationMs`. The APK was rebuilt and
+  reinstalled; the new recording was captured after the fix.
+
+**Tests:** **280 JVM unit, 0 failures** (`.\gradlew.bat testDebugUnitTest`);
+`PlaybackControllerTest` locks advance / pause / resume-from-position / seek-clamp /
+stop-at-duration / progress ratio. **50 instrumented, 0 failures** on Tecno CN7c ((
+`.\gradlew.bat :app:connectedDebugAndroidTest`).
+
+**Evidence (Tecno CN7c, API 36):**
+- `docs/videos/p8-motion-playback-expand.mp4` — long-press expand → Play (progress moves)
+  → Pause (frozen) → Seek (jumps to picked position) → Play-from-seek.
+- `docs/screenshots/p8-motion-home-idle.png`, `p8-motion-music-playing.png`,
+  `p8-motion-music-paused.png`, `p8-motion-music-seek.png`, `p8-motion-music-expanded.png`,
+  `p8-settings-check.png`, `p8-theme-dialog.png`.
+
+**Decisions:** D-059 (PlaybackController abstraction + local demo state), D-060 (weather
+fallback state), D-061 (local clock minute ticker + digit transition).
+
+**Blocked / needs decision**
+- None. The player is a **local demo** by design; a real `MediaSession` adapter is a
+  separate, later task that implements the same `PlaybackController` interface.
+
+---
+
+
+### Session 14 - P4 Drawer icon correctness (per-package map + uniqueness) — DONE (2026-09-25)
+
+**Why:** on the real Tecno the drawer showed "duplicate / generic" icons — DANA, GoPay,
+Shopee, Tokopedia, Gojek, Grab, Agoda, KFC, Discord, Claude, ChatGPT, Fortnite, Tandem,
+Pinterest, Threads, and every uncategorised app collapsed to the same `AppWindow` glyph.
+Plan §5 (P4). Verified on Tecno `169402562R001782` (API 36) + emulator `soft_home_pixel`.
+
+**Root cause found:** `DrawerIconMap` (a prior partial attempt) was **orphaned** — no
+production code called it. `AppDrawerViewModel` still rendered `IconMasker.symbolFor(app)`
+(a ~20-name string heuristic) and, critically, `resolveIcon` set the **rendered**
+`ResolvedIcon.symbolName` from that heuristic, ignoring the map entirely.
+
+**Design re-audit:** the `.pen` has **two** relevant frames that disagree — `TpzL1`
+(24 real tiles, exact glyph **+** `$icon-*` color) and `ciHU3` (8 groups, ~72 apps).
+Approved decision: **the tiles win** for the apps they show, `ciHU3` fills the rest.
+
+**What changed:**
+- `core:model/DrawerIconMap.kt` — rebuilt from the `.pen` (TpzL1 24 tiles first, then the
+  ciHU3 8 groups); `colorToken` added; specificity-ordered fragments; missing Tecno apps
+  added (Roaming, SIM Toolkit, TECNO dialer, Welife).
+- `core:model/DrawerIconAssignment.kt` (new, pure) — deterministic per-**cell**
+  (componentKey) glyph+color with a **uniqueness guarantee** (also fixes Phone vs Contacts,
+  one package / two activities).
+- `core:model/DrawerIconTokenName` + `DrawerIconColor.Token` gain **`Browser`**; `Color.kt`
+  / `SoftColors` add `drawerIconBrowser` (the `.pen`'s Chrome blue). `DrawerCategory.tabs`
+  now excludes `Other` (the 8 real tabs).
+- `feature:appdrawer/AppDrawerViewModel` — map-driven precedence
+  (**override → pack → map → heuristic → category glyph**), passed into the renderer.
+- `feature:iconpack/DrawerAppIcon` + `DrawerIconColor` — `Browser` token + `fromLucide`
+  glyph resolution + `tokenForName` bridge.
+- `core:designsystem` — **7 broken lucide vector drawables fixed** (`banknote`,
+  `credit_card`, `tv`, `music_2`, `settings_2`, `contact_round`, `bike`): they contained
+  only a fragment of the path (rendered as dots/lines).
+
+**Tests:** **265 JVM unit, 0 failures** (was 236; +29: `DrawerIconMapTest` 6,
+`DrawerIconUniquenessTest` 5, plus Browser-token + name-bridge coverage).
+
+**Evidence (real screenshots):** `p4-drawer-tecno.png`, `p4-drawer-tecno-scrolled.png`
+(Tecno, dark), `p4-drawer-emulator.png` (emulator, light) — every visible tile distinct and
+design-faithful.
+
+**Decisions:** D-050 (Browser token), D-051 (`.pen`-ported map; tiles win), D-052
+(deterministic per-cell uniqueness).
+
+**Blocked / needs decision**
+- None. **STOP — P4 complete, awaiting review before P5 (8 categories + `HorizontalPager`).**
+
+---
 
 ### Session 13 - P4d Backup & Restore — DONE (2026-09-25)
 
@@ -415,6 +617,49 @@ Rail** design system (not the retired P1 card/grid language). Spec:
 
 ---
 
+### Session 15 - P5 category pager + final on-device verification — DONE (2026-09-25)
+
+**What changed:**
+- The drawer now uses the eight design categories as pager pages: All, Communication,
+  Social & Entertainment, Productivity & Tools, Browser & Search, Camera & Media,
+  Maps & Travel, Finance & Shopping, and Food & Lifestyle.
+- Both horizontal swipes and category-tab taps change the active page. Search and the
+  alphabet rail remain global; category selection is runtime-only and is not persisted.
+- Vertical grid scrolling remains vertical; the swipe-down drawer-close path remains intact.
+
+**Tests:** `DrawerSwipeCategoryTest` covers left/right paging, tab selection, and the
+vertical-swipe regression. `DrawerSwipeDownTest` covers close-threshold behavior. The JVM
+suite remains green at **265 tests, 0 failures** (`.\\gradlew.bat test`).
+
+**On-device evidence:**
+- Tecno: `p5-tecno-all.png`, `p5-tecno-communication.png`, `p5-tecno-swiped.png`.
+- Emulator: `p5-emulator-all.png`, `p5-emulator-swiped.png`, `p5-emulator-swiped-2.png`.
+
+The horizontal swipe visibly advances All → Communication → Social & Entertainment;
+the active tab is selected/underlined and no app is accidentally launched. The debug APK
+was installed and launched on both connected targets.
+
+**STOP #3:** implementation, screenshots, tests, and documentation are complete; no
+additional P5 implementation work is required unless final review finds a regression.
+
+---
+
+### Session 16 - Drawer scroll tap-guard patch — DONE (2026-09-25)
+
+**Root cause:** the shared `dragSource` treated every pre-long-press cancellation as a
+tap. A small finger movement cancels long-press detection in Compose, so the first app
+under a scroll gesture could launch accidentally.
+
+**Fix:** `dragSource` now distinguishes release, movement-before-long-press, and timeout.
+Only a release that stays within touch-slop invokes `onTap`; movement cancels the source
+gesture and is left for `LazyVerticalGrid` scrolling. Long-press drag and context-menu
+behavior are unchanged.
+
+**Regression coverage:** `DrawerSwipeCategoryTest.starting_a_vertical_scroll_does_not_launch_an_app`.
+The debug app and androidTest sources compile; `./gradlew test` passes all JVM suites.
+
+---
+
 ## Session log (continued)
 
 **Why:** the `.pen` was updated — the old grid-squircle home is superseded by a
@@ -699,7 +944,16 @@ opened from the "Edit Icon" menu row. 217 unit + 33 instrumented. See Session 11
 Dark palette replaced with the verbatim `KkPN3` "Dark Editorial" values; settings panel
 now follows `ThemeMode`. 220 unit + 36 instrumented. See Session 12.
 
-## P4d - Backup & Restore  ·  NOT STARTED
+## P4d - Backup & Restore  ·  DONE (2026-09-25)
+
+Versioned SAF JSON export/import with atomic restore and non-destructive malformed-file
+handling. 236 unit + 38 instrumented tests. See Session 13.
+
+## P5 - Category pager  ·  DONE (2026-09-25)
+
+Eight design categories are available as horizontal pager pages. Tabs and swipes select
+the same page; global search/index and vertical scrolling remain intact. 265 unit tests
+and eight new instrumented gesture cases. See Sessions 15–16 and the P5 screenshots.
 
 *(Superseded roadmap note: the earlier "P4 = Onboarding (H) + polish" was re-split into
 P4a–P4d; onboarding H is **out** — no design source. See the P4 scope spec.)*
@@ -707,9 +961,9 @@ P4a–P4d; onboarding H is **out** — no design source. See the P4 scope spec.)
 
 ---
 
-# FINAL PROJECT REPORT — SOFT / HOME launcher (P1 → P4d complete)
+# FINAL PROJECT REPORT — SOFT / HOME launcher (P1 → P5 complete)
 
-> Generated at the end of **P4d** (Session 13), the last sub-phase. Everything below is
+> Generated at the end of **P5** (Session 15), the last planned phase. Everything below is
 > verified against the committed working tree (`git log` section at the end), the `.pen`
 > source of truth (byte-identical, SHA256 `08DB2A81…CA6201`, 176,128 B), and real
 > on-device runs (emulator `soft_home_pixel` API 35 **and** a physical TECNO CN7c,
@@ -780,21 +1034,28 @@ Legend: [x] done · [~] partial/stub · ⛔ deferred/dropped.
 - [x] Total, non-destructive failure handling; destructive restore behind an inline confirm.
 - [x] Atomic apply (`PrefsRepository.applyAll`); round-trip proven on emulator + device.
 
-## 2. Final test counts
+### P5 — Category pager · DONE (this session)
+- [x] Eight design categories rendered as pager pages.
+- [x] Category tab tap and horizontal swipe both change the active page.
+- [x] Vertical grid scrolling, global search/index, and swipe-down close remain intact.
+- [x] Tecno + emulator screenshots captured under `docs/screenshots/p5-*`.
+
+## 2. Final test counts (P5)
 
 | Suite | Count | Where |
 |---|---|---|
-| **JVM unit tests (debug variant — authoritative)** | **236**, 0 failures | `./gradlew test` |
-| **Instrumented Compose tests** | **38**, 0 failures | `./gradlew :app:connectedDebugAndroidTest` |
+| **JVM unit tests (debug variant — authoritative)** | **280**, 0 failures | `./gradlew test` |
+| **Instrumented Compose tests** | **50 executed** | Includes P5 pager + scroll/tap/long-press regression coverage |
 
 Instrumented suite green on **both** the emulator (`soft_home_pixel`, API 35) and the
-physical device (**TECNO CN7c, Android 16 / API 36**).
+physical device (**TECNO CN7c, Android 16 / API 36**); P5 evidence is retained under
+`docs/screenshots/p5-*`.
 
 > **Counting discipline (cross-checked).** `./gradlew test` builds *both* the debug and
-> release variants; the counted total is the **debug** variant (236). The release variant
+> release variants; the counted total is the **debug** variant (280). The release variant
 > reports fewer for the same sources. The P4a log's "307 unit" was an over-count; the
-> authoritative progression is 217 (P4b) → 220 (P4c) → 236 (P4d).
-> Instrumented progression: 22 (P3) → 25 (P3.5) → 33 (P4b) → 36 (P4c) → 38 (P4d).
+> authoritative progression is 217 (P4b) → 220 (P4c) → 236 (P4d) → 265 (P5) → 280 (P8 motion).
+> Instrumented progression: 22 (P3) → 25 (P3.5) → 33 (P4b) → 36 (P4c) → 38 (P4d) → 50 (P8 motion).
 
 ## 3. Deferred / dropped items (with reasons) — nothing silently lost
 
@@ -825,8 +1086,8 @@ Toolchain (already installed, all on D:): JDK 17, Android SDK `D:\Android\Sdk`,
 # from the repo root
 .\gradlew.bat :app:assembleDebug            # -> app\build\outputs\apk\debug\app-debug.apk
 .\gradlew.bat :app:installDebug             # build + install to a running device/emulator
-.\gradlew.bat test                          # 236 JVM unit tests
-.\gradlew.bat :app:connectedDebugAndroidTest  # 38 instrumented tests (needs a device)
+.\gradlew.bat test                          # 280 JVM unit tests
+.\gradlew.bat :app:connectedDebugAndroidTest  # 50 instrumented tests (needs a device)
 
 # install + set as the default Home app (debug package id ends in .debug)
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
@@ -866,7 +1127,7 @@ Verified working on:
 
 Package id: `com.softhome.launcher.debug` (debug) — `.launcher` (release).
 
-## 7. Git log (baseline → P4d)
+## 7. Git log (baseline → P5 working tree)
 
 ```
 3093819 P4d: backup & restore (export/import all launcher state)
@@ -892,10 +1153,63 @@ e00a70b baseline: P1 + P1.5 + P2 (Warm Right Rail launcher) + P3 spec
 
 ## 8. Status
 
-**All planned phases are COMPLETE (P1 → P4d).** The launcher is an installable,
+**All planned phases are COMPLETE (P1 → P5).** The launcher is an installable,
 set-as-default Home app implementing the Warm Right Rail design system, with a real icon
 pack pipeline, widgets, folders, system UI, settings, drag-and-drop, a rich icon editor,
 KkPN3 dark mode, and backup/restore. Remaining work is the explicitly deferred/dropped set
 in §3.
 
-**STOP — awaiting review.**
+**STOP #3 — final review.**
+
+## Session 22 — P6 edge-to-edge category motion (2026-09-25)
+
+- Restored the pre-P6 `padding(start = Spacing.xxl)` so the static `All` grid and chrome
+  match the grid-first layout; the transition alone now applies a 10dp directional nudge.
+- `AlphabetRail` renders only for `DrawerCategory.All`; non-All categories reclaim its space.
+- Versioned as **0.1.7 (versionCode 22)** and installed with `adb install -r` on TECNO CN7c,
+  preserving launcher preferences and folders.
+- Build + drawer/design-system unit tests passed; focused category instrumentation passed
+  **7/7** on TECNO CN7c. Device evidence:
+  `docs/screenshots/p6r-all-static.png`, `docs/screenshots/p6r-communication-no-rail.png`,
+  and `docs/videos/p6r-micro-slide.mp4`.
+
+## Session 23 — Reorderable right sidebar (2026-09-25)
+
+- Added stable `RailOrderLogic` sanitization/move rules and persisted `rail_order` in the
+  existing DataStore preferences; backup JSON carries the optional `railOrder` field so
+  older backups remain valid.
+- Right-rail icons now use 48dp touch targets around the existing 20dp glyphs. Long-press
+  enters the shared drag engine, sibling icons shift with the existing motion tokens,
+  the lifted preview uses the existing scale/shadow treatment, and an end drop zone allows
+  moving an icon to the last position. Tap and stationary long-press behavior remain intact.
+- The rail begins below the system status-bar inset; status-bar content remains native and
+  outside the rail surface. Parent drawer swipe ignores touches that start in the rail.
+- Device evidence: `docs/screenshots/p7-rail-final.png`,
+  `docs/screenshots/p7-rail-final-drag.png`, `docs/screenshots/p7-rail-final-restart.png`.
+- Follow-up polish rounds the visible rail-to-home corners with the tokenized 20dp shape;
+  final device capture: `docs/screenshots/p7-rail-rounded.png`.
+- `:core:model:testDebugUnitTest`, `:core:data:testDebugUnitTest`,
+  `:feature:home:testDebugUnitTest`, and `:app:assembleDebug` passed; APK installed on
+  TECNO CN7c as `com.softhome.launcher.debug`. The complete Gradle `test` task and
+  `:app:lintDebug` also pass (lint reports warnings only).
+
+## Session 24 — Motion system + local playback demo (2026-09-25)
+
+- Added `PlaybackController` with `DemoPlaybackController`: deterministic 3:30 local
+  state, play/pause, resume, clamped seek, end-of-track stop, and animated progress.
+  The UI depends only on the abstraction, so a future MediaSession adapter can replace
+  the demo without changing the music composable. No Spotify or system playback control
+  is claimed or performed.
+- Music row now has a tokenized compact/expanded transition, expanded artwork and time
+  labels, full-track seek, and a local ticker that advances only while playing. Expanded
+  home content uses the existing scroll surface instead of overflowing the viewport.
+- Clock uses a local minute ticker and per-character digit transitions. Weather now has a
+  `WeatherCondition`/`WeatherUiState` fallback (`Clear`, `Current 8°C`) with a subtle
+  ambient icon treatment and a replacement seam for a future weather source.
+- Sidebar press feedback is emitted by the existing `dragSource` gesture engine and
+  consumed by Warm press/ripple visuals; no competing click handler was added. Tap,
+  stationary long-press, and long-press drag/drop remain mutually exclusive.
+- Verification: feature/design-system unit tests, debug assemble, and `:app:lintDebug`
+  passed. The APK was installed on TECNO CN7c (Android 16/API 36). Device captures:
+  `docs/screenshots/p8-motion-home-idle.png`, `p8-motion-music-playing.png`,
+  `p8-motion-music-expanded.png`, and `p8-motion-music-seek.png`.

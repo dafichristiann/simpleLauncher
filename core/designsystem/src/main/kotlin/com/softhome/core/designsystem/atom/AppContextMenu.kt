@@ -111,6 +111,7 @@ fun AppContextMenu(
 @Composable
 private fun ContextMenuRow(item: ContextMenuItem, onDismiss: () -> Unit) {
     val colors = MaterialTheme.softColors
+    val interactionSource = remember { MutableInteractionSource() }
     val tint = when {
         !item.enabled -> colors.disabled
         item.destructive -> colors.destructive
@@ -120,9 +121,15 @@ private fun ContextMenuRow(item: ContextMenuItem, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .alpha(if (item.enabled) 1f else 0.55f)
+            .warmPress(interactionSource, enabled = item.enabled)
             .then(
                 if (item.enabled) {
-                    Modifier.clickable(role = Role.Button, onClickLabel = item.label) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        role = Role.Button,
+                        onClickLabel = item.label,
+                    ) {
                         item.onClick()
                         onDismiss()
                     }

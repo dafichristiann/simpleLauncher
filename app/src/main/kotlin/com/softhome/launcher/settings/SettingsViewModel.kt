@@ -17,15 +17,18 @@ import com.softhome.core.model.IconPack
 import com.softhome.core.model.LauncherPrefs
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
+import com.softhome.core.model.Folder
 import com.softhome.feature.iconpack.data.IconPackRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.UUID
 
 /** One hidden app, resolved for display in the "Hidden apps" manager. */
 data class HiddenApp(val componentKey: String, val label: String)
@@ -94,6 +97,17 @@ class SettingsViewModel @Inject constructor(
     fun setSpacing(scale: SpacingScale) = viewModelScope.launch { prefsRepository.setSpacing(scale) }
 
     fun unhideApp(componentKey: String) = viewModelScope.launch { prefsRepository.unhideApp(componentKey) }
+
+    fun createFolder() = viewModelScope.launch {
+        val current = folderRepository.folders.first()
+        folderRepository.save(
+            current + Folder(
+                id = UUID.randomUUID().toString(),
+                name = "New folder",
+                apps = emptyList(),
+            ),
+        )
+    }
 
     // --- Widgets (home rows) --------------------------------------------------
 

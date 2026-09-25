@@ -10,6 +10,7 @@ import com.softhome.core.model.HomeRowLogic
 import com.softhome.core.model.HomeRowPref
 import com.softhome.core.model.IconOverride
 import com.softhome.core.model.LauncherPrefs
+import com.softhome.core.model.RailOrderLogic
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,7 @@ class PrefsRepositoryTest {
         repo.setSpacing(SpacingScale.Normal)
         repo.setHiddenApps(emptySet())
         repo.setIconOverride("com.reset/Main", null)
+        repo.setRailOrder(RailOrderLogic.DEFAULT)
     }
 
     @Test
@@ -72,22 +74,38 @@ class PrefsRepositoryTest {
     // --- P3 ---
 
     @Test
-    fun `home rows default to all visible in order`() = runTest {
+    fun `home rows default to the lean set in order`() = runTest {
         val repo = newRepo(); reset(repo)
         val prefs = repo.prefs.first()
         assertThat(prefs.homeRows.map { it.kind }).isEqualTo(HomeRowLogic.DEFAULT_ORDER)
-        assertThat(prefs.homeRows.all { it.visible }).isTrue()
+        // P2: Calendar/Battery/Notes are hidden by default; the other five are visible.
+        assertThat(prefs.homeRows.filter { it.visible }.map { it.kind }).containsExactly(
+            HomeRowKind.Time, HomeRowKind.Date, HomeRowKind.Weather,
+            HomeRowKind.Search, HomeRowKind.Music,
+        ).inOrder()
+    }
+
+    @Test
+    fun `legacy all-visible home rows are migrated once to the lean default`() = runTest {
+        val repo = newRepo()
+        // Simulate a pre-P2 install: persist the exact legacy all-visible default.
+        repo.setHomeRows(HomeRowLogic.DEFAULT_ORDER.map { HomeRowPref(it, visible = true) })
+        val got = repo.prefs.first().homeRows
+        assertThat(got).isEqualTo(HomeRowLogic.default())
+        assertThat(got.first { it.kind == HomeRowKind.Calendar }.visible).isFalse()
+        // A second read is stable (no re-migration, no flip-flop).
+        assertThat(repo.prefs.first().homeRows).isEqualTo(HomeRowLogic.default())
     }
 
     @Test
     fun `home rows visibility and order round-trip`() = runTest {
         val repo = newRepo(); reset(repo)
         var rows = HomeRowLogic.default()
-        rows = HomeRowLogic.toggle(rows, HomeRowKind.Notes)  // hide notes
+        rows = HomeRowLogic.toggle(rows, HomeRowKind.Notes)  // notes: hidden -> visible
         rows = HomeRowLogic.moveUp(rows, HomeRowKind.Music)  // reorder music
         repo.setHomeRows(rows)
         val got = repo.prefs.first().homeRows
-        assertThat(got.first { it.kind == HomeRowKind.Notes }.visible).isFalse()
+        assertThat(got.first { it.kind == HomeRowKind.Notes }.visible).isTrue()
         // Music moved before Weather (it was after Search originally).
         assertThat(got.map { it.kind }.indexOf(HomeRowKind.Music))
             .isLessThan(HomeRowLogic.DEFAULT_ORDER.indexOf(HomeRowKind.Music))
@@ -109,6 +127,15 @@ class PrefsRepositoryTest {
         val repo = newRepo(); reset(repo)
         repo.setSpacing(SpacingScale.Roomy)
         assertThat(repo.prefs.first().spacing).isEqualTo(SpacingScale.Roomy)
+    }
+
+    @Test
+    fun `rail order persists and repairs missing entries`() = runTest {
+        val repo = newRepo(); reset(repo)
+        repo.setRailOrder(listOf("Camera", "Camera", "unknown"))
+        assertThat(repo.prefs.first().railOrder).containsExactlyElementsIn(
+            listOf("Camera") + RailOrderLogic.DEFAULT.filter { it != "Camera" },
+        ).inOrder()
     }
 
     @Test

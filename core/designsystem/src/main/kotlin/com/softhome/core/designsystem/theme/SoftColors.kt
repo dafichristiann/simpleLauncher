@@ -48,6 +48,7 @@ data class SoftColors(
     val drawerIconTravel: Color,
     val drawerIconFinance: Color,
     val drawerIconNeutral: Color,     // fallback glyph color
+    val drawerIconBrowser: Color,     // P4: Browser & Search slot
     val isLight: Boolean,
 ) {
     /** Shadow color used behind tiles/cards in the current theme. */
@@ -90,6 +91,7 @@ val LightSoftColors = SoftColors(
     drawerIconTravel = DrawerIconTravel,
     drawerIconFinance = DrawerIconFinance,
     drawerIconNeutral = DrawerIconNeutral,
+    drawerIconBrowser = DrawerIconBrowser,
     isLight = true,
 )
 
@@ -129,6 +131,7 @@ val DarkSoftColors = SoftColors(
     drawerIconTravel = DarkDrawerIconTravel,
     drawerIconFinance = DarkDrawerIconFinance,
     drawerIconNeutral = DarkDrawerIconNeutral,
+    drawerIconBrowser = DarkDrawerIconBrowser,
     isLight = false,
 )
 

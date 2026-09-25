@@ -57,9 +57,14 @@ class HomeScreenTest {
 
     // --- P2 widget rows -------------------------------------------------------
 
+    /** P2: Calendar/Battery/Notes are hidden by default; these tests opt them back in. */
+    private fun allRowsVisible() = HomeRowLogic.DEFAULT_ORDER.map {
+        com.softhome.core.model.HomeRowPref(it, visible = true)
+    }
+
     @Test
     fun shows_calendar_row_with_no_events() {
-        setHome()
+        setHome(HomeUiState(homeRows = allRowsVisible()))
         composeRule.onNodeWithText("No upcoming events").assertExists()
     }
 
@@ -67,6 +72,7 @@ class HomeScreenTest {
     fun shows_battery_row_with_real_values() {
         setHome(
             HomeUiState(
+                homeRows = allRowsVisible(),
                 deviceStatus = DeviceStatusSnapshot(batteryPercent = 42, storageUsedFraction = 0.5f),
             ),
         )
@@ -76,12 +82,63 @@ class HomeScreenTest {
 
     @Test
     fun shows_notes_row_collapsed_with_preview() {
-        setHome(HomeUiState(notes = "remember the milk"))
+        setHome(HomeUiState(homeRows = allRowsVisible(), notes = "remember the milk"))
         composeRule.onNodeWithContentDescription("Quick notes").assertExists()
         composeRule.onNodeWithText("remember the milk").assertExists()
     }
 
-    // --- P3 (F1/F2/F3) --------------------------------------------------------
+    @Test
+    fun default_home_hides_calendar_battery_and_notes() {
+        // P2: the default home shows only Time/Date/Weather/Search/Music.
+        setHome()
+        composeRule.onNodeWithText("No upcoming events").assertDoesNotExist()   // Calendar row
+        composeRule.onNodeWithText("Battery").assertDoesNotExist()              // Battery row
+        composeRule.onNodeWithContentDescription("Quick notes").assertDoesNotExist() // Notes row
+        // The five kept rows are present.
+        composeRule.onNodeWithText("Current 8\u00B0C").assertIsDisplayed()      // Weather
+        composeRule.onNodeWithText("play music.").assertIsDisplayed()          // Music
+    }
+
+    // --- P3 (Q2): tap launches, long-press expands ---------------------------------
+
+    @Test
+    fun tapping_search_row_does_not_expand_it_launches_instead() {
+        // Q2: a tap on the Search row is a LAUNCH (here onOpenRow is captured, not the
+        // in-place expand). The row must not enter the "searching" state on a tap.
+        var launched = false
+        composeRule.setContent {
+            SoftHomeTheme {
+                HomeScreen(
+                    onOpenDrawer = {},
+                    onVoiceSearch = {},
+                    state = HomeUiState(),
+                    onLaunchRow = { launched = true },
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Find something").performClick()
+        composeRule.waitForIdle()
+        assertTrue("tap on the Search row must launch, not expand (Q2)", launched)
+    }
+
+    @Test
+    fun long_pressing_search_row_expands_in_place() {
+        // Q2: the in-place expand stays on LONG-press. After a long-press the row shows
+        // its focused "searching" text (HomeState.Search).
+        composeRule.setContent {
+            SoftHomeTheme {
+                HomeScreen(
+                    onOpenDrawer = {},
+                    onVoiceSearch = {},
+                    state = HomeUiState(),
+                    onLaunchRow = { },
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Find something").performTouchInput { longClick() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("s e a r c h i n g").assertExists()
+    }
 
     @Test
     fun tapping_the_settings_rail_icon_opens_settings() {
@@ -118,18 +175,18 @@ class HomeScreenTest {
     fun hidden_row_is_not_rendered() {
         val rows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Music)
         setHome(HomeUiState(homeRows = rows))
-        // Music row hidden -> its static title is gone; notes still present.
+        // Music row hidden -> its static title is gone; another kept row is still present.
         composeRule.onNodeWithText("play music.").assertDoesNotExist()
-        composeRule.onNodeWithText("No upcoming events").assertExists()
+        composeRule.onNodeWithText("Current 8\u00B0C").assertExists()
     }
 
     @Test
     fun locked_rows_render_even_when_all_toggleable_rows_hidden() {
+        // Force every hideable row hidden regardless of its default (P2) state.
         var rows = HomeRowLogic.default()
-        listOf(
-            HomeRowKind.Search, HomeRowKind.Music, HomeRowKind.Calendar,
-            HomeRowKind.BatteryStorage, HomeRowKind.Notes,
-        ).forEach { rows = HomeRowLogic.toggle(rows, it) }
+        HomeRowLogic.DEFAULT_ORDER.filter { HomeRowLogic.canHide(it) }.forEach { kind ->
+            if (rows.first { it.kind == kind }.visible) rows = HomeRowLogic.toggle(rows, kind)
+        }
         setHome(HomeUiState(homeRows = rows))
         // Weather (locked) still renders; music (hidden) does not.
         composeRule.onNodeWithText("Current 8\u00B0C").assertExists()

@@ -5,6 +5,268 @@ Append-only.
 
 ---
 
+### D-061 - Clock uses a local minute ticker with a digit-level transition
+- **What:** The Time row is driven by `rememberMinuteKey()` (a coroutine that sleeps to
+  the next minute boundary and bumps an epoch-minute key) rather than a broadcast or
+  `AlarmManager`. Each character of `HH:mm` is rendered through its own `AnimatedContent`
+  keyed by index, so only the digits that actually change animate (a slide+fade through
+  `MotionTokens.clockDigit()`); the Date row re-reads on the same key.
+- **Why:** A launcher clock must stay correct without a receiver/permission, and the
+  design language animates per-character, not the whole string. A minute is the smallest
+  unit the row shows, so it is the only tick needed.
+- **Impact:** No permission, no manifest receiver, no wake-lock. `reducedMotion` replaces
+  the digit transition with a hard cut. The animation is deterministic (the time string is
+  a pure function of the minute key), not random. No storage.
+
+---
+
+### D-060 - Weather renders an abstract fallback state until a real source exists
+- **What:** `WeatherUiState(condition = WeatherCondition.Clear, temperatureLabel = "Current 8°C")`
+  is an isolated, local contract (`WeatherCondition = Clear | Cloudy | Rain | Night`). The
+  Weather row animates between conditions (`AnimatedContent` + a tokenized transition) and
+  plays a slow ambient scale on the icon; the value itself is a fixed fallback, not fetched.
+- **Why:** The motion system (condition cross-fade + ambient icon) can be built and
+  reviewed now without waiting on a weather API, and the icon mapping already covers the
+  four conditions. A future weather repository can replace the single `remember` that
+  supplies the state without touching the row's animation code.
+- **Impact:** No network, no location permission, no API key. The row is deterministic and
+  offline-safe; "Current 8°C" is clearly a placeholder value, not a live reading.
+
+---
+
+### D-059 - Music player uses a PlaybackController abstraction (local demo state)
+- **What:** The home Music row depends only on a `PlaybackController` interface
+  (`state: StateFlow<PlaybackState>`, `togglePlayPause()`, `seekTo(positionMs)`), where
+  `PlaybackState(isPlaying, currentTimeMs, durationMs)` exposes a derived
+  `progress: Float = currentTimeMs / durationMs`. The only implementation today is the
+  local `DemoPlaybackController`: a fixed 50 ms UI ticker calls `advanceBy(50)` while
+  `isPlaying`, `seekTo` clamps to `[0, duration]`, and reaching `durationMs` stops
+  playback. The UI reads `playbackState.progress` / `currentTimeMs` / `durationMs` and the
+  play control reflects `isPlaying`.
+- **Why:** Play/Pause must freeze the progress and resume from the same position, seek must
+  jump to the picked position, and the progress bar must be a deterministic function of
+  `duration`/`currentTime` — not a decorative animation. At the same time, playback must be
+  swappable later for an Android `MediaSession` **without changing the Music Player UI**.
+  The interface is that seam; the demo controller is a real, testable state machine so the
+  motion/behaviour can be built now.
+- **Impact:** This is a **local demo**, not system playback: SOFT/HOME does **not** control
+  Spotify or any device media session, and no `MediaSession`/notification is created. A
+  future `MediaSessionPlaybackController` can implement the same interface and be injected
+  in place of `DemoPlaybackController` with no UI edits. Determinism is unit-locked by
+  `PlaybackControllerTest` (advance / pause / resume-from-position / seek-clamp /
+  stop-at-duration / progress ratio). Evidence: `docs/videos/p8-motion-playback-expand.mp4`
+  and `docs/screenshots/p8-motion-music-*.png`.
+
+---
+
+### D-058 - Drawer category transition is a full-width slide+fade, not a HorizontalPager
+- **What:** The app-drawer category switch (`AppDrawerScreen`) no longer uses
+  `HorizontalPager`. It now uses `AnimatedContent` keyed on `state.category`, with a
+  full-width horizontal slide (+ a thin fade) in the direction of the change. A
+  `pointerInput { detectHorizontalDragGestures }` on the content box flings between
+  categories; tab taps run the same transition. The alphabet rail and `CategoryNav` read
+  `state.category`; one `LazyGridState` per category keeps scroll position.
+- **Why:** `HorizontalPager`'s drag physics render the neighbouring page mid-swipe, so a
+  sliver of the next/previous category "peeked" at the screen edge during the transition
+  (the "sisa space / tepian" the user reported). This is inherent to the pager, not a
+  `pageSpacing`/`contentPadding` setting. Each category must fill the full width with no
+  peek, and the transition must never show two categories truncated side by side.
+- **Impact:** Drawer swipe and tab tap produce one clean slide+fade; no neighbour is ever
+  visible at the edge. The horizontal detector only claims after horizontal slop, so the
+  grid's vertical scroll and the surface's swipe-down-to-close are unaffected (verified
+  on device). JVM suites green (`core:model`, `feature:appdrawer`, `core:data`); evidence:
+  `docs/videos/p6-category-swipe-ab.mp4`, `p6-category-swipe-ba-and-tab.mp4` and
+  `docs/screenshots/p6-*`.
+
+---
+
+### D-057 - Motion polish uses shared tokenized press and overlay primitives
+- **What:** Interactive Warm surfaces share a press scale/opacity treatment and accent
+  ripple; overlay transitions use `MotionTokens`; widget progress and drag lift animate.
+- **Why:** Premium feel should come from one coherent motion vocabulary rather than
+  scattered component-local timings.
+- **Impact:** Existing gesture callbacks and persistence are unchanged. Tecno regression
+  coverage remains green (drawer 6/6; home drag 2/2); the first post-polish recording and
+  frame profile are retained for follow-up tuning.
+
+---
+
+### D-056 - Versioned updates preserve existing DataStore state
+- **What:** Release `0.1.1` uses `versionCode 16`; the Settings footer exposes the
+  running version. The update helper uses `installDebug` (replace-in-place).
+- **Why:** A visible version and repeatable install command make on-device testing safer.
+- **Impact:** `soft_home_prefs`, `soft_home_folders`, and `soft_home_notes` names/keys are
+  unchanged. Home-row legacy migration is one-shot and sanitized; icon overrides, folder
+  JSON, and notes are tolerant/round-trip tested, so no data migration is needed.
+
+---
+
+### D-055 - Scroll movement must cancel app-cell taps
+- **What:** The shared `dragSource` emits `onTap` only when the pointer is released before
+  moving beyond Compose touch-slop. Movement before long-press cancels the source gesture;
+  the parent grid owns the scroll.
+- **Why:** `awaitLongPressOrCancellation` conflated pre-long-press movement with release,
+  so a slight drag while scrolling could launch the app under the finger.
+- **Impact:** Drawer scrolling no longer opens an app accidentally. Long-press drag/drop,
+  stationary context menus, and normal taps retain their existing behavior. Locked by the
+  new `DrawerSwipeCategoryTest` regression case.
+
+---
+
+### D-054 - Drawer categories use a horizontal pager with global search/index (P5)
+- **What:** The eight `DrawerCategory.tabs` are pager pages. A tab tap and a horizontal
+  swipe select the same runtime category state; search and the alphabet rail stay global.
+  Category selection is not persisted.
+- **Why:** This matches the requested category flow while keeping the existing search/index
+  behavior predictable and avoiding a storage migration for transient navigation state.
+- **Impact:** A swipe across the grid advances All → Communication → Social & Entertainment
+  without launching an app; vertical grid scrolling and swipe-down close remain separate.
+
+---
+
+### D-053 - P5 verification evidence is retained per target device
+- **What:** Final category verification keeps separate Tecno and emulator stills for the
+  All page and post-swipe pages under `docs/screenshots/p5-*`.
+- **Why:** The physical Tecno and API 35 emulator have different app inventories and startup
+  timing; a single screenshot would not prove both runtime paths.
+- **Impact:** The final review can compare the same gesture on both targets without repeating
+  the already completed manual capture sequence.
+
+---
+
+### D-052 - Drawer icons are assigned deterministically per cell with a uniqueness guarantee (P4)
+- **What:** New pure `core:model/DrawerIconAssignment` computes each drawer cell's
+  `(glyph, colorToken)` from `DrawerIconMap`, then de-duplicates: cells are walked in a
+  **sorted key order** (by `componentKey`), and any collision is nudged deterministically
+  (rotate the color; else fall to another resolvable glyph). `AppDrawerViewModel.buildState`
+  carries the result and feeds it into the renderer.
+- **Why:** the complaint was two different apps rendering identically. Keying on
+  `componentKey` (not package) also fixes TECNO's Phone + Contacts — **one package, two
+  launcher activities** — which otherwise shared a glyph. Determinism (sorted, no
+  randomness) means tiles never shuffle between launches.
+- **Impact:** guaranteed-distinct grid across the **real Tecno list** (locked by
+  `DrawerIconUniquenessTest`, seeded with the on-device 77-activity list). If a whole
+  glyph's color column ever saturates, a resolvable fallback glyph is used, never a fake
+  name (so the tile still renders).
+
+---
+
+### D-051 - Drawer icon table is ported from the `.pen`; the `TpzL1` tiles win (P4)
+- **What:** `core:model/DrawerIconMap` is rebuilt from `design/homeApp.pen`: the 24
+  `TpzL1` "App Tile" drawables (exact lucide glyph **+** `$icon-*` color) are the source of
+  truth for the apps they show; the `ciHU3` "Icon Language Library" (8 groups, ~72 apps)
+  fills the rest. Matching is by **package-name fragment, first-match, most-specific-first**
+  (GoPay `gojek.gopay` before `gojek`; Threads `instagram.barcelona` before `instagram`;
+  Google TV `google.android.videos` before generic `google`; YouTube Music
+  `youtube.music` before `youtube`; ShopeePay before Shopee). Precedence at runtime:
+  **user override → active pack → `DrawerIconMap` → `IconMasker` heuristic → category glyph**.
+- **Why:** the map existed but was **never consumed** — the drawer still used the ~20-name
+  string heuristic, so DANA/GoPay/Shopee/Discord/Claude/… all collapsed to `AppWindow`.
+  Where the two frames disagree the visual mock (the tiles) is the more authoritative
+  artifact for those 24 apps; the library extends coverage to everything else.
+- **Impact:** ~72 design apps now render their intended glyph; the map is design-fidelity
+  locked by `DrawerIconMapTest`. A handful of `TpzL1`-vs-`ciHU3` differences are
+  deliberate (Agoda `tent` not `tag`; DANA `wallet-minimal` not `wallet`).
+
+---
+
+### D-050 - A dedicated "Browser" drawer color token (8th slot) (P4)
+- **What:** `DrawerIconTokenName` (and the mirror `DrawerIconColor.Token`) gain
+  **`Browser`**; `Color.kt` adds `DrawerIconBrowser` (light `#4D7C8A`, dark `#7FA6B2`).
+  `SoftColors.drawerIconBrowser` is added to both palettes.
+- **Why:** the design has **8 categories but only 7 named `$icon-*` colors** — the `.pen`
+  tints Chrome (Browser & Search) with the blue `$icon-finance`. Overloading Finance would
+  make "Browser & Search" indistinguishable from "Finance & Shopping" in code; a dedicated
+  slot keeps the 8 categories ↔ 8 tokens consistent while matching the mock's blue.
+- **Impact:** browser apps (Chrome/Brave/Firefox/…) resolve to the blue token; the icon
+  editor can now offer it too. `DrawerColorsTest` / `DrawerAppIconColorTest` cover it.
+
+---
+
+### D-049 - Home rows deep-link with a graceful fallback chain; tap launches, long-press expands (P3)
+- **What:** New `feature:home/RowLaunchResolver` maps each tappable row to a launch intent
+  through an ordered chain: **primary implicit intent → known launcher package (Tecno-first)
+  → chooser → null**. `HomeScreen` wires a row **tap to launch** and moves the in-place
+  expand of Search/Music/Notes to **long-press**. `HomeRow` gained an optional
+  `onLongClick` (combinedClickable). The manifest declares the intent `<queries>` needed
+  for package visibility on Android 11+.
+- **Why (Q2):** tap is the primary "open the related app" action; the expand stays available
+  on long-press (no behavior removed). **Why (Q3):** when no weather app resolves, the Weather
+  row opens a browser weather URL rather than a dead tap.
+- **Root cause found on-device:** Android has **no clock category**, and a bare
+  `AlarmClock.ACTION_SET_ALARM` **resolves but is denied** on the Tecno (`Permission Denial …
+  requires com.android.alarm.permission.SET_ALARM`) — `runCatching` swallowed it, so the Time
+  row did nothing. Fix: the Time row opens the clock app via its **known launcher package**
+  (`com.transsion.deskclock/.DeskClock`). Also confirmed the plan's probe: `CATEGORY_APP_
+  CALENDAR`/`_WEATHER` return *No activity found* on this ROM, so the package fallback is
+  load-bearing (verified: calendar/weather both launch from the fallback).
+- **Impact:** all 5 rows launch the right app on the Tecno (Time→DeskClock, Date→AllInOne
+  Calendar, Weather→rlk.weathers, Search→Brave, Music→Spotify). Locked by `RowLaunchResolverTest`
+  (9 cases) + instrumented Q2 tests. Verified on device.
+
+---
+
+### D-048 - Lean home default: Calendar/Battery/Notes hidden, applied once to existing installs (P2)
+- **What:** `HomeRowLogic.default()` now returns the default order with
+  **Time/Date/Weather/Search/Music visible** and **Calendar/BatteryStorage/Notes hidden**
+  (new `DEFAULT_HIDDEN` set). `sanitize` appends a *missing* kind **hidden** if it is in
+  `DEFAULT_HIDDEN`. A pure `HomeRowLogic.migrateLegacy(stored)` detects the exact pre-P2
+  "all 8 kinds, in default order, all visible" shape; `PrefsRepositoryImpl` runs it **once
+  per process** (`onStart`, before the first emission) and writes the new default back.
+- **Why:** The user wanted a leaner home (only the 5 core rows) **without deleting any
+  rows** — Calendar/Battery/Notes must stay re-enablable in Settings. Existing installs had
+  persisted the old all-visible default, so a change to the code default alone would not
+  have reached them. Q1 decision = **apply-once migration** (a real user choice — any hidden
+  row or reorder — is never the legacy shape, so it is never clobbered).
+- **Impact:** Fresh installs and upgraded installs both open with 5 rows; verified on the
+  Tecno (`docs/screenshots/p2-home-5-rows-after-migration.png` — an install that previously
+  showed all 8 now shows 5). Rows remain toggleable (`DEFAULT_HIDDEN` ⊆ `canHide == true`).
+  Migration is unit-locked (`HomeRowLogicTest` migrateLegacy cases,
+  `PrefsRepositoryTest` migrate-once case). Supersedes the `default()`/`sanitize` behavior
+  from D-033.
+
+---
+
+### D-047 - Drawer open/close is a swipe *on the content*, pass-through, not a layer behind it (P1.1)
+- **What:** The drawer is opened by an upward swipe handled by a **pass-through
+  vertical-swipe observer** (`Modifier.verticalSwipe`, `core:designsystem`) attached to the
+  home surface itself, and closed by the mirror downward swipe on the drawer surface (only
+  when the grid is at the top). The observer runs on `PointerEventPass.Initial` and **never
+  consumes** events, so row taps, long-press drag-to-reorder and the notes scroll are
+  untouched.
+- **Why:** The previous swipe-up layer sat **behind** the home content and was therefore
+  effectively dead — `HomeScreen.onOpenDrawer` was never invoked, and the row list's
+  `dragSource` treats a quick swipe as a tap. Net effect on the real Tecno: **neither**
+  swipe-up (open) nor swipe-down (close, which never existed) worked. A blocking
+  `detectVerticalDragGestures` layer would steal taps/drag-reorder, hence the
+  non-consuming Initial-pass observer.
+- **Impact:** Symmetric open/close; verified on Tecno `169402562R001782` (video + stills in
+  `docs/screenshots/p1-*`). Locked by `DrawerSwipeDownTest` (instrumented) + the existing
+  `DrawerBackHandlerTest` and home row-drag tests (regression). Supersedes the old
+  behind-content swipe layer.
+
+---
+
+### D-046 - Drawer scroll: memoize glyph (name, colour) per app; apply the Spacing preset (P1.2)
+- **What:** (1) `DrawerEntry` now carries a precomputed `colorToken` (and `symbolName`);
+  `AppDrawerViewModel.buildState` computes them **once per app**, and `DrawerAppIcon` no
+  longer calls the `DrawerIconColor.tokenFor` heuristic during recomposition. (2) The drawer
+  grid's vertical gap now applies `SpacingScale.factor` to the design token
+  (`Spacing.drawerGap` = 26dp), instead of a fixed `Spacing.xxl`.
+- **Why:** The colour/symbol heuristics re-ran on every scroll frame (per-frame UI-thread
+  work); the P3 "Spacing" preset was **persisted, backed-up, shown in Settings and
+  unit-tested — but never consumed** (a latent bug: the enum's own KDoc claimed it was
+  applied to drawer gaps).
+- **Impact:** Spacing preset is now real (Compact/Normal/Roomy visibly change the grid;
+  tighter default matches the `.pen`). Memoization removes genuine per-frame work and is
+  unit-locked by `DrawerEntryResolveTest`. **Honest measurement note:** emulator `gfxinfo`
+  before/after was within noise (the small emulator grid is layout-bound, not
+  heuristic-bound); the Tecno ROM blocks `dumpsys gfxinfo` entirely, so Tecno smoothness is
+  verified visually. See `docs/superpowers/specs/2026-09-25-onddevice-findings-fix-plan.md`
+  §P1 report.
+
+---
+
 ### D-042 - Backup/restore is SAF + one versioned JSON document (P4d)
 - **What:** Backup & Restore (the last P4 sub-phase, G4) exports/imports the whole
   launcher user state as **one JSON file** with a schema envelope
@@ -255,6 +517,11 @@ Append-only.
 ---
 
 ### D-021 - Music player is a static UI component (MediaSession deferred)
+> **Superseded by D-059 (P8).** The `MusicPlayerRow` is no longer static: it renders a
+> live `PlaybackState` from a `PlaybackController` (a local `DemoPlaybackController` for
+> now). MediaSession integration is still deliberately deferred — D-021's "real media
+> integration is a later task" remains true; only the "no playback wiring / play is a
+> no-op" premise is replaced. Kept for history.
 - **What:** `MusicPlayerRow` renders the design's dummy values ("play music." /
   Djo / End of Beginning · Live from Chicago) with no playback wiring; the play
   button is a no-op.

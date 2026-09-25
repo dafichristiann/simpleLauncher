@@ -42,4 +42,12 @@ enum class DrawerIconTokenName {
     Travel,
     Finance,
     Neutral,
+
+    /**
+     * P4: the 8th slot for the "Browser & Search" category. The `.pen` has 8 categories
+     * but only 7 named `$icon-*` colors; the `TpzL1` mock tints Chrome (Browser) with
+     * `$icon-finance` (blue). Rather than overload Finance, this dedicated slot reuses the
+     * same blue so browser apps read as a group (see the P4 spec / decision D-050).
+     */
+    Browser,
 }

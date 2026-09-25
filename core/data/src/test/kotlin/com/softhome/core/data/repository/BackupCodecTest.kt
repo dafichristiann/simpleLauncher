@@ -38,6 +38,7 @@ class BackupCodecTest {
         homeRows = HomeRowLogic.moveUp(HomeRowLogic.default(), HomeRowKind.Notes),
         spacing = SpacingScale.Roomy,
         hiddenApps = setOf("com.hidden/One", "com.hidden/Two"),
+        railOrder = listOf("Camera", "Sparkles", "CircleDot", "MessageCircle", "Send", "Wind", "PanelLeft", "Phone"),
     )
 
     private fun richDoc() = BackupDocument(
@@ -73,6 +74,7 @@ class BackupCodecTest {
         assertThat(p.hiddenApps).containsExactly("com.hidden/One", "com.hidden/Two")
         assertThat(p.iconOverrides).isEqualTo(doc.prefs.iconOverrides)
         assertThat(p.homeRows).isEqualTo(doc.prefs.homeRows)
+        assertThat(p.railOrder).isEqualTo(doc.prefs.railOrder)
     }
 
     @Test

@@ -6,6 +6,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -16,6 +22,7 @@ import com.softhome.core.designsystem.theme.SoftHomeTheme
 import com.softhome.core.model.ThemeMode
 import com.softhome.launcher.settings.SettingsPanel
 import com.softhome.launcher.settings.SettingsViewModel
+import com.softhome.feature.iconpack.ui.IconPackImportSheet
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -29,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
  * light, which left a dark panel with light status-bar icons.
  */
 @AndroidEntryPoint
+@androidx.compose.material3.ExperimentalMaterial3Api
 class SettingsStubActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +51,7 @@ class SettingsStubActivity : ComponentActivity() {
                 ThemeMode.Dark -> true
                 ThemeMode.System -> systemDark
             }
+            var iconPackOpen by remember { mutableStateOf(false) }
             SoftHomeTheme(darkTheme = darkTheme) {
                 val context = LocalContext.current
                 SideEffect {
@@ -56,8 +65,17 @@ class SettingsStubActivity : ComponentActivity() {
                 SettingsPanel(
                     viewModel = viewModel,
                     onClose = { finish() },
+                    onOpenIconPack = { iconPackOpen = true },
                     modifier = Modifier.fillMaxSize(),
                 )
+                if (iconPackOpen) {
+                    ModalBottomSheet(
+                        onDismissRequest = { iconPackOpen = false },
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ) {
+                        IconPackImportSheet(onApplied = { iconPackOpen = false })
+                    }
+                }
             }
         }
     }

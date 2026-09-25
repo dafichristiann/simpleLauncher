@@ -2,7 +2,20 @@ package com.softhome.feature.home
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -25,9 +38,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +53,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
@@ -56,6 +75,7 @@ import com.softhome.core.designsystem.atom.LineIconImage
 import com.softhome.core.designsystem.atom.MusicPlayerRow
 import com.softhome.core.designsystem.atom.NotesRowContent
 import com.softhome.core.designsystem.atom.RailIcon
+import com.softhome.core.designsystem.atom.warmPress
 import com.softhome.core.designsystem.atom.dragSource
 import com.softhome.core.designsystem.atom.dragSourceAlpha
 import com.softhome.core.designsystem.atom.dropTarget
@@ -64,6 +84,7 @@ import com.softhome.core.designsystem.theme.ClockLarge
 import com.softhome.core.designsystem.theme.DateNumber
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.MotionTokens
+import com.softhome.core.designsystem.theme.rememberReducedMotion
 import com.softhome.core.designsystem.theme.RowDisplay
 import com.softhome.core.designsystem.theme.RowMeta
 import com.softhome.core.designsystem.theme.Spacing
@@ -71,9 +92,12 @@ import com.softhome.core.designsystem.theme.TweakLabel
 import com.softhome.core.designsystem.theme.TweakLabelLean
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.HomeRowKind
+import com.softhome.core.model.RailOrderLogic
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 /**
  * The SOFT / HOME home screen -- "Warm Right Rail".
@@ -99,15 +123,44 @@ fun HomeScreen(
     onNotesChange: (String) -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onReorderRow: (HomeRowKind, Int) -> Unit = { _, _ -> },
+    onReorderRail: (String, Int) -> Unit = { _, _ -> },
+    /**
+     * P3: invoked with the row whose **tap** should launch an app. When null (default)
+     * the real [RowLaunchResolver] opens the related app; pass a lambda in tests to
+     * assert the tap/long-press split (Q2) without a device.
+     */
+    onLaunchRow: ((HomeRowKind) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val colors = MaterialTheme.softColors
-    val time = homeTime()
-    val date = homeDate()
+    val minuteKey = rememberMinuteKey()
+    val time = remember(minuteKey) { homeTime(Date(minuteKey * 60_000L)) }
+    val date = remember(minuteKey) { homeDate(Date(minuteKey * 60_000L)) }
+    val reducedMotion = rememberReducedMotion()
+    val weather = remember { WeatherUiState() }
+    val playbackController = remember { DemoPlaybackController() }
+    val playbackState by playbackController.state.collectAsState()
+    LaunchedEffect(playbackController) {
+        while (isActive) {
+            delay(50L)
+            playbackController.advanceBy(50L)
+        }
+    }
 
     val railResolver = rememberRailResolver(context)
     val onShortcut: (RailShortcut) -> Unit = { shortcut ->
         railResolver.intentFor(shortcut)?.let { intent ->
+            runCatching { context.startActivity(intent) }
+        }
+    }
+
+    // P3: tapping a row launches the related app (Clock / Calendar / Weather / Search /
+    // Music) through the graceful fallback chain (Q2/Q3). A long-press keeps the in-place
+    // expand for Search / Music / Notes. `onVoiceSearch` is the "no app found" hook the
+    // launcher uses to surface a message (kept a no-op-by-default callback for tests).
+    val rowResolver = rememberRowResolver(context)
+    val launchRow: (HomeRowKind) -> Unit = onLaunchRow ?: { kind ->
+        rowResolver.intentFor(kind)?.let { intent ->
             runCatching { context.startActivity(intent) }
         }
     }
@@ -165,7 +218,7 @@ fun HomeScreen(
                     // expanded row reachable, while at rest the list fits and the swipe-up
                     // gesture reaches the drawer layer behind the content.
                     .then(
-                        if (homeState.isNotesOpen) Modifier.verticalScroll(scrollState) else Modifier,
+                        if (homeState.isNotesOpen || homeState.isMusicOpen) Modifier.verticalScroll(scrollState) else Modifier,
                     )
                     .dropTarget(targetId = "rowlist", controller = dragController)
                     .padding(
@@ -185,8 +238,14 @@ fun HomeScreen(
                         date = date,
                         state = state,
                         homeState = homeState,
+                        weather = weather,
+                        playbackState = playbackState,
+                        reducedMotion = reducedMotion,
+                        onPlaybackToggle = playbackController::togglePlayPause,
+                        onSeekPlayback = playbackController::seekTo,
                         onNotesChange = onNotesChange,
                         onTapRow = { homeState = homeState.onTapRow(it) },
+                        onLaunchRow = launchRow,
                         modifier = Modifier
                             .onGloballyPositioned { coords ->
                                 val b = coords.boundsInWindow()
@@ -223,6 +282,8 @@ fun HomeScreen(
                 onShortcut = onShortcut,
                 onOpenSettings = onOpenSettings,
                 expanded = homeState.isSearching,
+                railOrder = state.railOrder,
+                onReorder = onReorderRail,
             )
         }
 
@@ -275,22 +336,36 @@ private fun HomeRowSlot(
     date: HomeDate,
     state: HomeUiState,
     homeState: HomeState,
+    weather: WeatherUiState,
+    playbackState: PlaybackState,
+    reducedMotion: Boolean,
+    onPlaybackToggle: () -> Unit,
+    onSeekPlayback: (Long) -> Unit,
     onNotesChange: (String) -> Unit,
     onTapRow: (HomeRowId) -> Unit,
+    onLaunchRow: (HomeRowKind) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         when (kind) {
-            HomeRowKind.Time -> TimeRow(time)
-            HomeRowKind.Date -> DateRow(date)
-            HomeRowKind.Weather -> WeatherRow()
+            // P3: each of these rows **taps to launch** its related app.
+            HomeRowKind.Time -> TimeRow(time, reducedMotion, onLaunch = { onLaunchRow(kind) })
+            HomeRowKind.Date -> DateRow(date, onLaunch = { onLaunchRow(kind) })
+            HomeRowKind.Weather -> WeatherRow(weather, reducedMotion, onLaunch = { onLaunchRow(kind) })
+            // Q2: tap launches; the in-place expand moves to **long-press**.
             HomeRowKind.Search -> SearchRow(
                 focused = homeState.isSearching,
-                onClick = { onTapRow(HomeRowId.Search) },
+                onClick = { onLaunchRow(kind) },
+                onLongClick = { onTapRow(HomeRowId.Search) },
             )
             HomeRowKind.Music -> MusicRow(
                 expanded = homeState.isMusicOpen,
-                onToggle = { onTapRow(HomeRowId.Music) },
+                playbackState = playbackState,
+                reducedMotion = reducedMotion,
+                onPlaybackToggle = onPlaybackToggle,
+                onSeekPlayback = onSeekPlayback,
+                onClick = { onLaunchRow(kind) },
+                onLongClick = { onTapRow(HomeRowId.Music) },
             )
             HomeRowKind.Calendar -> CalendarRowContent(
                 dayOfMonth = date.day,
@@ -307,19 +382,24 @@ private fun HomeRowSlot(
                 text = state.notes,
                 expanded = homeState.isNotesOpen,
                 onTextChange = onNotesChange,
-                onToggle = { onTapRow(HomeRowId.Notes) },
+                onLongClick = { onTapRow(HomeRowId.Notes) },
             )
         }
     }
 }
 
 @Composable
-private fun TimeRow(time: String) {
+private fun TimeRow(time: String, reducedMotion: Boolean, onLaunch: () -> Unit) {
     val colors = MaterialTheme.softColors
-    HomeRow(showDivider = false) {
-        Text(
-            text = time,
-            style = ClockLarge,
+    HomeRow(
+        showDivider = false,
+        onClick = onLaunch,
+        onClickLabel = "Open clock",
+        contentDescription = "Time",
+    ) {
+        AnimatedClockText(
+            time = time,
+            reducedMotion = reducedMotion,
             color = colors.textPrimary,
             modifier = Modifier.padding(vertical = Spacing.xl),
         )
@@ -327,9 +407,49 @@ private fun TimeRow(time: String) {
 }
 
 @Composable
-private fun DateRow(date: HomeDate) {
+private fun AnimatedClockText(
+    time: String,
+    reducedMotion: Boolean,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier) {
+        time.forEachIndexed { index, character ->
+            androidx.compose.runtime.key(index) {
+                AnimatedContent(
+                    targetState = character,
+                    transitionSpec = {
+                        if (reducedMotion) {
+                            EnterTransition.None togetherWith ExitTransition.None
+                        } else {
+                            (slideInVertically(
+                                animationSpec = MotionTokens.clockDigit(),
+                                initialOffsetY = { it / 2 },
+                            ) + fadeIn(MotionTokens.clockDigit())) togetherWith
+                                (slideOutVertically(
+                                    animationSpec = MotionTokens.clockDigit(),
+                                    targetOffsetY = { -it / 2 },
+                                ) + fadeOut(MotionTokens.clockDigit()))
+                        }
+                    },
+                    label = "clockDigit_$index",
+                ) { digit ->
+                    Text(text = digit.toString(), style = ClockLarge, color = color)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DateRow(date: HomeDate, onLaunch: () -> Unit) {
     val colors = MaterialTheme.softColors
-    HomeRow(showDivider = false) {
+    HomeRow(
+        showDivider = false,
+        onClick = onLaunch,
+        onClickLabel = "Open calendar",
+        contentDescription = "Date",
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -347,22 +467,76 @@ private fun DateRow(date: HomeDate) {
 }
 
 @Composable
-private fun WeatherRow() {
+private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, onLaunch: () -> Unit) {
     val colors = MaterialTheme.softColors
-    HomeRow(showDivider = false, contentDescription = "Weather") {
-        Text(
-            text = "Current 8\u00B0C",
-            style = RowDisplay,
-            color = colors.statusText,
+    HomeRow(
+        showDivider = false,
+        contentDescription = "Weather",
+        onClick = onLaunch,
+        onClickLabel = "Open weather",
+    ) {
+        Row(
             modifier = Modifier.padding(vertical = Spacing.xl),
-        )
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val iconScale = rememberWeatherScale(reducedMotion)
+            AnimatedContent(
+                targetState = weather.condition,
+                transitionSpec = {
+                    if (reducedMotion) {
+                        fadeIn(tween(80)) togetherWith fadeOut(tween(80))
+                    } else {
+                        (fadeIn(MotionTokens.weatherTransition()) + scaleIn(MotionTokens.weatherTransition(), initialScale = 0.94f)) togetherWith
+                            (fadeOut(MotionTokens.weatherTransition()) + scaleOut(MotionTokens.weatherTransition(), targetScale = 0.96f))
+                    }
+                },
+                label = "weatherCondition",
+            ) { condition ->
+                LineIconImage(
+                    icon = condition.weatherIcon(),
+                    size = Dimens.searchRowIcon,
+                    tint = colors.statusText,
+                    contentDescription = condition.name,
+                    modifier = Modifier.scale(iconScale),
+                )
+            }
+            Spacer(Modifier.width(Spacing.md))
+            Text(text = weather.temperatureLabel, style = RowDisplay, color = colors.statusText)
+        }
     }
 }
 
 @Composable
-private fun SearchRow(focused: Boolean, onClick: () -> Unit) {
+private fun rememberWeatherScale(reducedMotion: Boolean): Float {
+    if (reducedMotion) return 1f
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "weatherAmbient")
+    val scale by transition.animateFloat(
+        initialValue = 0.97f,
+        targetValue = 1.03f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = tween(4_000, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+        ),
+        label = "weatherBreathing",
+    )
+    return scale
+}
+
+@Composable
+private fun SearchRow(
+    focused: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
     val colors = MaterialTheme.softColors
-    HomeRow(showDivider = false, onClick = onClick, onClickLabel = "Search", contentDescription = "Find something") {
+    HomeRow(
+        showDivider = false,
+        onClick = onClick,
+        onClickLabel = "Open search",
+        onLongClick = onLongClick,
+        onLongClickLabel = "Search in place",
+        contentDescription = "Find something",
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -386,25 +560,49 @@ private fun SearchRow(focused: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MusicRow(expanded: Boolean, onToggle: () -> Unit) {
+private fun MusicRow(
+    expanded: Boolean,
+    playbackState: PlaybackState,
+    reducedMotion: Boolean,
+    onPlaybackToggle: () -> Unit,
+    onSeekPlayback: (Long) -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
     // MUSIC state grows the row in-place (MUSIC_RISE 280ms); other rows stay.
     val grow by animateDpAsState(
         targetValue = if (expanded) 16.dp else 0.dp,
-        animationSpec = MotionTokens.musicRise(),
+        animationSpec = if (reducedMotion) snap() else MotionTokens.musicRise(),
         label = "musicRise",
     )
-    HomeRow(showDivider = false, contentDescription = "Music player", onClick = onToggle, onClickLabel = "Music") {
+    HomeRow(
+        showDivider = false,
+        contentDescription = "Music player",
+        onClick = onClick,
+        onClickLabel = "Open music",
+        onLongClick = onLongClick,
+        onLongClickLabel = "Music in place",
+    ) {
         MusicPlayerRow(
             title = "play music.",
             artist = "Djo",
             track = "End of Beginning \u00B7 Live from Chicago",
+            expanded = expanded,
+            progress = playbackState.progress,
+            reducedMotion = reducedMotion,
+            isPlaying = playbackState.isPlaying,
+            currentTimeMs = playbackState.currentTimeMs,
+            durationMs = playbackState.durationMs,
+            onPlayToggle = onPlaybackToggle,
+            onSeek = onSeekPlayback,
             modifier = Modifier.padding(top = Spacing.xl + grow, bottom = Spacing.xl + grow),
         )
     }
 }
 
 /**
- * Quick-notes row (P2 / E5). Tapping toggles Idle <-> NOTES; when expanded the row
+ * Quick-notes row (P2 / E5). **Long-press** toggles Idle <-> NOTES (Q2: tap is reserved
+ * for launching; notes has no app target so its tap is a no-op). When expanded the row
  * grows in-place (same motion family as music) and reveals the editor.
  */
 @Composable
@@ -412,19 +610,25 @@ private fun NotesRow(
     text: String,
     expanded: Boolean,
     onTextChange: (String) -> Unit,
-    onToggle: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val grow by animateDpAsState(
         targetValue = if (expanded) 12.dp else 0.dp,
         animationSpec = MotionTokens.notesExpand(),
         label = "notesExpand",
     )
-    HomeRow(showDivider = false, contentDescription = "Quick notes") {
+    // The notes editor itself handles taps/focus; the row-level long-press toggles expand.
+    HomeRow(
+        showDivider = false,
+        contentDescription = "Quick notes",
+        onLongClick = onLongClick,
+        onLongClickLabel = "Expand notes",
+    ) {
         NotesRowContent(
             text = text,
             expanded = expanded,
             onTextChange = onTextChange,
-            onClick = onToggle,
+            onClick = onLongClick,
             modifier = Modifier.padding(top = grow, bottom = grow),
         )
     }
@@ -454,6 +658,8 @@ private fun HomeRightRail(
     onShortcut: (RailShortcut) -> Unit,
     onOpenSettings: () -> Unit,
     expanded: Boolean,
+    railOrder: List<String>,
+    onReorder: (String, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
@@ -465,31 +671,137 @@ private fun HomeRightRail(
     )
     // Long-press menu state (F3): which rail shortcut is being configured.
     var menuFor by remember { mutableStateOf<RailShortcut?>(null) }
+    val dragController = rememberDragController()
+    val dragState = dragController.state
+    var railOriginInWindow by remember { mutableStateOf(Offset.Zero) }
+    val ordered = remember(railOrder) {
+        RailOrderLogic.sanitize(railOrder).mapNotNull { name ->
+            RailShortcut.entries.firstOrNull { it.name == name }
+        }
+    }
+    val draggingName = dragState.draggingId?.removePrefix("rail:")
+    val draggingIndex = ordered.indexOfFirst { it.name == draggingName }
+    val hoveredIndex = dragState.hoveredTargetId
+        ?.removePrefix("rail:")
+        ?.toIntOrNull()
+        ?.takeIf { it in ordered.indices }
+    val hoveredEnd = dragState.hoveredTargetId == "rail:end"
+    val slotShift = Dimens.railTouchTarget + Spacing.railGap
 
-    Column(
+    Box(
         modifier = modifier
             .width(Dimens.railWidth)
             .fillMaxHeight()
-            .background(colors.railBg)
-            .padding(top = Dimens.railPadTop, bottom = Dimens.railPadBottom)
             .semantics { contentDescription = "Shortcut rail" },
-        verticalArrangement = Arrangement.spacedBy(Spacing.railGap),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        RailShortcut.ordered.forEach { shortcut ->
-            val enabled = resolver.intentFor(shortcut) != null
-            RailIcon(
-                icon = shortcut.lineIcon(),
-                contentDescription = shortcut.label(),
-                modifier = Modifier.offset(y = slide),
-                onClick = when {
-                    // Q1: the panel-left (Settings) icon opens our own settings panel.
-                    shortcut == RailShortcut.PanelLeft -> onOpenSettings
-                    enabled -> { { onShortcut(shortcut) } }
-                    else -> null
-                },
-                onLongClick = { menuFor = shortcut },
-            )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = Dimens.railCornerRadius,
+                            bottomStart = Dimens.railCornerRadius,
+                        ),
+                    )
+                    .background(colors.railBg)
+                    .onGloballyPositioned { railOriginInWindow = it.boundsInWindow().topLeft },
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = Dimens.railPadTop, bottom = Dimens.railPadBottom),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.railGap),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    ordered.forEachIndexed { index, shortcut ->
+                        androidx.compose.runtime.key(shortcut.name) {
+                            val sourceIndex = ordered.indexOf(shortcut)
+                            val enabled = resolver.intentFor(shortcut) != null
+                            val showDropIndicator = dragState.isDragging &&
+                                hoveredIndex == index && draggingIndex != index
+                            val shiftTarget = when {
+                                draggingIndex < 0 || hoveredIndex == null -> 0.dp
+                                draggingIndex < hoveredIndex && index in (draggingIndex + 1)..hoveredIndex -> -slotShift
+                                draggingIndex > hoveredIndex && index in hoveredIndex until draggingIndex -> slotShift
+                                else -> 0.dp
+                            }
+                            val shift by animateDpAsState(
+                                targetValue = shiftTarget,
+                                animationSpec = MotionTokens.dragReorder(),
+                                label = "railReorderShift_${shortcut.name}",
+                            )
+                            if (showDropIndicator) {
+                                RailDropIndicator()
+                            }
+                            val railInteractionSource = remember { MutableInteractionSource() }
+                            Box(
+                                modifier = Modifier
+                                    .dropTarget("rail:$index", dragController)
+                                    .offset(y = slide + shift)
+                                    .dragSourceAlpha(draggingName == shortcut.name)
+                                    .warmPress(railInteractionSource)
+                                    .dragSource(
+                                        id = "rail:${shortcut.name}",
+                                        controller = dragController,
+                                        interactionSource = railInteractionSource,
+                                        onTap = when {
+                                            shortcut == RailShortcut.PanelLeft -> onOpenSettings
+                                            enabled -> { { onShortcut(shortcut) } }
+                                            else -> null
+                                        },
+                                        onLongPress = { menuFor = shortcut },
+                                        onDrop = { target, _ ->
+                                            val targetIndex = target
+                                                ?.removePrefix("rail:")
+                                                ?.toIntOrNull()
+                                            val destination = when {
+                                                target == "rail:end" -> ordered.size
+                                                targetIndex == null -> return@dragSource
+                                                sourceIndex < targetIndex -> targetIndex - 1
+                                                else -> targetIndex
+                                            }
+                                            onReorder(shortcut.name, destination)
+                                        },
+                                    ),
+                            ) {
+                                // Gesture ownership lives on dragSource so tap, stationary
+                                // long-press, and long-press+drag cannot fire together.
+                                RailIcon(
+                                    icon = shortcut.lineIcon(),
+                                    contentDescription = shortcut.label(),
+                                )
+                            }
+                        }
+                    }
+                    // A forgiving zone below the last icon lets a drag append an
+                    // item instead of always inserting before the final icon.
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .dropTarget("rail:end", dragController),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        if (hoveredEnd && draggingIndex != ordered.lastIndex) {
+                            RailDropIndicator()
+                        }
+                    }
+                }
+                // The preview follows the pointer using only transform/opacity-friendly motion.
+            DragPreviewLayer(controller = dragController, windowOrigin = railOriginInWindow) { id ->
+                val shortcut = id.removePrefix("rail:").let { name ->
+                    RailShortcut.entries.firstOrNull { it.name == name }
+                }
+                shortcut?.let {
+                    RailIcon(icon = it.lineIcon(), contentDescription = it.label())
+                }
+            }
+            }
         }
     }
 
@@ -502,6 +814,17 @@ private fun HomeRightRail(
             onDismiss = { menuFor = null },
         )
     }
+}
+
+@Composable
+private fun RailDropIndicator() {
+    Box(
+        modifier = Modifier
+            .padding(vertical = Dimens.railDropIndicatorGap)
+            .width(Dimens.railDropIndicatorWidth)
+            .height(Dimens.dragInsertionThickness)
+            .background(MaterialTheme.softColors.accent.copy(alpha = 0.52f)),
+    )
 }
 
 /**
@@ -559,17 +882,37 @@ private data class HomeDate(
     val month: String,
 )
 
-private fun homeTime(): String =
-    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+@Composable
+private fun rememberMinuteKey(): Long {
+    var minuteKey by remember { mutableStateOf(System.currentTimeMillis() / 60_000L) }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            val now = System.currentTimeMillis()
+            val untilNextMinute = 60_000L - (now % 60_000L)
+            delay(untilNextMinute.coerceAtLeast(100L))
+            minuteKey = System.currentTimeMillis() / 60_000L
+        }
+    }
+    return minuteKey
+}
 
-private fun homeDate(): HomeDate {
-    val now = Date()
+private fun homeTime(now: Date): String =
+    SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
+
+private fun homeDate(now: Date): HomeDate {
     val day = SimpleDateFormat("d", Locale.getDefault()).format(now)
     val weekday = SimpleDateFormat("EEEE", Locale.getDefault()).format(now)
         .lowercase(Locale.getDefault()).toSpacedCaps()
     val month = SimpleDateFormat("MMMM", Locale.getDefault()).format(now)
         .uppercase(Locale.getDefault()).toSpacedCaps()
     return HomeDate(day = day, weekday = weekday, month = month)
+}
+
+private fun WeatherCondition.weatherIcon(): LineIcon = when (this) {
+    WeatherCondition.Clear -> LineIcon.Sun
+    WeatherCondition.Cloudy -> LineIcon.CloudSun
+    WeatherCondition.Rain -> LineIcon.CloudSun
+    WeatherCondition.Night -> LineIcon.CloudSun
 }
 
 /** "tuesday" -> "t u e s d a y" (the design tracks each letter). */
@@ -580,3 +923,18 @@ private fun String.toSpacedCaps(): String =
 @Composable
 private fun rememberRailResolver(context: Context): RailShortcutResolver =
     androidx.compose.runtime.remember(context) { RailShortcutResolver.forContext(context) }
+
+/**
+ * P3: builds the home-row launch resolver bound to the real `PackageManager`, so a row
+ * tap opens the right app through the fallback chain in [RowLaunchResolver].
+ */
+@Composable
+private fun rememberRowResolver(context: Context): RowLaunchResolver =
+    androidx.compose.runtime.remember(context) {
+        RowLaunchResolver.forResolver { intent ->
+            @Suppress("DEPRECATION")
+            context.packageManager.resolveActivity(intent, 0)?.activityInfo?.let {
+                android.content.ComponentName(it.packageName, it.name)
+            }
+        }
+    }

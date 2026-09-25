@@ -175,5 +175,12 @@ Notes:
 
 ## 7b. CI (later)
 
+## 7c. Quick update
+
+From the project root, run `.\update.ps1`. It configures the pinned JDK, Gradle cache,
+and Android SDK paths, then runs `:app:installDebug` so the existing app data remains
+in place while the debug APK is replaced. The installed version is visible at the
+bottom of Settings as `SOFT/HOME v0.1.1 (P5)`.
+
 A GitHub Actions workflow can run `./gradlew test` + `assembleDebug` on push.
 Not set up yet.

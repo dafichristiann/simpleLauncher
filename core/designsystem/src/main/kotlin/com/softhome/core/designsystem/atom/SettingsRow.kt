@@ -2,6 +2,7 @@ package com.softhome.core.designsystem.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +57,7 @@ fun SettingsRow(
 ) {
     val colors = MaterialTheme.softColors
     val interactive = enabled && onClick != null
+    val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
 
     Row(
         modifier = modifier
@@ -65,7 +67,15 @@ fun SettingsRow(
             .alpha(if (enabled) 1f else 0.5f)
             .then(
                 if (interactive) {
-                    Modifier.clickable(role = Role.Button, onClickLabel = onClickLabel, onClick = onClick)
+                    Modifier
+                        .warmPress(interactionSource, enabled = enabled)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Button,
+                            onClickLabel = onClickLabel,
+                            onClick = onClick,
+                        )
                 } else {
                     Modifier
                 },
@@ -134,13 +144,22 @@ private fun ReorderButton(
 ) {
     val colors = MaterialTheme.softColors
     val active = enabled && onClick != null
+    val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(Dimens.moveButton)
             .clip(RoundedCornerShape(Dimens.moveButton / 2))
             .then(
                 if (active) {
-                    Modifier.clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+                    Modifier
+                        .warmPress(interactionSource, enabled = active)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Button,
+                            onClickLabel = label,
+                            onClick = onClick,
+                        )
                 } else {
                     Modifier
                 },

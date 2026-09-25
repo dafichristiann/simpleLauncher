@@ -47,6 +47,13 @@ fun DrawerAppIcon(
     drawableLoader: IconPackDrawableLoader,
     modifier: Modifier = Modifier,
     category: Int? = null,
+    /**
+     * P1.2: the precomputed drawer glyph color token (see `DrawerEntry.colorToken`).
+     * When supplied, the per-frame `DrawerIconColor.tokenFor(...)` heuristic is skipped
+     * -- this is what keeps scrolling smooth. Null falls back to computing it here
+     * (kept for call sites that don't carry a precomputed token, e.g. folder previews).
+     */
+    colorToken: DrawerIconColor.Token? = null,
     selected: Boolean = false,
     contentDescription: String? = null,
 ) {
@@ -76,14 +83,18 @@ fun DrawerAppIcon(
         selected -> colors.drawerIconOnSelected
         // P4b: a user-chosen glyph color, when the app carries a glyph override.
         overrideToken != null -> tokenColor(colors, overrideToken)
-        else -> tokenColor(colors, DrawerIconColor.tokenFor(category, resolved.symbolName))
+        // P1.2: prefer the precomputed token; only compute the heuristic if absent.
+        else -> tokenColor(
+            colors,
+            colorToken ?: DrawerIconColor.tokenFor(category, resolved.symbolName),
+        )
     }
 
     Box(modifier = modifier) {
         DrawerIconTile(
             size = size,
             background = background,
-            symbol = LineIcon.fromName(resolved.symbolName),
+            symbol = LineIcon.fromLucide(resolved.symbolName),
             symbolTint = symbolTint,
             painter = packPainter,
             painterTint = null, // real pack artwork keeps its own colors
@@ -104,6 +115,7 @@ internal fun tokenColor(
     DrawerIconColor.Token.Travel -> colors.drawerIconTravel
     DrawerIconColor.Token.Finance -> colors.drawerIconFinance
     DrawerIconColor.Token.Neutral -> colors.drawerIconNeutral
+    DrawerIconColor.Token.Browser -> colors.drawerIconBrowser
 }
 
 /**
@@ -122,6 +134,7 @@ internal fun tokenColor(
     com.softhome.core.model.DrawerIconTokenName.Travel -> colors.drawerIconTravel
     com.softhome.core.model.DrawerIconTokenName.Finance -> colors.drawerIconFinance
     com.softhome.core.model.DrawerIconTokenName.Neutral -> colors.drawerIconNeutral
+    com.softhome.core.model.DrawerIconTokenName.Browser -> colors.drawerIconBrowser
 }
 
 private fun painterFromDrawable(drawable: android.graphics.drawable.Drawable): Painter? =

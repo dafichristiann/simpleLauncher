@@ -2,7 +2,8 @@ package com.softhome.core.designsystem.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,9 +39,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.softhome.core.designsystem.theme.Dimens
+import com.softhome.core.designsystem.theme.MotionTokens
 import com.softhome.core.designsystem.theme.TileShadow
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.designsystem.theme.softShadow
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 
 /**
@@ -127,6 +131,7 @@ fun Modifier.dragSource(
     controller: DragController,
     onTap: (() -> Unit)? = null,
     onLongPress: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource? = null,
     onDrop: (targetId: String?, pointerWindowPx: Offset) -> Unit,
 ): Modifier = composed {
     val haptics = LocalHapticFeedback.current
@@ -140,18 +145,47 @@ fun Modifier.dragSource(
         .pointerInput(id, controller) {
             awaitPointerEventScope {
                 while (true) {
-                    // Wait for a press, then either a long-press or an up (tap).
+                    // Wait for a press, then distinguish a real tap, pre-long-press
+                    // movement, and a long-press. `awaitLongPressOrCancellation` treats
+                    // both movement and release as cancellation, which used to make the
+                    // first few pixels of a grid scroll launch the app.
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    val longPress = awaitLongPressOrCancellation(down.id)
-                    if (longPress == null) {
-                        // Released before the long-press timeout -> a tap.
+                    val press = PressInteraction.Press(down.position)
+                    interactionSource?.tryEmit(press)
+                    val releasedBeforeLongPress = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: continue
+                            // A scroll parent or the pointer itself moved past slop. This
+                            // is neither a tap nor a drag yet; let the parent consume it.
+                            // Check this before UP: Android can deliver the final UP with
+                            // the accumulated position change, and treating that event as
+                            // a tap re-opens the old "swipe launches the tile" regression.
+                            val movedPastSlop =
+                                (change.position - down.position).getDistance() > viewConfiguration.touchSlop
+                            if (change.isConsumed || movedPastSlop) {
+                                return@withTimeoutOrNull false
+                            }
+                            if (change.changedToUpIgnoreConsumed()) return@withTimeoutOrNull true
+                        }
+                    }
+                    if (releasedBeforeLongPress == true) {
+                        // Released before long-press without movement -> a tap.
+                        interactionSource?.tryEmit(PressInteraction.Release(press))
                         currentOnTap?.invoke()
                         continue
                     }
-                    // Long-pressed. Track drag movement until release.
+                    if (releasedBeforeLongPress == false) {
+                        // Movement before long-press -> cancel completely. In particular,
+                        // never launch an app as a side effect of starting a scroll.
+                        interactionSource?.tryEmit(PressInteraction.Cancel(press))
+                        continue
+                    }
+                    // Timeout elapsed while the pointer stayed within touch slop: a real
+                    // long-press. Track drag movement until release.
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    controller.begin(id, longPress.position + sourceWindow)
-                    var pointer = longPress.position
+                    controller.begin(id, down.position + sourceWindow)
+                    var pointer = down.position
                     while (true) {
                         val event = awaitPointerEvent()
                         val ch = event.changes.firstOrNull { it.id == down.id } ?: continue
@@ -160,6 +194,7 @@ fun Modifier.dragSource(
                             val finalPointer = controller.state.pointerWindowPx
                             val hovered = controller.state.hoveredTargetId
                             controller.end()
+                            interactionSource?.tryEmit(PressInteraction.Release(press))
                             if (didMove) currentOnDrop(hovered, finalPointer)
                             else currentOnLongPress?.invoke()
                             break
@@ -205,6 +240,11 @@ fun BoxScope.DragPreviewLayer(
 ) {
     val state = controller.state
     val id = state.draggingId ?: return
+    val liftScale by animateFloatAsState(
+        targetValue = Dimens.dragLiftScale,
+        animationSpec = MotionTokens.dragLift(),
+        label = "dragLiftScale",
+    )
     Box(
         modifier = Modifier
             .offset {
@@ -213,7 +253,7 @@ fun BoxScope.DragPreviewLayer(
                     (state.pointerWindowPx.y - windowOrigin.y).roundToInt(),
                 )
             }
-            .scale(Dimens.dragLiftScale)
+            .scale(liftScale)
             .softShadow(TileShadow),
     ) {
         content(id)

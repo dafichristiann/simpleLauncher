@@ -11,12 +11,17 @@ object Dimens {
     // --- Home (Warm Right Rail) -- from .pen znb90 / L7ZAp ---
     val railWidth = 72.dp             // hrsLU / B6633e rail width
     val railIcon = 20.dp              // rail icons 20x20
+    val railCornerRadius = 20.dp      // soft edge where rail meets the home surface
+    val railTouchTarget = 48.dp       // comfortable hit target; visual glyph remains 20dp
+    val railDropIndicatorWidth = 40.dp
+    val railDropIndicatorGap = 4.dp
     val railPadTop = 58.dp            // hrsLU padding top
     val railPadBottom = 26.dp         // hrsLU padding bottom
     val homeRowPaddingX = 42.dp       // row content x (znb90 text x=42)
     val dividerHeight = 1.dp          // row divider thickness
     val searchRowIcon = 24.dp         // N7ICqS search row icon
     val albumArt = 64.dp              // mdsQP album artwork circle
+    val expandedAlbumArt = 148.dp     // local demo player expanded focal artwork
     val musicControl = 18.dp          // play (largest control)
     val musicControlSmall = 16.dp     // skip-back / skip-forward
     val progressHeight = 5.dp         // pvQO0 progress bar
@@ -27,6 +32,7 @@ object Dimens {
     val drawerTileRadius = 21.dp      // dBQmH cornerRadius (~30% of 68)
     val drawerTileSymbol = 24.dp      // glyph inside drawer tile
     val drawerLabelWidth = 76.dp      // J3Lb4 label box width
+    val alphabetRailWidth = 20.dp     // czxh4 rail slot (glyphs only appear on All)
     val drawerSearchNewHeight = 56.dp // V7udUl search pill height
     val drawerSearchNewRadius = 28.dp // V7udUl radius (height / 2)
 

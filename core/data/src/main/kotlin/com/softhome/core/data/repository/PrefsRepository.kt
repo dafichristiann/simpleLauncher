@@ -16,6 +16,7 @@ import com.softhome.core.model.HomeRowPref
 import com.softhome.core.model.IconOverride
 import com.softhome.core.model.DrawerIconTokenName
 import com.softhome.core.model.LauncherPrefs
+import com.softhome.core.model.RailOrderLogic
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,6 +24,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,6 +52,8 @@ interface PrefsRepository {
     suspend fun setIconOverride(componentKey: String, override: IconOverride?)
     /** P4d: replace ALL persisted prefs in a single write (used by backup restore). */
     suspend fun applyAll(prefs: LauncherPrefs)
+    /** P7: persist the user-defined right-rail order. */
+    suspend fun setRailOrder(order: List<String>) { }
 }
 
 @Singleton
@@ -72,29 +76,59 @@ class PrefsRepositoryImpl @Inject constructor(
         val HIDDEN_APPS = stringSetPreferencesKey("hidden_apps")
         // --- P4b ---
         val ICON_OVERRIDES = stringPreferencesKey("icon_overrides_json")
+        val RAIL_ORDER = stringPreferencesKey("rail_order")
     }
 
-    override val prefs: Flow<LauncherPrefs> = context.launcherDataStore.data.map { p ->
-        val default = GridConfig.Default
-        LauncherPrefs(
-            grid = GridConfig(
-                columns = p[Keys.COLUMNS] ?: default.columns,
-                rows = p[Keys.ROWS] ?: default.rows,
-                iconScale = (p[Keys.ICON_SCALE] ?: (default.iconScale * 100).toInt()) / 100f,
-                showLabels = p[Keys.SHOW_LABELS] ?: default.showLabels,
-            ),
-            activeIconPackId = p[Keys.ICON_PACK],
-            maskUnsupportedApps = p[Keys.MASK] ?: true,
-            darkTheme = runCatching { ThemeMode.valueOf(p[Keys.THEME] ?: ThemeMode.System.name) }
-                .getOrDefault(ThemeMode.System),
-            showNotificationBadges = p[Keys.BADGES] ?: true,
-            homeRows = HomeRowLogic.sanitize(HomeRowsCodec.decode(p[Keys.HOME_ROWS])),
-            spacing = runCatching { SpacingScale.valueOf(p[Keys.SPACING] ?: SpacingScale.Normal.name) }
-                .getOrDefault(SpacingScale.Normal),
-            hiddenApps = p[Keys.HIDDEN_APPS] ?: emptySet(),
-            iconOverrides = IconOverridesCodec.decode(p[Keys.ICON_OVERRIDES]),
-        )
+    /**
+     * P2: one-shot guard so the legacy home-row migration is applied (and persisted) at
+     * most once per repository instance. A `@Singleton` repo means once per process.
+     */
+    private val legacyRowMigrationDone = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /**
+     * P2 (Q1 = apply-once): if the backing store still holds the **legacy all-visible**
+     * home-row shape, rewrite it to the new lean default exactly once. Runs as a prefix of
+     * the [prefs] flow, before the first value is delivered, so the first emission already
+     * reflects the migration. A real user choice (any hidden row / reorder) is never the
+     * legacy shape, so it is left untouched.
+     */
+    private suspend fun migrateLegacyHomeRowsOnce() {
+        if (!legacyRowMigrationDone.compareAndSet(false, true)) return
+        context.launcherDataStore.edit { p ->
+            val stored = HomeRowsCodec.decode(p[Keys.HOME_ROWS])
+            val newRows = HomeRowLogic.migrateLegacy(stored)
+            if (newRows != null) {
+                p[Keys.HOME_ROWS] = HomeRowsCodec.encode(HomeRowLogic.sanitize(newRows))
+            }
+        }
     }
+
+    override val prefs: Flow<LauncherPrefs> = context.launcherDataStore.data
+        .onStart { migrateLegacyHomeRowsOnce() }
+        .map { p ->
+            val default = GridConfig.Default
+            LauncherPrefs(
+                grid = GridConfig(
+                    columns = p[Keys.COLUMNS] ?: default.columns,
+                    rows = p[Keys.ROWS] ?: default.rows,
+                    iconScale = (p[Keys.ICON_SCALE] ?: (default.iconScale * 100).toInt()) / 100f,
+                    showLabels = p[Keys.SHOW_LABELS] ?: default.showLabels,
+                ),
+                activeIconPackId = p[Keys.ICON_PACK],
+                maskUnsupportedApps = p[Keys.MASK] ?: true,
+                darkTheme = runCatching { ThemeMode.valueOf(p[Keys.THEME] ?: ThemeMode.System.name) }
+                    .getOrDefault(ThemeMode.System),
+                showNotificationBadges = p[Keys.BADGES] ?: true,
+                // The one-shot migration (onStart, above) has already rewritten a legacy
+                // all-visible list in the store; reading it here yields the new default.
+                homeRows = HomeRowLogic.sanitize(HomeRowsCodec.decode(p[Keys.HOME_ROWS])),
+                spacing = runCatching { SpacingScale.valueOf(p[Keys.SPACING] ?: SpacingScale.Normal.name) }
+                    .getOrDefault(SpacingScale.Normal),
+                hiddenApps = p[Keys.HIDDEN_APPS] ?: emptySet(),
+                iconOverrides = IconOverridesCodec.decode(p[Keys.ICON_OVERRIDES]),
+                railOrder = RailOrderLogic.sanitize(p[Keys.RAIL_ORDER]?.split(',')),
+            )
+        }
 
     override suspend fun setGrid(grid: GridConfig) {
         context.launcherDataStore.edit { p ->
@@ -161,6 +195,12 @@ class PrefsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setRailOrder(order: List<String>) {
+        context.launcherDataStore.edit { p ->
+            p[Keys.RAIL_ORDER] = RailOrderLogic.sanitize(order).joinToString(",")
+        }
+    }
+
     /**
      * P4d: write every pref key in **one** `edit` block, so a restore produces a single
      * DataStore write (and one reactive `prefs` emission) rather than N. Mirrors the
@@ -186,6 +226,7 @@ class PrefsRepositoryImpl @Inject constructor(
 
             if (prefs.iconOverrides.isEmpty()) p.remove(Keys.ICON_OVERRIDES)
             else p[Keys.ICON_OVERRIDES] = IconOverridesCodec.encode(prefs.iconOverrides)
+            p[Keys.RAIL_ORDER] = RailOrderLogic.sanitize(prefs.railOrder).joinToString(",")
         }
     }
 }

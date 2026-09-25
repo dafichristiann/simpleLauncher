@@ -8,17 +8,20 @@ import com.softhome.core.data.repository.FolderRepository
 import com.softhome.core.data.repository.PrefsRepository
 import com.softhome.core.model.AppInfo
 import com.softhome.core.model.DrawerCategory
-import com.softhome.core.model.DrawerCategoryMapper
+import com.softhome.core.model.DrawerCategoryResolver
 import com.softhome.core.model.DrawerGridItem
+import com.softhome.core.model.DrawerIconAssignment
 import com.softhome.core.model.Folder
 import com.softhome.core.model.FolderDropResolver
 import com.softhome.core.model.FolderLogic
 import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconSource
 import com.softhome.core.model.ResolvedIcon
+import com.softhome.core.designsystem.atom.LineIcon
 import com.softhome.feature.iconpack.data.IconPackDrawableLoader
 import com.softhome.feature.iconpack.data.IconPackRepository
 import com.softhome.feature.iconpack.domain.IconBitmapProvider
+import com.softhome.feature.iconpack.domain.DrawerIconColor
 import com.softhome.feature.iconpack.domain.IconMasker
 import com.softhome.feature.iconpack.domain.IconResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,10 +33,28 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * P4: extra **resolvable** glyphs the uniqueness pass cycles through when a whole glyph's
+ * color column is already taken. These are the generic lucide glyphs that always have a
+ * bundled drawable, so a de-duplicated tile is still renderable (never a fake name).
+ */
+private val GLYPH_FALLBACKS: List<String> = listOf(
+    "AppWindow", "Square", "Box", "CircleDot", "Sparkles",
+    "Shield", "Tag", "Bot", "Store", "Wrench",
+)
+
 data class DrawerEntry(
     val app: AppInfo,
     val resolved: ResolvedIcon,
     val symbolName: String,
+    /**
+     * P1.2: the drawer glyph **color token**, computed ONCE per app here instead of on
+     * every recomposition of the cell. During scroll each cell recomposes repeatedly;
+     * before this change [DrawerAppIcon] re-ran `DrawerIconColor.tokenFor(...)` (a string
+     * heuristic) on every frame. Precomputing it (with [symbolName]) removes that
+     * per-frame UI-thread work.
+     */
+    val colorToken: com.softhome.feature.iconpack.domain.DrawerIconColor.Token,
 )
 
 /** One cell in the drawer grid: an app, or a folder (P2 / D1). */
@@ -42,10 +63,28 @@ sealed interface DrawerCell {
     data class FolderCell(val folder: Folder, val preview: List<DrawerEntry>) : DrawerCell
 }
 
+/**
+ * P5: one page of the drawer category pager. Each page holds the cells (folders-first)
+ * and the alphabet letters for its own category, so swiping shows that category's grid
+ * without re-deriving it in the composable.
+ */
+data class DrawerPage(
+    val category: DrawerCategory,
+    val label: String,
+    val cells: List<DrawerCell>,
+    val indexLetters: List<Char>,
+)
+
 data class DrawerUiState(
     val allApps: List<DrawerEntry> = emptyList(),
     val cells: List<DrawerCell> = emptyList(),
     val indexLetters: List<Char> = emptyList(),
+    /**
+     * P5: a page per category ([DrawerCategory.All] first, then the 8 design groups).
+     * `cells`/`indexLetters` above mirror the page for the current [category] so existing
+     * consumers keep working.
+     */
+    val pages: List<DrawerPage> = emptyList(),
     val query: String = "",
     val category: DrawerCategory = DrawerCategory.All,
     val availableCategories: List<DrawerCategory> = DrawerCategory.entries.toList(),
@@ -62,6 +101,12 @@ data class DrawerUiState(
     val hiddenApps: Set<String> = emptySet(),
     /** P4b: current per-app icon overrides (for the editor's seed). */
     val iconOverrides: Map<String, com.softhome.core.model.IconOverride> = emptyMap(),
+    /**
+     * P1.2: the drawer grid spacing multiplier from settings (P3 `SpacingScale`).
+     * Previously persisted but never consumed -- the grid used a fixed gap. Now the
+     * vertical gap honours this factor.
+     */
+    val spacingFactor: Float = 1f,
 )
 
 /** Per-app facts the context menu needs (P3 / F3), computed on demand. */
@@ -145,53 +190,86 @@ class AppDrawerViewModel @Inject constructor(
         // P3/Q2: hidden apps are filtered out of the drawer entirely.
         val hidden = prefs.hiddenApps
         val visibleApps = apps.filterNot { it.componentKey in hidden }
+        // P4: deterministic per-package glyph+color, with a uniqueness guarantee over the
+        // WHOLE visible set (not the filtered view) so the assignment is stable while the
+        // user switches categories. The design table (DrawerIconMap) wins; the IconMasker
+        // heuristic + OS-category color are the fallback for unknown packages.
+        val byPackage = visibleApps.associateBy { it.packageName }
+        val assignments = DrawerIconAssignment.assign(
+            identities = visibleApps.map { it.componentKey to it.packageName },
+            heuristicGlyph = { pkg -> byPackage[pkg]?.let { IconMasker.symbolFor(it) } ?: "AppWindow" },
+            heuristicColor = { pkg ->
+                val app = byPackage[pkg]
+                DrawerIconColor.nameOf(
+                    DrawerIconColor.tokenFor(app?.category, app?.let { IconMasker.symbolFor(it) } ?: "AppWindow"),
+                )
+            },
+            glyphFallbacks = GLYPH_FALLBACKS,
+        )
         val entries = visibleApps.associate { app ->
+            // The assignment's glyph is a lucide kebab name; resolve it to the bundled
+            // LineIcon enum name (what the renderer + editor speak) once, here.
+            val assigned = assignments[app.componentKey]
+            val symbol = assigned?.glyph?.let { LineIcon.fromLucide(it).name }
+                ?: IconMasker.symbolFor(app)
             app.componentKey to DrawerEntry(
                 app = app,
-                symbolName = IconMasker.symbolFor(app),
-                resolved = resolveIcon(app, prefs, pack),
+                symbolName = symbol,
+                resolved = resolveIcon(app, prefs, pack, symbol),
+                colorToken = assigned?.colorToken
+                    ?.let { com.softhome.feature.iconpack.domain.DrawerIconColor.tokenForName(it) }
+                    ?: com.softhome.feature.iconpack.domain.DrawerIconColor
+                        .tokenFor(app.category, symbol),
             )
         }
-        val inCategory = DrawerCategoryMapper.filter(visibleApps, category)
-            .map { it.componentKey }
-            .toSet()
         val matchesQuery: (AppInfo) -> Boolean =
             { query.isBlank() || it.label.contains(query, ignoreCase = true) }
 
-        // Apps that pass the current filter, in original (alphabetical) order.
-        val visibleEntries = visibleApps
-            .filter { it.componentKey in inCategory && matchesQuery(it) }
-            .mapNotNull { entries[it.componentKey] }
+        // P5: build one page per category (All + the 8 design groups). Global search
+        // (`matchesQuery`) applies to every page; folders lead each page (P2-1).
+        val pagerTabs = DrawerCategoryResolver.pagerTabs
+        val pages = pagerTabs.map { tab ->
+            val inTab = visibleApps.filter { DrawerCategoryResolver.matches(it, tab) }
+                .map { it.componentKey }
+                .toSet()
 
-        // Folders: show a folder cell when >= 1 of its apps passes the filter.
-        // Inside an open folder, the popup lists the folder's visible apps.
-        val visibleFolderCells = folders.mapNotNull { folder ->
-            val memberEntries = folder.apps.mapNotNull { entries[it] }
-                .filter { it.app.componentKey in inCategory && matchesQuery(it.app) }
-            if (memberEntries.isEmpty()) return@mapNotNull null
-            DrawerCell.FolderCell(
-                folder = folder,
-                preview = FoldersPreview.entriesFor(folder, memberEntries).take(FolderLogic.PREVIEW_CAPACITY),
+            val tabEntries = visibleApps
+                .filter { it.componentKey in inTab && matchesQuery(it) }
+                .mapNotNull { entries[it.componentKey] }
+
+            val folderCells = folders.mapNotNull { folder ->
+                val memberEntries = folder.apps.mapNotNull { entries[it] }
+                    .filter { it.app.componentKey in inTab && matchesQuery(it.app) }
+                if (memberEntries.isEmpty()) return@mapNotNull null
+                DrawerCell.FolderCell(
+                    folder = folder,
+                    preview = FoldersPreview.entriesFor(folder, memberEntries).take(FolderLogic.PREVIEW_CAPACITY),
+                )
+            }
+
+            val appCells = tabEntries
+                .filterNot { FolderLogic.isInsideFolder(folders, it.app.componentKey) }
+                .map { DrawerCell.AppEntry(it) }
+
+            DrawerPage(
+                category = tab,
+                label = tab.label,
+                cells = folderCells + appCells,
+                indexLetters = AlphabetIndex.lettersPresentIn(tabEntries.map { it.app.label }),
             )
         }
-
-        // App cells = apps not inside any folder.
-        val appCells = visibleEntries
-            .filterNot { FolderLogic.isInsideFolder(folders, it.app.componentKey) }
-            .map { DrawerCell.AppEntry(it) }
-
-        // Folders lead the grid (P2-1), matching FolderLogic.drawerGridItems order.
-        val cells = visibleFolderCells + appCells
+        val currentPage = pages.firstOrNull { it.category == category } ?: pages.firstOrNull()
 
         val openFolder = folders.firstOrNull { it.id == openFolderId }
 
         return DrawerUiState(
             allApps = entries.values.toList(),
-            cells = cells,
-            indexLetters = AlphabetIndex.lettersPresentIn(visibleEntries.map { it.app.label }),
+            cells = currentPage?.cells ?: emptyList(),
+            indexLetters = currentPage?.indexLetters ?: emptyList(),
+            pages = pages,
             query = query,
             category = category,
-            availableCategories = DrawerCategory.entries.toList(),
+            availableCategories = DrawerCategoryResolver.pagerTabs,
             loading = loading,
             activePack = pack,
             folders = folders,
@@ -200,6 +278,7 @@ class AppDrawerViewModel @Inject constructor(
             editingEntry = editingKey?.let { entries[it] },
             hiddenApps = hidden,
             iconOverrides = prefs.iconOverrides,
+            spacingFactor = prefs.spacing.factor,
         )
     }
 
@@ -207,6 +286,7 @@ class AppDrawerViewModel @Inject constructor(
         app: AppInfo,
         prefs: com.softhome.core.model.LauncherPrefs,
         pack: IconPack?,
+        automaticSymbol: String,
     ): ResolvedIcon {
         val source = iconResolver.resolve(
             app = app,
@@ -214,17 +294,17 @@ class AppDrawerViewModel @Inject constructor(
             overrides = prefs.iconOverrides,
             maskUnsupported = prefs.maskUnsupportedApps,
         )
-        val symbol = IconMasker.symbolFor(app)
         val drawableName = when (source) {
             is IconSource.FromPack -> source.drawableName
             is IconSource.Override -> source.drawableName
             is IconSource.Glyph -> null
             IconSource.AutoMask, IconSource.System -> null
         }
-        // P4b: a glyph override carries both the chosen glyph and its color token.
+        // P4b: a glyph override carries both the chosen glyph and its color token. P4:
+        // otherwise use the design-mapped symbol (DrawerIconMap), not the raw heuristic.
         val (symbolName, overrideToken) = when (source) {
             is IconSource.Glyph -> source.symbolName to source.colorToken
-            else -> symbol to null
+            else -> automaticSymbol to null
         }
         return ResolvedIcon(
             source = source,

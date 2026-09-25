@@ -12,7 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.espresso.Espresso
 import com.softhome.core.data.repository.AppActionsRepository
 import com.softhome.core.data.repository.AppRepository
@@ -95,14 +95,15 @@ class DrawerBackHandlerTest {
     fun back_closes_the_drawer_overlay() {
         setDrawerHost()
         composeRule.waitForIdle()
-        // Drawer visible: its header ("All apps") is on screen.
-        composeRule.onNodeWithText("All apps").assertIsDisplayed()
+        // Drawer visible: the current UI has no legacy "All apps" header; the pager is
+        // the stable drawer surface marker.
+        composeRule.onNodeWithTag("drawer_pager").assertIsDisplayed()
 
         // System BACK must close the drawer (was a no-op before this fix).
         Espresso.pressBack()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("All apps").assertDoesNotExist()
+        composeRule.onNodeWithTag("drawer_pager").assertDoesNotExist()
     }
 
     @Test
@@ -119,7 +120,7 @@ class DrawerBackHandlerTest {
     }
 
     private fun drawerHeaderExists(): Boolean = try {
-        composeRule.onNodeWithText("All apps").assertExists()
+        composeRule.onNodeWithTag("drawer_pager").assertExists()
         true
     } catch (_: AssertionError) {
         false

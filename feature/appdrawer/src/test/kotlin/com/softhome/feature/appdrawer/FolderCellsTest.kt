@@ -15,6 +15,7 @@ class FolderCellsTest {
         return DrawerEntry(
             app = AppInfo(packageName = pkg, className = cls, label = cls),
             symbolName = "AppWindow",
+            colorToken = com.softhome.feature.iconpack.domain.DrawerIconColor.Token.Neutral,
             resolved = ResolvedIcon(
                 source = IconSource.System,
                 drawableName = null,

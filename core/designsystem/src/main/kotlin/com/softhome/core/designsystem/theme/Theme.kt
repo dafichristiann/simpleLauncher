@@ -1,6 +1,10 @@
 package com.softhome.core.designsystem.theme
 
 import android.app.Activity
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -22,32 +26,6 @@ fun SoftHomeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val softColors = if (darkTheme) DarkSoftColors else LightSoftColors
-
-    val scheme = if (darkTheme) {
-        darkColorScheme(
-            background = DarkBackground,
-            surface = DarkSurface,
-            surfaceVariant = DarkCard,
-            primary = DarkTile,
-            onPrimary = DarkOnDark,
-            onBackground = DarkTextTitle,
-            onSurface = DarkTextTitle,
-            secondary = DarkAccent,
-        )
-    } else {
-        lightColorScheme(
-            background = SoftBackground,
-            surface = SoftSurface,
-            surfaceVariant = SoftCard,
-            primary = SoftTile,
-            onPrimary = SoftOnDark,
-            onBackground = SoftTextTitle,
-            onSurface = SoftTextTitle,
-            secondary = SoftAccent,
-        )
-    }
-
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -59,13 +37,47 @@ fun SoftHomeTheme(
         }
     }
 
-    CompositionLocalProvider(LocalSoftColors provides softColors) {
-        MaterialTheme(
-            colorScheme = scheme,
-            typography = SoftTypography,
-            shapes = SoftShapes,
-            content = content,
-        )
+    AnimatedContent(
+        targetState = darkTheme,
+        transitionSpec = {
+            fadeIn(MotionTokens.themeTransition()) togetherWith
+                fadeOut(MotionTokens.themeTransition())
+        },
+        label = "themeTransition",
+    ) { animatedDarkTheme ->
+        val softColors = if (animatedDarkTheme) DarkSoftColors else LightSoftColors
+        val scheme = if (animatedDarkTheme) {
+            darkColorScheme(
+                background = DarkBackground,
+                surface = DarkSurface,
+                surfaceVariant = DarkCard,
+                primary = DarkTile,
+                onPrimary = DarkOnDark,
+                onBackground = DarkTextTitle,
+                onSurface = DarkTextTitle,
+                secondary = DarkAccent,
+            )
+        } else {
+            lightColorScheme(
+                background = SoftBackground,
+                surface = SoftSurface,
+                surfaceVariant = SoftCard,
+                primary = SoftTile,
+                onPrimary = SoftOnDark,
+                onBackground = SoftTextTitle,
+                onSurface = SoftTextTitle,
+                secondary = SoftAccent,
+            )
+        }
+
+        CompositionLocalProvider(LocalSoftColors provides softColors) {
+            MaterialTheme(
+                colorScheme = scheme,
+                typography = SoftTypography,
+                shapes = SoftShapes,
+                content = content,
+            )
+        }
     }
 }
 

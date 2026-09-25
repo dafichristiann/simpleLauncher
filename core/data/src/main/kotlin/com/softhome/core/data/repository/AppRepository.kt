@@ -28,7 +28,11 @@ class AppRepositoryImpl @Inject constructor(
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val resolved: List<ResolveInfo> = pm.queryIntentActivities(
             intent,
-            PackageManager.MATCH_DEFAULT_ONLY or PackageManager.GET_META_DATA,
+            // Launcher activities do not have to advertise CATEGORY_DEFAULT. Using
+            // MATCH_DEFAULT_ONLY silently drops many real apps on Tecno (ChatGPT,
+            // Instagram, Discord, Gojek, etc.). The drawer must enumerate every
+            // launchable activity, not only the system's preferred/default handlers.
+            PackageManager.MATCH_ALL or PackageManager.GET_META_DATA,
         )
         resolved.asSequence()
             .mapNotNull { ri ->

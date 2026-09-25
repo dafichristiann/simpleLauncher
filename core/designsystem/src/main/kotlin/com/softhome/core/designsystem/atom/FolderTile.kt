@@ -2,6 +2,7 @@ package com.softhome.core.designsystem.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,12 +43,21 @@ fun FolderTile(
     miniIcons: @Composable () -> Unit,
 ) {
     val colors = MaterialTheme.softColors
+    val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .fillMaxWidth()
             .then(
                 if (onClick != null) {
-                    Modifier.clickable(role = Role.Button, onClickLabel = name, onClick = onClick)
+                    Modifier
+                        .warmPress(interactionSource)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Button,
+                            onClickLabel = name,
+                            onClick = onClick,
+                        )
                 } else {
                     Modifier
                 },

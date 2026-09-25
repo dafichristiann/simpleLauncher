@@ -20,11 +20,11 @@ Master table of every requested feature -> priority -> backing design node -> st
 | A3 | Minimal search bar + voice search | `Q1cGYj` `N7ICqS` | [~] | **REDESIGNED**: row with "find something" text + search icon; tapping enters SEARCH state; voice action still a stub |
 | A4 | Multiple pages + custom page indicator (pill lines) | *(assumption)* | [x] | removed in favour of the single Warm Right Rail page |
 | A5 | Gestures (swipe up -> drawer, swipe L/R -> page, double-tap -> lock) | *(behavior)* | [~] | swipe-up -> drawer done; others P3 |
-| A6 | Clock on home | `IDSBb` / `cFKcs` | [x] | **REDESIGNED**: 58 normal, ls −2 |
+| A6 | Clock on home | `IDSBb` / `cFKcs` | [x] | **REDESIGNED**: 58 normal, ls −2; **P8**: local minute ticker + per-digit transition (D-061) |
 | A7 | Date on home | `ApuhU` `KkRQg` `ftENm` | [x] | **REDESIGNED**: number 60 normal + spaced day/month |
-| A8 | Weather row on home | `lLPZS` | [x] | **REDESIGNED**: "Current 8°C", 28 normal (static values) |
-| A9 | **Right icon rail (8 shortcuts)** | `hrsLU` / `B6633e` | [x] | **NEW**: 72dp, `#D8C8B6`, line icons → default device apps |
-| A10 | **Music player row** | `QTwqr`… `pvQO0` `d41sbp` | [x] | **NEW**: static UI (title/artist/album/controls/progress); MediaSession deferred |
+| A8 | Weather row on home | `lLPZS` | [x] | **REDESIGNED**: "Current 8°C", 28 normal; **P8**: abstract fallback `condition = Clear` + condition cross-fade + ambient icon (D-060) |
+| A9 | **Right icon rail (8 shortcuts)** | `hrsLU` / `B6633e` | [x] | **NEW**: 72dp, `#D8C8B6`, line icons → default device apps; **P8**: press/drag/drop feedback on the single existing drag engine |
+| A10 | **Music player row** | `QTwqr`… `pvQO0` `d41sbp` | [x] | **NEW**: title/artist/album/controls/progress; **P8**: real local `PlaybackState` via `PlaybackController` (play/pause/seek/progress); MediaSession deferred (D-059) |
 | A11 | **3 interaction states (Idle/Search/Music)** | `Az7qs` `m9OlxQ` `T8AA1` | [x] | **NEW**: tap-row trigger, tokenized motion (`MotionTokens`) |
 
 ### B. Custom Icon Pack System
@@ -44,10 +44,11 @@ Master table of every requested feature -> priority -> backing design node -> st
 | C1 | Separate drawer, swipe-up trigger, 4-column grid | `TpzL1` | [x] | **REDESIGNED**: tile 68 r21 (was 104 r30), bg `#DCCDBA`. **P3.5**: cream tile + per-category colored glyphs (was charcoal mono) |
 | C2 | Alphabetical index on right | `czxh4` | [x] | active `#B06F52`, idle `#81796D` |
 | C3 | Search/filter apps inside drawer | `V7udUl` | [x] | **REDESIGNED**: h56 r28 `#E8DFD0` stroke `#C8B8A6` |
-| C4 | Drawer header (label + "All apps") | `lasU6` | [x] | no eyebrow; "All apps" + "Icon pack" action |
-| C5 | **Category nav (All/Communication/Entertainment/Tools)** | `B6gGM` | [x] | **NEW**: mapped from `ApplicationInfo.category` |
+| C4 | Drawer header / search placement | `lasU6` | [x] | polished grid-first layout; redundant "All apps" header removed and search pill anchored below the icon grid |
+| C5 | **Category nav** | `B6gGM` | [x] | **P5**: 8 `ciHU3` groups in a horizontal pager; both tab tap and left/right swipe switch pages. Search + alphabet rail remain global. |
 | C6 | **App labels under tiles** | `J3Lb4`… | [x] | **NEW**: 11pt `#3A3A3A` |
-| C7 | **Color icon system** (P3.5) | `TpzL1` | [x] | **P3.5**: cream tile + pack artwork or category-colored glyph + amber selected state |
+| C7 | **Color icon system** (P3.5, extended P4) | `TpzL1` | [x] | **P3.5**: cream tile + pack artwork or category-colored glyph + amber selected state. **P4**: per-package glyph from `DrawerIconMap` + a dedicated **Browser** color token |
+| C8 | **Per-app drawer icons (no duplicates)** (P4) | `TpzL1` + `ciHU3` | [x] | **P4**: `DrawerIconMap` (TpzL1 tiles + ciHU3 library) + `DrawerIconAssignment` uniqueness; 7 broken lucide drawables fixed |
 
 ---
 
@@ -77,7 +78,7 @@ Master table of every requested feature -> priority -> backing design node -> st
 | Drag-and-drop app → folder | ⛔ deferred to **P3** (gesture subsystem) |
 | Live calendar events (`CalendarContract` + `READ_CALENDAR`) | ⛔ deferred |
 | Battery change callback stream (vs re-read on resume) | ⛔ deferred to **P3** |
-| Real music playback / MediaSession | ⛔ deferred (still) |
+| Real music playback / MediaSession | ⛔ still deferred; **P8** ships a local `PlaybackController` demo (play/pause/seek/progress) behind the same interface (D-059) |
 | KkPN3 dark editorial mode | ⛔ deferred (still) |
 
 ---

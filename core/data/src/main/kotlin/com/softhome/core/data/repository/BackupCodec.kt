@@ -5,6 +5,7 @@ import com.softhome.core.model.Folder
 import com.softhome.core.model.GridConfig
 import com.softhome.core.model.HomeRowLogic
 import com.softhome.core.model.LauncherPrefs
+import com.softhome.core.model.RailOrderLogic
 import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import org.json.JSONArray
@@ -75,6 +76,7 @@ object BackupCodec {
     private const val SPACING = "spacing"
     private const val HIDDEN = "hiddenApps"
     private const val OVERRIDES = "iconOverrides"
+    private const val RAIL_ORDER = "railOrder"
 
     /** Encodes the document to a single JSON string (deterministic key order). */
     fun encode(doc: BackupDocument): String {
@@ -100,6 +102,7 @@ object BackupCodec {
         prefs.put(SPACING, p.spacing.name)
         prefs.put(HIDDEN, JSONArray(p.hiddenApps.toList().sorted()))
         prefs.put(OVERRIDES, IconOverridesCodec.encode(p.iconOverrides))
+        prefs.put(RAIL_ORDER, JSONArray(RailOrderLogic.sanitize(p.railOrder)))
         root.put(PREFS, prefs)
 
         root.put(FOLDERS, FoldersCodec.encode(doc.folders))
@@ -153,6 +156,7 @@ object BackupCodec {
             spacing = enumOr(prefsObj.optString(SPACING), SpacingScale.Normal, SpacingScale.entries),
             hiddenApps = optStringSet(prefsObj.optJSONArray(HIDDEN)),
             iconOverrides = IconOverridesCodec.decode(prefsObj.optString(OVERRIDES)),
+            railOrder = RailOrderLogic.sanitize(optStringList(prefsObj.optJSONArray(RAIL_ORDER))),
         )
 
         // Folders were encoded as a JSON *string* (reusing FoldersCodec); decode that string.
@@ -175,6 +179,15 @@ object BackupCodec {
             array.optString(i).takeIf { it.isNotBlank() }?.let(out::add)
         }
         return out
+    }
+
+    private fun optStringList(array: JSONArray?): List<String> {
+        if (array == null) return emptyList()
+        return buildList(array.length()) {
+            for (i in 0 until array.length()) {
+                array.optString(i).takeIf { it.isNotBlank() }?.let(::add)
+            }
+        }
     }
 
     private inline fun <reified E : Enum<E>> enumOr(name: String, fallback: E, all: List<E>): E =

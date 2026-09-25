@@ -226,3 +226,15 @@ vocabulary — a new "Backup & restore" `SettingsRow` section (see
   no design surface to honour.
 - Restore **replaces** state wholesale, behind an inline confirm; failure is graceful and
   leaves state untouched.
+
+---
+
+## P6 (Drawer category transition) — no design nodes
+
+The category swipe/tab transition is a **behavioural** change, authored on the existing
+Warm Right Rail vocabulary. The `.pen` still has no motion node for it beyond the drawer
+frame `TpzL1` (category nav `B6gGM`) and the shared motion tokens (`L7ZAp` card `Z5V7Y9`).
+
+- Each category fills the **full width**; the transition is a **full-width slide + thin
+  fade** (uses `MotionTokens.railSlide()` + `searchFade()`), never a two-page peek. See
+  [D-058](09-DECISIONS-LOG.md).

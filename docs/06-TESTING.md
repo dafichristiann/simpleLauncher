@@ -39,6 +39,7 @@ the main flows. Not all tests exist yet — this file is the target and the trac
 | UI | **AppContextMenu** (rows, tap fires, uninstall disabled for system) | Compose UI test | ✅ (P3, androidTest) |
 | UI | **SettingsRow** (label, click, reorder buttons, toggle slot) | Compose UI test | ✅ (P3, androidTest) |
 | UI | drawer opens & filters by search | Compose UI test | ⬜ |
+| UI | **category pager (tab tap + horizontal swipe + vertical-scroll regression)** | Compose UI test | ✅ (P5, `DrawerSwipeCategoryTest`) |
 | UI | **long-press menu appears** (rail + drawer) | Compose UI test | ✅ (P3, androidTest) |
 | Manual | set as default launcher, gestures | on device | ✅ |
 | Manual | icon pack import (zip) end-to-end | on device | ✅ (P1.5) |
@@ -50,12 +51,14 @@ the main flows. Not all tests exist yet — this file is the target and the trac
 | Manual | TalkBack navigation | on device | ⬜ |
 | Manual | WCAG contrast (title/body/muted on cream) | tooling | ⬜ |
 
-**Current total: 217 unit tests, 0 failures (P4b, Session 11); 33 instrumented Compose
-tests pass on `soft_home_pixel`.** P4b added: `IconOverridesCodecTest` (10),
+**Current total: 280 unit tests, 0 failures (P5 + motion demo); 50 instrumented Compose tests execute
+for the app, including the P5 pager/gesture coverage.** P4b added: `IconOverridesCodecTest` (10),
 `IconEditorTest` (10) as unit; `IconEditorSheetTest` (2), `IconEditorScreenshotTest` (2),
-`IconOverrideEndToEndTest` (2) as instrumented. `IconResolverTest` grew 8→10. The 7
+`IconOverrideEndToEndTest` (2) as instrumented. `IconResolverTest` grew 8→10. P5 adds
+`DrawerSwipeCategoryTest` (6) and `DrawerSwipeDownTest` (2). The 7
 icon-pipeline tests (AutoMask, IconResolver, IconMasker, GlyphUniqueness, Importer,
-Persistence, AppFilterParser) stayed green throughout.
+Persistence, AppFilterParser) stayed green throughout. *(P8 re-verified 2026-09-25 on
+TECNO CN7c: 280 unit + 50 instrumented, 0 failures — see "Motion system verification".)*
 
 *(History: 124 after P2; 160 + 20 instrumented after P3; 176 + 25 after P3.5; P4a added
 `DragAndDropStateTest` 5 + `DragDropResolverTest` 13 + `HomeRowDragTest` 2. The P4a log's
@@ -182,15 +185,30 @@ have **distinct** fingerprint values. Evidence screenshot:
   is well-formed JSON (421 B).
 - [x] The 7 icon-pipeline tests + all P4a/P4b/P4c suites stayed green.
 
-## Final test counts (P4 complete)
+## Final test counts (P5)
 
 | Suite | Count | Notes |
 |---|---|---|
-| **JVM unit (debug variant, authoritative)** | **236** | `./gradlew test` builds both variants; the **debug** variant is the counted total |
-| Instrumented (Compose, `:app`) | **38** | green on `soft_home_pixel` (API 35) **and** the physical device (API 36) |
+| **JVM unit (debug variant, authoritative)** | **280** | `./gradlew test` builds both variants; the **debug** variant is the counted total |
+| Instrumented (Compose, `:app`) | **50 executed** | Includes P5 pager + scroll/tap/long-press regression coverage |
 
 > Reconciliation note (continuing the honest-counting rule from P4a): the P4a log's
 > "307 unit" was an over-count; P4b's "217", P4c's "220", and P4d's "236" are the
 > authoritative **debug-variant** totals. The release variant reports a smaller number
 > for the same sources (Robolectric-only suites vary), which is why the number must always
 > be read per-variant and per-command.
+
+## Motion system verification (Session 23 — P8)
+
+- `:feature:home:testDebugUnitTest` covers deterministic demo playback advance, pause,
+  resume, seek clamping, progress ratio, and end-of-track stop (`PlaybackControllerTest`).
+- `:core:designsystem:testDebugUnitTest`, `:app:assembleDebug`, and `:app:lintDebug`
+  passed after integrating the shared drag/press interaction source.
+- **Verified on Tecno CN7c (API 36, 2026-09-25):** `.\gradlew.bat testDebugUnitTest` →
+  **280 unit, 0 failures**; `.\gradlew.bat :app:connectedDebugAndroidTest` →
+  **50 instrumented, 0 failures**.
+- TECNO CN7c visual smoke: idle home, play/pause progress, long-press expansion,
+  full-track seek, clock digit update, weather fallback, and rounded rail capture are
+  retained in `docs/screenshots/p8-motion-*.png`; the recorded playback/expand sequence is
+  `docs/videos/p8-motion-playback-expand.mp4` (play → progress moves → pause → seek →
+  resume-from-seek).

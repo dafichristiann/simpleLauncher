@@ -1,7 +1,9 @@
 package com.softhome.core.designsystem.atom
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.softhome.core.designsystem.theme.ClockLarge
 import com.softhome.core.designsystem.theme.Dimens
+import com.softhome.core.designsystem.theme.MotionTokens
 import com.softhome.core.designsystem.theme.RowDisplay
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.TweakLabel
@@ -181,13 +186,21 @@ fun NotesRowContent(
     placeholder: String = "Quick notes",
 ) {
     val colors = MaterialTheme.softColors
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .fillMaxWidth()
             .then(
                 if (!expanded) {
                     Modifier
-                        .clickable(role = Role.Button, onClickLabel = placeholder, onClick = onClick)
+                        .warmPress(interactionSource)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Button,
+                            onClickLabel = placeholder,
+                            onClick = onClick,
+                        )
                 } else {
                     Modifier
                 },
@@ -257,6 +270,11 @@ fun ThinWarmProgressBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
+    val animatedFraction by animateFloatAsState(
+        targetValue = fraction.coerceIn(0f, 1f),
+        animationSpec = MotionTokens.musicRise(),
+        label = "widgetProgress",
+    )
     Box(
         modifier = modifier
             .fillMaxWidth(0.5f)
@@ -266,7 +284,7 @@ fun ThinWarmProgressBar(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .fillMaxWidth(animatedFraction)
                 .height(Dimens.widgetProgressHeight)
                 .clip(RoundedCornerShape(3.dp))
                 .background(colors.accent),

@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.softhome.core.designsystem.atom.SettingsRow
 import com.softhome.core.designsystem.atom.SoftToggle
+import com.softhome.core.designsystem.atom.warmPress
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.HomeRowKind
@@ -41,6 +43,7 @@ import com.softhome.core.model.SpacingScale
 import com.softhome.core.model.ThemeMode
 import com.softhome.launcher.SettingsIntents
 import com.softhome.launcher.WallpaperIntents
+import com.softhome.launcher.BuildConfig
 
 /**
  * The SOFT / HOME settings panel (P3 / G). Sections: Appearance, Widgets, Wallpaper,
@@ -52,6 +55,7 @@ fun SettingsPanel(
     viewModel: SettingsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     onClose: () -> Unit = {},
+    onOpenIconPack: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.softColors
@@ -118,6 +122,11 @@ fun SettingsPanel(
 
             GesturesSection()
 
+            AppDrawerSection(
+                onOpenIconPack = onOpenIconPack,
+                onCreateFolder = viewModel::createFolder,
+            )
+
             BackupSection(
                 message = state.backupMessage,
                 pendingRestore = state.pendingRestore,
@@ -128,7 +137,39 @@ fun SettingsPanel(
                 onCancel = viewModel::cancelRestore,
                 onConsumeMessage = viewModel::consumeBackupMessage,
             )
+
+            Text(
+                text = "SOFT/HOME v${BuildConfig.VERSION_NAME} (P5)",
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textMuted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Spacing.lg, bottom = Spacing.md),
+            )
         }
+    }
+}
+
+@Composable
+private fun AppDrawerSection(
+    onOpenIconPack: () -> Unit,
+    onCreateFolder: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        SectionLabel("APP DRAWER")
+        SettingsRow(
+            label = "New folder",
+            supporting = "Create an empty folder for the drawer",
+            showChevron = true,
+            onClick = onCreateFolder,
+        )
+        SettingsRow(
+            label = "Icon pack",
+            supporting = "Import or switch the drawer icon pack",
+            showChevron = true,
+            onClick = onOpenIconPack,
+        )
     }
 }
 
@@ -330,6 +371,7 @@ private fun BackupSection(
 @Composable
 private fun MessageRow(text: String, onClick: () -> Unit) {
     val colors = MaterialTheme.softColors
+    val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     Text(
         text = text,
         style = MaterialTheme.typography.bodySmall,
@@ -338,7 +380,8 @@ private fun MessageRow(text: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(colors.cardAlt)
-            .clickable(onClick = onClick)
+            .warmPress(interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .padding(Spacing.md),
     )
 }
@@ -352,6 +395,7 @@ private fun ActionPill(
     onClick: () -> Unit,
 ) {
     val colors = MaterialTheme.softColors
+    val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     Text(
         text = label,
         style = MaterialTheme.typography.bodyLarge,
@@ -360,7 +404,8 @@ private fun ActionPill(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
             .background(if (primary) colors.primaryAction else colors.card)
-            .clickable(onClick = onClick)
+            .warmPress(interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
     )
 }

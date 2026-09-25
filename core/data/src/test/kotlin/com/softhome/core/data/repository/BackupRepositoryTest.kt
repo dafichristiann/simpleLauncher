@@ -65,7 +65,7 @@ class BackupRepositoryTest {
         prefs().setActiveIconPack("supa_pack")
         prefs().hideApp("com.hidden/One")
         prefs().setIconOverride("com.a/Main", IconOverride.Glyph("Phone", DrawerIconTokenName.Media))
-        prefs().setHomeRows(HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Notes))
+        prefs().setHomeRows(HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Music))
         folders().save(listOf(Folder("f1", "Games", listOf("com.g/A"))))
         notes().setBody("remember the milk")
 
@@ -95,7 +95,7 @@ class BackupRepositoryTest {
         assertThat(restored.hiddenApps).containsExactly("com.hidden/One")
         assertThat(restored.iconOverrides["com.a/Main"])
             .isEqualTo(IconOverride.Glyph("Phone", DrawerIconTokenName.Media))
-        assertThat(restored.homeRows.first { it.kind == HomeRowKind.Notes }.visible).isFalse()
+        assertThat(restored.homeRows.first { it.kind == HomeRowKind.Music }.visible).isFalse()
         assertThat(folders().folders.first()).isEqualTo(listOf(Folder("f1", "Games", listOf("com.g/A"))))
         assertThat(notes().notes.first().body).isEqualTo("remember the milk")
     }

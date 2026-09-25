@@ -15,7 +15,9 @@ depth, and icons that feel considered, never loud.
 | **P1** | Home core (A) + Custom icon pack (B) + App drawer (C) → installable MVP, can be set as default launcher | ✅ Done (incl. P1.5 real icon decode) |
 | **P2** | Custom widgets (E) + Folder system (D) | ✅ Done (2026-09-25) |
 | **P3** | System UI integration (F) + Settings panel (G) | ✅ Done (2026-09-25) |
-| P4 | Onboarding (H) + polish / animation | ⬜ Not started |
+| **P4** | Drag & drop, icon editor, dark mode, backup & restore | ✅ Done (2026-09-25) |
+| **P5** | Eight-category drawer pager (tab tap + horizontal swipe) | ✅ Done (2026-09-25) |
+| **P8** | Motion demo: music playback abstraction + weather fallback + clock ticker + rail feedback | ✅ Done (2026-09-25) |
 
 Legend: ⬜ todo · 🟡 in progress · ✅ done · **stub** = skeleton only (logic not yet functional)
 

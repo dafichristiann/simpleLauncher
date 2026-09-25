@@ -25,6 +25,7 @@ class DrawerColorsTest {
         "drawerIconTravel" to c.drawerIconTravel,
         "drawerIconFinance" to c.drawerIconFinance,
         "drawerIconNeutral" to c.drawerIconNeutral,
+        "drawerIconBrowser" to c.drawerIconBrowser,
     )
 
     @Test
@@ -56,5 +57,7 @@ class DrawerColorsTest {
         assertTrue(LightSoftColors.drawerIconTravel == Color(0xFFB06F52))
         assertTrue(LightSoftColors.drawerIconFinance == Color(0xFF4D7C8A))
         assertTrue(LightSoftColors.drawerIconNeutral == Color(0xFF625B52))
+        // P4: the Browser & Search slot reuses the TpzL1 Chrome blue ($icon-finance).
+        assertTrue(LightSoftColors.drawerIconBrowser == Color(0xFF4D7C8A))
     }
 }

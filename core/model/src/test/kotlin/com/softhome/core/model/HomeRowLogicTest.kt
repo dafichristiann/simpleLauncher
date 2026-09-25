@@ -6,10 +6,27 @@ import org.junit.Test
 class HomeRowLogicTest {
 
     @Test
-    fun `default is all rows visible in default order`() {
+    fun `default is the lean set visible, the rest hidden, in default order`() {
         val prefs = HomeRowLogic.default()
+        // Order is unchanged; only visibility differs from the pre-P2 default.
         assertThat(prefs.map { it.kind }).isEqualTo(HomeRowLogic.DEFAULT_ORDER)
-        assertThat(prefs.all { it.visible }).isTrue()
+        // P2: only Time/Date/Weather/Search/Music are visible on a fresh install.
+        assertThat(prefs.filter { it.visible }.map { it.kind }).containsExactly(
+            HomeRowKind.Time, HomeRowKind.Date, HomeRowKind.Weather,
+            HomeRowKind.Search, HomeRowKind.Music,
+        ).inOrder()
+        assertThat(prefs.filterNot { it.visible }.map { it.kind })
+            .containsExactlyElementsIn(HomeRowLogic.DEFAULT_HIDDEN)
+    }
+
+    @Test
+    fun `default hidden rows are still re-enablable (not locked)`() {
+        HomeRowLogic.DEFAULT_HIDDEN.forEach { kind ->
+            assertThat(HomeRowLogic.canHide(kind)).isTrue()
+        }
+        // Toggling a default-hidden row ON makes it visible.
+        val after = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Calendar)
+        assertThat(after.first { it.kind == HomeRowKind.Calendar }.visible).isTrue()
     }
 
     @Test
@@ -25,8 +42,9 @@ class HomeRowLogicTest {
 
     @Test
     fun `toggle flips a toggleable row only`() {
+        // Notes starts hidden by default (P2); toggling flips it back on.
         val after = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Notes)
-        assertThat(after.first { it.kind == HomeRowKind.Notes }.visible).isFalse()
+        assertThat(after.first { it.kind == HomeRowKind.Notes }.visible).isTrue()
         assertThat(after.first { it.kind == HomeRowKind.Music }.visible).isTrue()
     }
 
@@ -68,12 +86,15 @@ class HomeRowLogicTest {
     }
 
     @Test
-    fun `hiding everything leaves the locked set rendered`() {
+    fun `hiding every non-locked row leaves the locked set rendered`() {
+        // Force every hideable row hidden, whether it started visible or hidden.
         var prefs = HomeRowLogic.default()
-        listOf(
-            HomeRowKind.Search, HomeRowKind.Music,
-            HomeRowKind.Calendar, HomeRowKind.BatteryStorage, HomeRowKind.Notes,
-        ).forEach { prefs = HomeRowLogic.toggle(prefs, it) }
+        val hideable = HomeRowLogic.DEFAULT_ORDER.filter { HomeRowLogic.canHide(it) }
+        hideable.forEach { kind ->
+            if (prefs.first { it.kind == kind }.visible) {
+                prefs = HomeRowLogic.toggle(prefs, kind)
+            }
+        }
         assertThat(HomeRowLogic.visibleInOrder(prefs))
             .containsExactly(HomeRowKind.Time, HomeRowKind.Date, HomeRowKind.Weather).inOrder()
     }
@@ -94,8 +115,37 @@ class HomeRowLogicTest {
         val cleaned = HomeRowLogic.sanitize(stored)
         assertThat(cleaned.first { it.kind == HomeRowKind.Weather }.visible).isTrue()
         assertThat(cleaned.map { it.kind }).containsExactlyElementsIn(HomeRowLogic.DEFAULT_ORDER)
-        // Appended missing rows default to visible.
+        // P2: a re-appended default-hidden row stays hidden; a re-appended normal row is visible.
+        assertThat(cleaned.first { it.kind == HomeRowKind.Calendar }.visible).isFalse()
         assertThat(cleaned.first { it.kind == HomeRowKind.Music }.visible).isTrue()
+    }
+
+    @Test
+    fun `migrateLegacy maps the old all-visible default to the new lean default`() {
+        // Exactly what a pre-P2 install has persisted: all 8 kinds, visible, default order.
+        val legacy = HomeRowLogic.DEFAULT_ORDER.map { HomeRowPref(it, visible = true) }
+        val migrated = HomeRowLogic.migrateLegacy(legacy)
+        assertThat(migrated).isEqualTo(HomeRowLogic.default())
+        assertThat(migrated!!.filter { it.visible }.map { it.kind }).containsExactly(
+            HomeRowKind.Time, HomeRowKind.Date, HomeRowKind.Weather,
+            HomeRowKind.Search, HomeRowKind.Music,
+        ).inOrder()
+    }
+
+    @Test
+    fun `migrateLegacy leaves a real user choice untouched`() {
+        // Any hidden row -> not the legacy shape -> no migration (null).
+        val userChoice = HomeRowLogic.DEFAULT_ORDER.map {
+            HomeRowPref(it, visible = it != HomeRowKind.Music)
+        }
+        assertThat(HomeRowLogic.migrateLegacy(userChoice)).isNull()
+
+        // Already the new default -> not legacy either (Calendar hidden) -> no re-migration.
+        assertThat(HomeRowLogic.migrateLegacy(HomeRowLogic.default())).isNull()
+
+        // Empty / null -> nothing to migrate.
+        assertThat(HomeRowLogic.migrateLegacy(null)).isNull()
+        assertThat(HomeRowLogic.migrateLegacy(emptyList())).isNull()
     }
 
     @Test

@@ -52,9 +52,22 @@ object HomeRowLogic {
         HomeRowKind.Notes,
     )
 
-    /** All rows visible, in the default order. */
+    /**
+     * P2 (2026-09-25): rows that are **hidden by default** on a fresh install, so the home
+     * opens lean -- only Time -> Date -> Weather -> Search -> Music. These are NOT removed:
+     * they stay reorderable/visible via Settings -> Widgets ([canHide] returns true).
+     *
+     * Locked rows (Time/Date/Weather) are always visible and are never in this set.
+     */
+    val DEFAULT_HIDDEN: Set<HomeRowKind> = setOf(
+        HomeRowKind.Calendar,
+        HomeRowKind.BatteryStorage,
+        HomeRowKind.Notes,
+    )
+
+    /** The rows the home renders on a fresh install: the default order minus [DEFAULT_HIDDEN]. */
     fun default(): List<HomeRowPref> =
-        DEFAULT_ORDER.map { HomeRowPref(it, visible = true) }
+        DEFAULT_ORDER.map { HomeRowPref(it, visible = it !in DEFAULT_HIDDEN) }
 
     /** Whether [kind] may be hidden by the user. */
     fun canHide(kind: HomeRowKind): Boolean = kind !in LOCKED
@@ -106,7 +119,8 @@ object HomeRowLogic {
     /**
      * Repair a stored list so it is always usable:
      *  - unknown kinds are dropped,
-     *  - missing kinds are appended (in default order),
+     *  - missing kinds are appended (in default order): **hidden** if in [DEFAULT_HIDDEN],
+     *    else visible (P2),
      *  - locked rows are forced visible,
      *  - a blank/absent list falls back to [default].
      */
@@ -119,8 +133,30 @@ object HomeRowLogic {
                 cleaned += p.copy(visible = p.visible || p.kind in LOCKED)
             }
         }
-        // Append any known kinds the stored list was missing (default: visible).
-        DEFAULT_ORDER.filterNot { it in seen }.forEach { cleaned += HomeRowPref(it, visible = true) }
+        // Append any known kinds the stored list was missing. P2: a missing kind that is
+        // hidden-by-default (Calendar/Battery/Notes) is appended hidden, so an upgrade that
+        // adds a row does not silently un-hide a row the user is meant to opt into.
+        DEFAULT_ORDER.filterNot { it in seen }.forEach {
+            cleaned += HomeRowPref(it, visible = it !in DEFAULT_HIDDEN)
+        }
         return cleaned.ifEmpty { default() }
+    }
+
+    /**
+     * P2 migration helper (pure). Existing installs persisted the **legacy all-visible
+     * default** (all 8 kinds, every one visible). We can't distinguish "user deliberately
+     * turned everything on" from the old default, so per the P2 decision (Q1 = apply-once)
+     * this detects the exact legacy shape and maps it to the new [default] exactly once.
+     *
+     * @return the migrated list when [stored] is the legacy all-visible default, else null
+     *   (meaning: leave the stored value untouched).
+     */
+    fun migrateLegacy(stored: List<HomeRowPref>?): List<HomeRowPref>? {
+        if (stored.isNullOrEmpty()) return null
+        // The legacy default is exactly: every known kind present, in DEFAULT_ORDER, all visible.
+        if (stored.size != DEFAULT_ORDER.size) return null
+        if (stored.map { it.kind } != DEFAULT_ORDER) return null
+        if (stored.any { !it.visible }) return null
+        return default()
     }
 }

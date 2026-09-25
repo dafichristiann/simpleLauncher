@@ -6,12 +6,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,14 +21,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.softhome.core.designsystem.atom.verticalSwipe
 import com.softhome.core.designsystem.theme.SoftHomeTheme
+import com.softhome.core.designsystem.theme.MotionTokens
+import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.model.ThemeMode
 import com.softhome.feature.appdrawer.AppDrawerScreen
 import com.softhome.feature.home.HomeScreen
@@ -78,6 +81,11 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
         ThemeMode.System -> systemDark
     }
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val rightRailSwipeStartPx = with(density) {
+        (configuration.screenWidthDp.dp - Dimens.railWidth).toPx()
+    }
 
     // F1/F2: adapt the status/nav bar icon color to the theme and hide the nav bar
     // under gesture navigation. Re-applied on every recomposition of this host.
@@ -109,37 +117,42 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
         BackHandler(enabled = true) { /* consume: stay on Home */ }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Swipe-up layer (BEHIND the home content): opening the drawer. The home row
-            // list scrolls; this layer still receives drags in the area the content does
-            // not consume (and the row list's own scroll region forwards leftover drags).
+            // P1.1 fix: the old swipe-up layer sat BEHIND the home content and therefore
+            // almost never received a drag -- the row list's `dragSource` treats a quick
+            // swipe as a tap and never lets the gesture through to a layer behind it. The
+            // gesture now lives ON the home surface itself as a pass-through observer
+            // ([verticalSwipe]) that never consumes, so row tap / long-press reorder /
+            // notes scroll are unaffected. A clear upward swipe opens the drawer.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
-                        var total = 0f
-                        detectVerticalDragGestures(
-                            onDragStart = { total = 0f },
-                            onVerticalDrag = { _, delta -> total += delta },
-                            onDragEnd = {
-                                if (total < -60f) drawerOpen = true
-                            },
-                        )
+                    .verticalSwipe(
+                        key = drawerOpen,
+                        direction = -1f,
+                        // A rail long-press+drag belongs to the rail, never to the
+                        // home-to-drawer observer behind it.
+                        ignoreStart = { it.x >= rightRailSwipeStartPx },
+                    ) {
+                        if (!drawerOpen) drawerOpen = true
                     },
-            )
-
-            HomeScreen(
-                onOpenDrawer = { drawerOpen = true },
-                onVoiceSearch = { /* STUB - wire real voice search later */ },
-                state = state,
-                onNotesChange = viewModel::setNotes,
-                onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
-                onReorderRow = viewModel::reorderHomeRow,
-            )
+            ) {
+                HomeScreen(
+                    onOpenDrawer = { drawerOpen = true },
+                    onVoiceSearch = { /* STUB - wire real voice search later */ },
+                    state = state,
+                    onNotesChange = viewModel::setNotes,
+                    onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
+                    onReorderRow = viewModel::reorderHomeRow,
+                    onReorderRail = viewModel::reorderRail,
+                )
+            }
 
             AnimatedVisibility(
                 visible = drawerOpen,
-                enter = slideInVertically(tween(220)) { it } + fadeIn(tween(220)),
-                exit = slideOutVertically(tween(180)) { it } + fadeOut(tween(180)),
+                enter = slideInVertically(MotionTokens.overlayEnter()) { it } +
+                    fadeIn(MotionTokens.overlayEnter()),
+                exit = slideOutVertically(MotionTokens.overlayExit()) { it } +
+                    fadeOut(MotionTokens.overlayExit()),
             ) {
                 AppDrawerScreen(
                     onAppLaunched = { drawerOpen = false },
