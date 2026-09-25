@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home rows -->
+    <string name="home_open_clock">Open clock</string>
+    <string name="home_time_a11y">Time</string>
+    <string name="home_open_calendar">Open calendar</string>
+    <string name="home_date_a11y">Date</string>
+    <string name="home_weather_a11y">Weather</string>
+    <string name="home_open_weather">Open weather</string>
+    <string name="home_open_search">Open search</string>
+    <string name="home_search_in_place">Search in place</string>
+    <string name="home_find_something">Find something</string>
+    <string name="home_weather_current">Current 8°C</string>
+    <string name="home_notes_a11y">Quick notes</string>
+    <string name="home_expand_notes">Expand notes</string>
+    <string name="home_rail_a11y">Shortcut rail</string>
+
+    <!-- Search (the spaced-letter design is applied in code so translation stays clean) -->
+    <string name="home_search_placeholder">find something</string>
+    <string name="home_searching">searching</string>
+</resources>

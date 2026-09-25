@@ -57,6 +57,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.softhome.core.designsystem.atom.AppContextMenu
@@ -368,8 +369,8 @@ private fun TimeRow(time: String, reducedMotion: Boolean, onLaunch: () -> Unit) 
     HomeRow(
         showDivider = false,
         onClick = onLaunch,
-        onClickLabel = "Open clock",
-        contentDescription = "Time",
+        onClickLabel = stringResource(R.string.home_open_clock),
+        contentDescription = stringResource(R.string.home_time_a11y),
     ) {
         AnimatedClockText(
             time = time,
@@ -421,8 +422,8 @@ private fun DateRow(date: HomeDate, onLaunch: () -> Unit) {
     HomeRow(
         showDivider = false,
         onClick = onLaunch,
-        onClickLabel = "Open calendar",
-        contentDescription = "Date",
+        onClickLabel = stringResource(R.string.home_open_calendar),
+        contentDescription = stringResource(R.string.home_date_a11y),
     ) {
         Row(
             modifier = Modifier
@@ -445,9 +446,9 @@ private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, onLaunch
     val colors = MaterialTheme.softColors
     HomeRow(
         showDivider = false,
-        contentDescription = "Weather",
+        contentDescription = stringResource(R.string.home_weather_a11y),
         onClick = onLaunch,
-        onClickLabel = "Open weather",
+        onClickLabel = stringResource(R.string.home_open_weather),
     ) {
         Row(
             modifier = Modifier.padding(vertical = Spacing.xl),
@@ -503,13 +504,15 @@ private fun SearchRow(
     onLongClick: () -> Unit,
 ) {
     val colors = MaterialTheme.softColors
+    val placeholder = stringResource(R.string.home_search_placeholder).toSpacedLetters()
+    val searching = stringResource(R.string.home_searching).toSpacedLetters()
     HomeRow(
         showDivider = false,
         onClick = onClick,
-        onClickLabel = "Open search",
+        onClickLabel = stringResource(R.string.home_open_search),
         onLongClick = onLongClick,
-        onLongClickLabel = "Search in place",
-        contentDescription = "Find something",
+        onLongClickLabel = stringResource(R.string.home_search_in_place),
+        contentDescription = stringResource(R.string.home_find_something),
     ) {
         Row(
             modifier = Modifier
@@ -518,7 +521,7 @@ private fun SearchRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = if (focused) "s e a r c h i n g" else "f i n d  s o m e t h i n g",
+                text = if (focused) searching else placeholder,
                 style = RowMeta,
                 color = if (focused) colors.textPrimary else colors.textMuted,
                 modifier = Modifier.weight(1f),
@@ -553,9 +556,9 @@ private fun NotesRow(
     // The notes editor itself handles taps/focus; the row-level long-press toggles expand.
     HomeRow(
         showDivider = false,
-        contentDescription = "Quick notes",
+        contentDescription = stringResource(R.string.home_notes_a11y),
         onLongClick = onLongClick,
-        onLongClickLabel = "Expand notes",
+        onLongClickLabel = stringResource(R.string.home_expand_notes),
     ) {
         NotesRowContent(
             text = text,
@@ -596,6 +599,7 @@ private fun HomeRightRail(
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
+    val railA11y = stringResource(R.string.home_rail_a11y)
     // SEARCH state: the rail "expands" (RAIL_SLIDE 220ms) -- icons nudge in.
     val slide by animateDpAsState(
         targetValue = if (expanded) 0.dp else (-6).dp,
@@ -625,7 +629,7 @@ private fun HomeRightRail(
         modifier = modifier
             .width(Dimens.railWidth)
             .fillMaxHeight()
-            .semantics { contentDescription = "Shortcut rail" },
+            .semantics { contentDescription = railA11y },
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -851,6 +855,16 @@ private fun WeatherCondition.weatherIcon(): LineIcon = when (this) {
 /** "tuesday" -> "t u e s d a y" (the design tracks each letter). */
 private fun String.toSpacedCaps(): String =
     trim().map { it.toString() }.joinToString(" ")
+
+/**
+ * Builds the design's letter-spaced, lowercase micro-label ("find something" ->
+ * "f i n d  s o m e t h i n g"). Letters get one space; words get a wider two-space
+ * gap. Applied in code so the localized resource stays plain text.
+ */
+private fun String.toSpacedLetters(): String =
+    trim().lowercase(Locale.getDefault())
+        .split(" ").filter { it.isNotEmpty() }
+        .joinToString("  ") { word -> word.map { it.toString() }.joinToString(" ") }
 
 
 @Composable

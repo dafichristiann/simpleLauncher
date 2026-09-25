@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,6 +45,8 @@ import com.softhome.core.model.ThemeMode
 import com.softhome.launcher.SettingsIntents
 import com.softhome.launcher.WallpaperIntents
 import com.softhome.launcher.BuildConfig
+import com.softhome.launcher.LauncherRole
+import com.softhome.launcher.R
 
 /**
  * The SOFT / HOME settings panel (P3 / G). Sections: Appearance, Widgets, Wallpaper,
@@ -88,12 +91,12 @@ fun SettingsPanel(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             Text(
-                text = "SETTINGS",
+                text = stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.accent,
             )
             Text(
-                text = "Make it yours.",
+                text = stringResource(R.string.settings_subtitle),
                 style = MaterialTheme.typography.headlineMedium,
                 color = colors.textPrimary,
                 modifier = Modifier.padding(bottom = Spacing.md),
@@ -104,6 +107,8 @@ fun SettingsPanel(
                 gridColumns = state.grid.columns,
                 spacing = state.spacing,
                 hiddenApps = state.hiddenApps,
+                isDefaultLauncher = LauncherRole.isDefaultLauncher(context),
+                onSetDefaultLauncher = { LauncherRole.requestDefaultLauncher(context) },
                 onTheme = viewModel::setThemeMode,
                 onColumns = viewModel::setGridColumns,
                 onSpacing = viewModel::setSpacing,
@@ -139,7 +144,7 @@ fun SettingsPanel(
             )
 
             Text(
-                text = "SOFT/HOME v${BuildConfig.VERSION_NAME} (P5)",
+                text = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.textMuted,
                 textAlign = TextAlign.Center,
@@ -157,16 +162,16 @@ private fun AppDrawerSection(
     onCreateFolder: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        SectionLabel("APP DRAWER")
+        SectionLabel(stringResource(R.string.settings_section_app_drawer))
         SettingsRow(
-            label = "New folder",
-            supporting = "Create an empty folder for the drawer",
+            label = stringResource(R.string.settings_new_folder),
+            supporting = stringResource(R.string.settings_new_folder_support),
             showChevron = true,
             onClick = onCreateFolder,
         )
         SettingsRow(
-            label = "Icon pack",
-            supporting = "Import or switch the drawer icon pack",
+            label = stringResource(R.string.settings_icon_pack),
+            supporting = stringResource(R.string.settings_icon_pack_support),
             showChevron = true,
             onClick = onOpenIconPack,
         )
@@ -189,6 +194,8 @@ private fun AppearanceSection(
     gridColumns: Int,
     spacing: SpacingScale,
     hiddenApps: List<HiddenApp>,
+    isDefaultLauncher: Boolean,
+    onSetDefaultLauncher: () -> Unit,
     onTheme: (ThemeMode) -> Unit,
     onColumns: (Int) -> Unit,
     onSpacing: (SpacingScale) -> Unit,
@@ -196,46 +203,62 @@ private fun AppearanceSection(
     onOpenSystemSettings: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        SectionLabel("APPEARANCE")
+        SectionLabel(stringResource(R.string.settings_section_appearance))
+
+        // Launcher role: only offered while SOFT / HOME is not the default Home app.
+        // A launcher that is not the default cannot launch on HOME, so this is the
+        // highest-value action when the row is shown.
+        if (!isDefaultLauncher) {
+            SettingsRow(
+                label = stringResource(R.string.set_default_launcher),
+                supporting = stringResource(R.string.default_launcher_body),
+                showChevron = true,
+                onClick = onSetDefaultLauncher,
+            )
+        }
 
         // Theme: cycle Light -> Dark -> System on tap (3-way control).
         SettingsRow(
-            label = "Theme",
+            label = stringResource(R.string.settings_theme),
             supporting = themeMode.name,
             onClick = { onTheme(SettingsCycles.nextTheme(themeMode)) },
         )
 
         // Grid size: applies to the drawer grid (home is row-based).
         SettingsRow(
-            label = "Drawer grid size",
-            supporting = "$gridColumns columns",
+            label = stringResource(R.string.settings_drawer_grid_size),
+            supporting = stringResource(R.string.settings_grid_columns, gridColumns),
             onClick = { onColumns(SettingsCycles.nextColumns(gridColumns)) },
         )
 
         // Spacing preset (Q3): Compact / Normal / Roomy multiplier.
         SettingsRow(
-            label = "Spacing",
+            label = stringResource(R.string.settings_spacing),
             supporting = spacing.name,
             onClick = { onSpacing(SettingsCycles.nextSpacing(spacing)) },
         )
 
         // System settings entry (Q1).
         SettingsRow(
-            label = "System settings",
-            supporting = "Open Android settings",
+            label = stringResource(R.string.settings_system_settings),
+            supporting = stringResource(R.string.settings_system_settings_support),
             showChevron = true,
             onClick = onOpenSystemSettings,
         )
 
         // Hidden apps manager (Q2).
         SettingsRow(
-            label = "Hidden apps",
-            supporting = if (hiddenApps.isEmpty()) "None" else "${hiddenApps.size} hidden",
+            label = stringResource(R.string.settings_hidden_apps),
+            supporting = if (hiddenApps.isEmpty()) {
+                stringResource(R.string.settings_hidden_apps_none)
+            } else {
+                stringResource(R.string.settings_hidden_apps_count, hiddenApps.size)
+            },
         )
         hiddenApps.forEach { app ->
             SettingsRow(
                 label = app.label,
-                supporting = "Tap to restore",
+                supporting = stringResource(R.string.settings_hidden_app_tap_restore),
                 onClick = { onUnhide(app.componentKey) },
             )
         }
@@ -250,9 +273,9 @@ private fun WidgetsSection(
     onDown: (HomeRowKind) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        SectionLabel("WIDGETS")
+        SectionLabel(stringResource(R.string.settings_section_widgets))
         Text(
-            text = "Choose which home rows show and their order.",
+            text = stringResource(R.string.settings_widgets_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.softColors.textMuted,
             modifier = Modifier.padding(bottom = Spacing.xs),
@@ -261,7 +284,7 @@ private fun WidgetsSection(
             val locked = !HomeRowLogic.canHide(pref.kind)
             SettingsRow(
                 label = pref.kind.displayLabel(),
-                supporting = if (locked) "Always shown" else null,
+                supporting = if (locked) stringResource(R.string.settings_always_shown) else null,
                 toggle = {
                     SoftToggle(
                         checked = pref.visible || locked,
@@ -280,10 +303,10 @@ private fun WidgetsSection(
 @Composable
 private fun WallpaperSection(context: Context) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        SectionLabel("WALLPAPER")
+        SectionLabel(stringResource(R.string.settings_section_wallpaper))
         SettingsRow(
-            label = "Choose wallpaper",
-            supporting = "Opens the system picker",
+            label = stringResource(R.string.settings_choose_wallpaper),
+            supporting = stringResource(R.string.settings_choose_wallpaper_support),
             showChevron = true,
             onClick = { WallpaperIntents.openPicker(context) },
         )
@@ -292,11 +315,23 @@ private fun WallpaperSection(context: Context) {
 
 @Composable
 private fun GesturesSection() {
+    val comingSoon = stringResource(R.string.settings_gesture_coming_soon)
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        SectionLabel("GESTURES")
-        SettingsRow(label = "Swipe up", supporting = "Opens the app drawer")
-        SettingsRow(label = "Swipe down", supporting = "Coming soon", enabled = false)
-        SettingsRow(label = "Double-tap", supporting = "Coming soon", enabled = false)
+        SectionLabel(stringResource(R.string.settings_section_gestures))
+        SettingsRow(
+            label = stringResource(R.string.settings_gesture_swipe_up),
+            supporting = stringResource(R.string.settings_gesture_swipe_up_support),
+        )
+        SettingsRow(
+            label = stringResource(R.string.settings_gesture_swipe_down),
+            supporting = comingSoon,
+            enabled = false,
+        )
+        SettingsRow(
+            label = stringResource(R.string.settings_gesture_double_tap),
+            supporting = comingSoon,
+            enabled = false,
+        )
     }
 }
 
@@ -317,23 +352,23 @@ private fun BackupSection(
     onConsumeMessage: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        SectionLabel("BACKUP & RESTORE")
+        SectionLabel(stringResource(R.string.settings_section_backup))
         Text(
-            text = "Export your rows, folders, notes, theme and icon choices to a file, or restore them.",
+            text = stringResource(R.string.settings_backup_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.softColors.textMuted,
             modifier = Modifier.padding(bottom = Spacing.xs),
         )
 
         SettingsRow(
-            label = "Export backup",
-            supporting = "Save a backup file",
+            label = stringResource(R.string.settings_export_backup),
+            supporting = stringResource(R.string.settings_export_backup_support),
             showChevron = true,
             onClick = { onExport(suggestedName) },
         )
         SettingsRow(
-            label = "Import backup",
-            supporting = "Restore from a backup file",
+            label = stringResource(R.string.settings_import_backup),
+            supporting = stringResource(R.string.settings_import_backup_support),
             showChevron = true,
             onClick = onImport,
         )
@@ -344,20 +379,20 @@ private fun BackupSection(
 
         if (pendingRestore) {
             Text(
-                text = "Replace all current settings with this backup?",
+                text = stringResource(R.string.settings_restore_confirm),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.softColors.textPrimary,
                 modifier = Modifier.padding(top = Spacing.xs),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 ActionPill(
-                    label = "Restore",
+                    label = stringResource(R.string.settings_restore),
                     primary = true,
                     modifier = Modifier.weight(1f),
                     onClick = onConfirm,
                 )
                 ActionPill(
-                    label = "Cancel",
+                    label = stringResource(R.string.settings_cancel),
                     primary = false,
                     modifier = Modifier.weight(1f),
                     onClick = onCancel,
@@ -410,15 +445,18 @@ private fun ActionPill(
     )
 }
 
-private fun HomeRowKind.displayLabel(): String = when (this) {
-    HomeRowKind.Time -> "Clock"
-    HomeRowKind.Date -> "Date"
-    HomeRowKind.Weather -> "Weather"
-    HomeRowKind.Search -> "Search"
-    HomeRowKind.Calendar -> "Calendar"
-    HomeRowKind.BatteryStorage -> "Battery & storage"
-    HomeRowKind.Notes -> "Quick notes"
-}
+@Composable
+private fun HomeRowKind.displayLabel(): String = stringResource(
+    when (this) {
+        HomeRowKind.Time -> R.string.row_label_clock
+        HomeRowKind.Date -> R.string.row_label_date
+        HomeRowKind.Weather -> R.string.row_label_weather
+        HomeRowKind.Search -> R.string.row_label_search
+        HomeRowKind.Calendar -> R.string.row_label_calendar
+        HomeRowKind.BatteryStorage -> R.string.row_label_battery
+        HomeRowKind.Notes -> R.string.row_label_notes
+    },
+)
 
 /** Pure 3-way cycling helpers (unit-tested) used by the Appearance section. */
 object SettingsCycles {

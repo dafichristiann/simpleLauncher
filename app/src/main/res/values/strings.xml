@@ -3,33 +3,72 @@
     <string name="app_name">SOFT / HOME</string>
     <string name="launcher_role_name">SOFT / HOME</string>
 
-    <!-- Search / cards -->
-    <string name="mic_search">Voice search</string>
-    <string name="search_apps">Search apps</string>
-
-    <!-- Drawer -->
-    <string name="all_apps">All apps</string>
-    <string name="drawer_label">APP DRAWER</string>
-    <string name="swipe_up_hint">Swipe up from the mic bar to open all apps</string>
-    <string name="no_apps_found">No apps match that search.</string>
-    <string name="drawer_a11y_open">Open all apps</string>
-    <string name="drawer_a11y_close">Close all apps</string>
-
-    <!-- Home -->
-    <string name="page_indicator_a11y">Page %1$d of %2$d</string>
-
-    <!-- Set default -->
+    <!-- Set default (Settings + first-run CTA) -->
     <string name="set_default_launcher">Set as default launcher</string>
     <string name="default_launcher_body">Make SOFT / HOME your Home app. You can change this any time in Settings.</string>
 
-    <!-- Weather (static in P1, per docs/04 #7) -->
-    <string name="weather_condition">Soft light &#183; 72%% humidity</string>
+    <!-- Settings header -->
+    <string name="settings_title">SETTINGS</string>
+    <string name="settings_subtitle">Make it yours.</string>
+    <string name="settings_version">SOFT/HOME v%1$s</string>
 
-    <!-- Icon pack -->
-    <string name="icon_pack_title">Icon pack</string>
-    <string name="icon_pack_apply">Apply</string>
-    <string name="icon_pack_applied">Applied</string>
-    <string name="icon_pack_none">System icons</string>
-    <string name="icon_pack_corrupt">That icon pack could not be read. Apps will use system icons.</string>
-    <string name="icon_pack_missing_appfilter">This pack has no appfilter.xml; unsupported apps will be masked.</string>
+    <!-- Settings sections -->
+    <string name="settings_section_app_drawer">APP DRAWER</string>
+    <string name="settings_section_appearance">APPEARANCE</string>
+    <string name="settings_section_widgets">WIDGETS</string>
+    <string name="settings_section_wallpaper">WALLPAPER</string>
+    <string name="settings_section_gestures">GESTURES</string>
+    <string name="settings_section_backup">BACKUP &amp; RESTORE</string>
+
+    <!-- Settings rows: app drawer -->
+    <string name="settings_new_folder">New folder</string>
+    <string name="settings_new_folder_support">Create an empty folder for the drawer</string>
+    <string name="settings_icon_pack">Icon pack</string>
+    <string name="settings_icon_pack_support">Import or switch the drawer icon pack</string>
+
+    <!-- Settings rows: appearance -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_drawer_grid_size">Drawer grid size</string>
+    <string name="settings_grid_columns">%1$d columns</string>
+    <string name="settings_spacing">Spacing</string>
+    <string name="settings_system_settings">System settings</string>
+    <string name="settings_system_settings_support">Open Android settings</string>
+    <string name="settings_hidden_apps">Hidden apps</string>
+    <string name="settings_hidden_apps_none">None</string>
+    <string name="settings_hidden_apps_count">%1$d hidden</string>
+    <string name="settings_hidden_app_tap_restore">Tap to restore</string>
+
+    <!-- Settings rows: widgets -->
+    <string name="settings_widgets_body">Choose which home rows show and their order.</string>
+    <string name="settings_always_shown">Always shown</string>
+
+    <!-- Settings rows: wallpaper -->
+    <string name="settings_choose_wallpaper">Choose wallpaper</string>
+    <string name="settings_choose_wallpaper_support">Opens the system picker</string>
+
+    <!-- Settings rows: gestures -->
+    <string name="settings_gesture_swipe_up">Swipe up</string>
+    <string name="settings_gesture_swipe_up_support">Opens the app drawer</string>
+    <string name="settings_gesture_swipe_down">Swipe down</string>
+    <string name="settings_gesture_double_tap">Double-tap</string>
+    <string name="settings_gesture_coming_soon">Coming soon</string>
+
+    <!-- Settings rows: backup -->
+    <string name="settings_backup_body">Export your rows, folders, notes, theme and icon choices to a file, or restore them.</string>
+    <string name="settings_export_backup">Export backup</string>
+    <string name="settings_export_backup_support">Save a backup file</string>
+    <string name="settings_import_backup">Import backup</string>
+    <string name="settings_import_backup_support">Restore from a backup file</string>
+    <string name="settings_restore_confirm">Replace all current settings with this backup?</string>
+    <string name="settings_restore">Restore</string>
+    <string name="settings_cancel">Cancel</string>
+
+    <!-- Home row labels (settings + drag chip) -->
+    <string name="row_label_clock">Clock</string>
+    <string name="row_label_date">Date</string>
+    <string name="row_label_weather">Weather</string>
+    <string name="row_label_search">Search</string>
+    <string name="row_label_calendar">Calendar</string>
+    <string name="row_label_battery">Battery &amp; storage</string>
+    <string name="row_label_notes">Quick notes</string>
 </resources>

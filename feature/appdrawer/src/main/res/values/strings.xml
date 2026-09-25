@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Search -->
+    <string name="search_apps">Search apps</string>
+    <string name="drawer_search_hint">Search for apps</string>
+
+    <!-- Drawer -->
+    <string name="all_apps">All apps</string>
+    <string name="no_apps_found">No apps match that search.</string>
+    <string name="drawer_no_apps_category">No apps in this category.</string>
+    <string name="drawer_new_folder">New folder</string>
+    <string name="drawer_icon_pack">Icon pack</string>
+    <string name="drawer_categories_a11y">Categories</string>
+    <string name="drawer_alphabet_a11y">Alphabet index</string>
+    <string name="drawer_jump_to_letter">Jump to letter %1$s</string>
+    <string name="drawer_empty_folder">Empty folder — add an app below.</string>
+    <string name="drawer_folder_a11y">Folder %1$s</string>
+</resources>

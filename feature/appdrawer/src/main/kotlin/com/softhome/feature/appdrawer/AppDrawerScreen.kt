@@ -45,6 +45,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,9 +61,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,6 +74,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.softhome.feature.appdrawer.R
 import com.softhome.core.designsystem.atom.AppContextMenu
 import com.softhome.core.designsystem.atom.ContextMenuItem
 import com.softhome.core.designsystem.atom.DragController
@@ -281,8 +286,8 @@ fun AppDrawerScreen(
                         }
                         if (page == null || (page.cells.isEmpty() && !state.loading)) {
                             Text(
-                                text = if (state.query.isNotBlank()) "No apps match that search."
-                                else "No apps in this category.",
+                                text = if (state.query.isNotBlank()) stringResource(R.string.no_apps_found)
+                                else stringResource(R.string.drawer_no_apps_category),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colors.textMuted,
                                 modifier = Modifier.padding(top = Spacing.xxl),
@@ -482,6 +487,8 @@ private fun DrawerHeader(
     dragController: DragController,
 ) {
     val colors = MaterialTheme.softColors
+    val newFolderLabel = stringResource(R.string.drawer_new_folder)
+    val iconPackLabel = stringResource(R.string.drawer_icon_pack)
     val newFolderHovered = dragController.state.hoveredTargetId == "newfolder"
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
         Row(
@@ -495,23 +502,23 @@ private fun DrawerHeader(
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "New folder",
+                text = newFolderLabel,
                 style = MaterialTheme.typography.labelMedium,
                 color = if (newFolderHovered) colors.accent else colors.accent,
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
                     .dropTarget(targetId = "newfolder", controller = dragController)
                     .background(if (newFolderHovered) colors.accent.copy(alpha = 0.18f) else androidx.compose.ui.graphics.Color.Transparent)
-                    .clickable(onClick = onNewFolder)
+                    .clickable(role = Role.Button, onClickLabel = newFolderLabel, onClick = onNewFolder)
                     .padding(horizontal = Spacing.md, vertical = Spacing.xs),
             )
             Text(
-                text = "Icon pack",
+                text = iconPackLabel,
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.textBody,
                 modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
-                    .clickable(onClick = onOpenIconPack)
+                    .clickable(role = Role.Button, onClickLabel = iconPackLabel, onClick = onOpenIconPack)
                     .padding(horizontal = Spacing.md, vertical = Spacing.xs),
             )
         }
@@ -530,6 +537,8 @@ private fun DrawerSearchPill(
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
+    val searchHint = stringResource(R.string.drawer_search_hint)
+    val searchA11y = stringResource(R.string.search_apps)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -555,11 +564,11 @@ private fun DrawerSearchPill(
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = ImeAction.Search),
             modifier = Modifier
                 .weight(1f)
-                .semantics { contentDescription = "Search apps" },
+                .semantics { contentDescription = searchA11y },
             decorationBox = { inner ->
                 if (query.isEmpty()) {
                     Text(
-                        text = "Search for apps",
+                        text = searchHint,
                         style = MaterialTheme.typography.bodyLarge,
                         color = colors.textBody,
                     )
@@ -590,6 +599,7 @@ private fun CategoryNav(
     tabListState: androidx.compose.foundation.lazy.LazyListState,
 ) {
     val colors = MaterialTheme.softColors
+    val categoriesA11y = stringResource(R.string.drawer_categories_a11y)
     val selectedIndex = categories.indexOf(selected).coerceAtLeast(0)
     // Follow the selection: scroll the active tab into view.
     androidx.compose.runtime.LaunchedEffect(selectedIndex) {
@@ -599,7 +609,7 @@ private fun CategoryNav(
         state = tabListState,
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Categories" },
+            .semantics { contentDescription = categoriesA11y },
         horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -615,14 +625,21 @@ private fun CategoryNav(
                     color = if (active) colors.textPrimary else colors.textMuted,
                     maxLines = 1,
                     softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
+                        .minimumInteractiveComponentSize()
                         .clip(RoundedCornerShape(8.dp))
                         .warmPress(interactionSource)
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null,
+                            role = Role.Tab,
                             onClick = { onSelect(category) },
                         )
+                        .semantics {
+                            contentDescription = category.label
+                            this.selected = active
+                        }
                         .padding(vertical = Spacing.xs)
                         .testTag("drawer_tab_${category.name}"),
                 )
@@ -826,11 +843,12 @@ private fun AlphabetRail(
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
+    val railA11y = stringResource(R.string.drawer_alphabet_a11y)
     Column(
         modifier = modifier
             .width(Dimens.alphabetRailWidth)
             .testTag("drawer_alphabet_rail")
-            .semantics { contentDescription = "Alphabet index" },
+            .semantics { contentDescription = railA11y },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -840,8 +858,13 @@ private fun AlphabetRail(
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.indexLetter,
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(RoundedCornerShape(6.dp))
-                    .clickable { onLetter(letter) }
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = stringResource(R.string.drawer_jump_to_letter, letter.toString()),
+                        onClick = { onLetter(letter) },
+                    )
                     .padding(horizontal = 4.dp, vertical = 3.dp),
             )
         }
