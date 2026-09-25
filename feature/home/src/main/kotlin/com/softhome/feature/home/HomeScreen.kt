@@ -94,6 +94,7 @@ import com.softhome.core.model.AppInfo
 import com.softhome.core.model.RailConfigLogic
 import com.softhome.core.model.RailItemId
 import com.softhome.core.model.RailShortcutId
+import com.softhome.core.model.ThemeMode
 import com.softhome.feature.iconpack.data.IconPackDrawableLoader
 import com.softhome.feature.iconpack.ui.DrawerAppIcon
 import java.text.SimpleDateFormat
@@ -122,12 +123,18 @@ fun HomeScreen(
     onOpenDrawer: () -> Unit,
     onVoiceSearch: () -> Unit,
     modifier: Modifier = Modifier,
-    state: HomeUiState = HomeUiState(),
+    appsState: AppsUiState = AppsUiState(),
+    prefsState: PrefsUiState = PrefsUiState(),
+    notesState: NotesUiState = NotesUiState(),
+    railState: RailUiState = RailUiState(),
+    deviceStatusState: DeviceStatusUiState = DeviceStatusUiState(),
+    homeRowsState: HomeRowsUiState = HomeRowsUiState(),
     onNotesChange: (String) -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onReorderRow: (HomeRowKind, Int) -> Unit = { _, _ -> },
     onReorderRail: (String, Int) -> Unit = { _, _ -> },
     onLaunchApp: (AppInfo) -> Unit = {},
+    onSetThemeMode: (ThemeMode) -> Unit = {},
     /** Loader used to mirror the All Apps icon-pack artwork in the right rail. */
     drawerDrawableLoader: IconPackDrawableLoader? = null,
     /**
@@ -176,7 +183,7 @@ fun HomeScreen(
     // the floating preview layer (which is a child of that same Box).
     var surfaceOriginInWindow by remember { mutableStateOf(Offset.Zero) }
 
-    val rows = state.visibleRows
+    val rows = homeRowsState.visibleRows
     // While dragging a row: which index it would drop into (null = cancel).
     val dropIndex: Int? = if (dragState.isDragging && dragState.draggingId?.startsWith("row:") == true) {
         nearestRowIndex(dragState.pointerWindowPx.y, rowBoundsByIndex, rows.size)
@@ -235,7 +242,10 @@ fun HomeScreen(
                         kind = kind,
                         time = time,
                         date = date,
-                        state = state,
+                        appsState = appsState,
+                        prefsState = prefsState,
+                        notesState = notesState,
+                        deviceStatusState = deviceStatusState,
                         homeState = homeState,
                         weather = weather,
                         reducedMotion = reducedMotion,
@@ -283,12 +293,14 @@ fun HomeScreen(
                 onShortcut = onShortcut,
                 onOpenSettings = onOpenSettings,
                 expanded = homeState.isSearching,
-                railItems = state.railItems,
-                railApps = state.railApps,
-                activePack = state.activePack,
+                railItems = railState.railItems,
+                railApps = appsState.railApps,
+                activePack = prefsState.activePack,
                 drawableLoader = drawerDrawableLoader,
                 onReorder = onReorderRail,
                 onLaunchApp = onLaunchApp,
+                themeMode = prefsState.themeMode,
+                onThemeChange = { onSetThemeMode(it) },
             )
         }
 
@@ -338,7 +350,10 @@ private fun HomeRowSlot(
     kind: HomeRowKind,
     time: String,
     date: HomeDate,
-    state: HomeUiState,
+    appsState: AppsUiState,
+    prefsState: PrefsUiState,
+    notesState: NotesUiState,
+    deviceStatusState: DeviceStatusUiState,
     homeState: HomeState,
     weather: WeatherUiState,
     reducedMotion: Boolean,
@@ -366,12 +381,12 @@ private fun HomeRowSlot(
                 events = emptyList(),
             )
             HomeRowKind.BatteryStorage -> BatteryStorageRowContent(
-                batteryPercent = state.deviceStatus.batteryPercent,
-                storageUsedPercent = state.deviceStatus.storageUsedPercent,
-                storageFreeLabel = state.deviceStatus.storageFreeBytes?.let(::formatBytes),
+                batteryPercent = deviceStatusState.deviceStatus.batteryPercent,
+                storageUsedPercent = deviceStatusState.deviceStatus.storageUsedPercent,
+                storageFreeLabel = deviceStatusState.deviceStatus.storageFreeBytes?.let(::formatBytes),
             )
             HomeRowKind.Notes -> NotesRow(
-                text = state.notes,
+                text = notesState.notes,
                 expanded = homeState.isNotesOpen,
                 onTextChange = onNotesChange,
                 onLongClick = { onTapRow(HomeRowId.Notes) },
@@ -619,6 +634,8 @@ private fun HomeRightRail(
     drawableLoader: IconPackDrawableLoader?,
     onReorder: (String, Int) -> Unit,
     onLaunchApp: (AppInfo) -> Unit,
+    themeMode: ThemeMode = ThemeMode.System,
+    onThemeChange: (ThemeMode) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.softColors
@@ -674,7 +691,19 @@ private fun HomeRightRail(
                     verticalArrangement = Arrangement.spacedBy(Spacing.railGap),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    ordered.forEachIndexed { index, item ->
+                    // Theme toggle at the very top
+                    ThemeToggleButton(
+                        currentMode = themeMode,
+                        onThemeChange = onThemeChange,
+                        modifier = Modifier.offset(y = slide),
+                    )
+                    
+                    // Filter out Sparkles (theme toggle) from the rail items
+                    val itemsWithoutSparkles = ordered.filterNot { item ->
+                        (item as? RailItemId.System)?.shortcut == com.softhome.core.model.RailShortcutId.Sparkles
+                    }
+                    
+                    itemsWithoutSparkles.forEachIndexed { index, item ->
                         androidx.compose.runtime.key(item.storageId) {
                             val sourceIndex = ordered.indexOf(item)
                             val shortcut = (item as? RailItemId.System)?.shortcut

@@ -11,8 +11,12 @@ import com.softhome.core.designsystem.theme.SoftHomeTheme
 import com.softhome.core.model.DeviceStatusSnapshot
 import com.softhome.core.model.HomeRowKind
 import com.softhome.core.model.HomeRowLogic
-import com.softhome.feature.home.HomeScreen
-import com.softhome.feature.home.HomeUiState
+import com.softhome.feature.home.AppsUiState
+import com.softhome.feature.home.PrefsUiState
+import com.softhome.feature.home.NotesUiState
+import com.softhome.feature.home.RailUiState
+import com.softhome.feature.home.DeviceStatusUiState
+import com.softhome.feature.home.HomeRowsUiState
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -27,9 +31,25 @@ class HomeScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private fun setHome(state: HomeUiState = HomeUiState()) = composeRule.setContent {
+    private fun setHome(
+        appsState: AppsUiState = AppsUiState(),
+        prefsState: PrefsUiState = PrefsUiState(),
+        notesState: NotesUiState = NotesUiState(),
+        railState: RailUiState = RailUiState(),
+        deviceStatusState: DeviceStatusUiState = DeviceStatusUiState(),
+        homeRowsState: HomeRowsUiState = HomeRowsUiState(),
+    ) = composeRule.setContent {
         SoftHomeTheme {
-            HomeScreen(onOpenDrawer = {}, onVoiceSearch = {}, state = state)
+            HomeScreen(
+                onOpenDrawer = {},
+                onVoiceSearch = {},
+                appsState = appsState,
+                prefsState = prefsState,
+                notesState = notesState,
+                railState = railState,
+                deviceStatusState = deviceStatusState,
+                homeRowsState = homeRowsState,
+            )
         }
     }
 
@@ -62,17 +82,17 @@ class HomeScreenTest {
 
     @Test
     fun shows_calendar_row_with_no_events() {
-        setHome(HomeUiState(homeRows = allRowsVisible()))
+        setHome(homeRowsState = HomeRowsUiState(homeRows = allRowsVisible()))
         composeRule.onNodeWithText("No upcoming events").assertExists()
     }
 
     @Test
     fun shows_battery_row_with_real_values() {
         setHome(
-            HomeUiState(
-                homeRows = allRowsVisible(),
+            deviceStatusState = DeviceStatusUiState(
                 deviceStatus = DeviceStatusSnapshot(batteryPercent = 42, storageUsedFraction = 0.5f),
             ),
+            homeRowsState = HomeRowsUiState(homeRows = allRowsVisible()),
         )
         composeRule.onNodeWithText("Battery").assertExists()
         composeRule.onNodeWithText("42%").assertExists()
@@ -80,7 +100,10 @@ class HomeScreenTest {
 
     @Test
     fun shows_notes_row_collapsed_with_preview() {
-        setHome(HomeUiState(homeRows = allRowsVisible(), notes = "remember the milk"))
+        setHome(
+            notesState = NotesUiState(notes = "remember the milk"),
+            homeRowsState = HomeRowsUiState(homeRows = allRowsVisible()),
+        )
         composeRule.onNodeWithContentDescription("Quick notes").assertExists()
         composeRule.onNodeWithText("remember the milk").assertExists()
     }
@@ -109,7 +132,12 @@ class HomeScreenTest {
                 HomeScreen(
                     onOpenDrawer = {},
                     onVoiceSearch = {},
-                    state = HomeUiState(),
+                    appsState = AppsUiState(),
+                    prefsState = PrefsUiState(),
+                    notesState = NotesUiState(),
+                    railState = RailUiState(),
+                    deviceStatusState = DeviceStatusUiState(),
+                    homeRowsState = HomeRowsUiState(),
                     onLaunchRow = { launched = true },
                 )
             }
@@ -128,7 +156,12 @@ class HomeScreenTest {
                 HomeScreen(
                     onOpenDrawer = {},
                     onVoiceSearch = {},
-                    state = HomeUiState(),
+                    appsState = AppsUiState(),
+                    prefsState = PrefsUiState(),
+                    notesState = NotesUiState(),
+                    railState = RailUiState(),
+                    deviceStatusState = DeviceStatusUiState(),
+                    homeRowsState = HomeRowsUiState(),
                     onLaunchRow = { },
                 )
             }
@@ -146,7 +179,12 @@ class HomeScreenTest {
                 HomeScreen(
                     onOpenDrawer = {},
                     onVoiceSearch = {},
-                    state = HomeUiState(),
+                    appsState = AppsUiState(),
+                    prefsState = PrefsUiState(),
+                    notesState = NotesUiState(),
+                    railState = RailUiState(),
+                    deviceStatusState = DeviceStatusUiState(),
+                    homeRowsState = HomeRowsUiState(),
                     onOpenSettings = { opened = true },
                 )
             }
@@ -159,7 +197,16 @@ class HomeScreenTest {
     fun long_pressing_a_rail_icon_opens_the_context_menu() {
         composeRule.setContent {
             SoftHomeTheme {
-                HomeScreen(onOpenDrawer = {}, onVoiceSearch = {}, state = HomeUiState())
+                HomeScreen(
+                    onOpenDrawer = {},
+                    onVoiceSearch = {},
+                    appsState = AppsUiState(),
+                    prefsState = PrefsUiState(),
+                    notesState = NotesUiState(),
+                    railState = RailUiState(),
+                    deviceStatusState = DeviceStatusUiState(),
+                    homeRowsState = HomeRowsUiState(),
+                )
             }
         }
         composeRule.onNodeWithContentDescription("Settings").performTouchInput { longClick() }
@@ -174,7 +221,7 @@ class HomeScreenTest {
         // Search is visible by default; toggling it off hides the row, while another
         // kept row (weather) still renders.
         val rows = HomeRowLogic.toggle(HomeRowLogic.default(), HomeRowKind.Search)
-        setHome(HomeUiState(homeRows = rows))
+        setHome(homeRowsState = HomeRowsUiState(homeRows = rows))
         composeRule.onNodeWithText("f i n d  s o m e t h i n g").assertDoesNotExist()
         composeRule.onNodeWithText("Current 8\u00B0C").assertExists()
     }
@@ -186,7 +233,7 @@ class HomeScreenTest {
         HomeRowLogic.DEFAULT_ORDER.filter { HomeRowLogic.canHide(it) }.forEach { kind ->
             if (rows.first { it.kind == kind }.visible) rows = HomeRowLogic.toggle(rows, kind)
         }
-        setHome(HomeUiState(homeRows = rows))
+        setHome(homeRowsState = HomeRowsUiState(homeRows = rows))
         // Weather (locked) still renders; search (hidden) does not.
         composeRule.onNodeWithText("Current 8\u00B0C").assertExists()
         composeRule.onNodeWithText("f i n d  s o m e t h i n g").assertDoesNotExist()

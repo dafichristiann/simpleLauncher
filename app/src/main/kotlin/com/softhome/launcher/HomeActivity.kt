@@ -95,10 +95,16 @@ class HomeActivity : ComponentActivity() {
 @Composable
 private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
     var drawerOpen by remember { mutableStateOf(false) }
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val appsState by viewModel.appsState.collectAsStateWithLifecycle()
+    val prefsState by viewModel.prefsState.collectAsStateWithLifecycle()
+    val notesState by viewModel.notesState.collectAsStateWithLifecycle()
+    val railState by viewModel.railState.collectAsStateWithLifecycle()
+    val deviceStatusState by viewModel.deviceStatusState.collectAsStateWithLifecycle()
+    val homeRowsState by viewModel.homeRowsState.collectAsStateWithLifecycle()
+    
     val systemDark = isSystemInDarkTheme()
     // P3 (G): the app theme follows ThemeMode from settings (Light/Dark/System).
-    val darkTheme = when (state.themeMode) {
+    val darkTheme = when (prefsState.themeMode) {
         ThemeMode.Light -> false
         ThemeMode.Dark -> true
         ThemeMode.System -> systemDark
@@ -162,12 +168,18 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
                 HomeScreen(
                     onOpenDrawer = { drawerOpen = true },
                     onVoiceSearch = { /* STUB - wire real voice search later */ },
-                    state = state,
+                    appsState = appsState,
+                    prefsState = prefsState,
+                    notesState = notesState,
+                    railState = railState,
+                    deviceStatusState = deviceStatusState,
+                    homeRowsState = homeRowsState,
                     onNotesChange = viewModel::setNotes,
                     onOpenSettings = { context.startActivity(SettingsIntents.settings(context)) },
                     onReorderRow = viewModel::reorderHomeRow,
                     onReorderRail = viewModel::reorderRail,
                     onLaunchApp = viewModel::launchApp,
+                    onSetThemeMode = viewModel::setThemeMode,
                     drawerDrawableLoader = viewModel.drawableLoader,
                 )
             }

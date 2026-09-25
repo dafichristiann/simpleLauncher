@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,32 +51,54 @@ data class AppIconUi(
 )
 
 @Stable
-data class HomeUiState(
+data class AppsUiState(
     val apps: List<AppIconUi> = emptyList(),
-    val grid: GridConfig = GridConfig.Default,
     val loading: Boolean = true,
+    val railApps: Map<String, AppIconUi> = emptyMap(),
+)
+
+@Stable
+data class PrefsUiState(
+    val grid: GridConfig = GridConfig.Default,
+    val spacing: SpacingScale = SpacingScale.Normal,
+    val themeMode: ThemeMode = ThemeMode.System,
     val activePack: IconPack? = null,
     val activePackName: String? = null,
-    /** P2 / E5: persisted quick-notes body. */
+)
+
+@Stable
+data class NotesUiState(
     val notes: String = "",
-    /** P2 / E4: real device status (battery + storage). */
-    val deviceStatus: DeviceStatusSnapshot = DeviceStatusSnapshot.EMPTY,
-    /** P3 (G/Widgets): which home rows show and in what order. */
-    val homeRows: List<HomeRowPref> = HomeRowLogic.default(),
-    /** P3 (G/Appearance): drawer + row spacing preset (Q3). */
-    val spacing: SpacingScale = SpacingScale.Normal,
-    /** P3 (G/Appearance): theme mode (Light/Dark/System). */
-    val themeMode: ThemeMode = ThemeMode.System,
-    /** P7: persisted right-rail order as stable shortcut names. */
+)
+
+@Stable
+data class RailUiState(
     val railOrder: List<String> = RailOrderLogic.DEFAULT,
-    /** Unified rail IDs; this is the canonical view consumed by the rail. */
     val railItems: List<com.softhome.core.model.RailItemId> = RailConfigLogic.DEFAULT_ITEMS,
-    /** Installed app icons indexed by stable component key for rail resolution. */
-    val railApps: Map<String, AppIconUi> = emptyMap(),
+)
+
+@Stable
+data class DeviceStatusUiState(
+    val deviceStatus: DeviceStatusSnapshot = DeviceStatusSnapshot.EMPTY,
+)
+
+@Stable
+data class HomeRowsUiState(
+    val homeRows: List<HomeRowPref> = HomeRowLogic.default(),
 ) {
     /** Rows the home should render, in order (locked rows always included). */
     val visibleRows: List<HomeRowKind> get() = HomeRowLogic.visibleInOrder(homeRows)
 }
+
+@Stable
+data class HomeUiState(
+    val apps: AppsUiState = AppsUiState(),
+    val prefs: PrefsUiState = PrefsUiState(),
+    val notes: NotesUiState = NotesUiState(),
+    val rail: RailUiState = RailUiState(),
+    val deviceStatus: DeviceStatusUiState = DeviceStatusUiState(),
+    val homeRows: HomeRowsUiState = HomeRowsUiState(),
+)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -93,48 +116,111 @@ class HomeViewModel @Inject constructor(
     private val loadingFlow = MutableStateFlow(true)
     private val deviceStatusFlow = MutableStateFlow(DeviceStatusSnapshot.EMPTY)
 
-    private data class Core(
-        val apps: List<AppInfo>,
-        val prefs: LauncherPrefs,
-        val loading: Boolean,
-        val pack: IconPack?,
+    // SPLIT FLOW 1: Apps (only recomposes Home grid + Rail)
+    val appsState: StateFlow<AppsUiState> = combine(
+        appsFlow, loadingFlow, iconPackRepository.activePack, prefsRepository.prefs
+    ) { apps, loading, pack, prefs ->
+        val drawerAssignments = drawerAssignments(apps, prefs)
+        val appIcons = apps.associate { app ->
+            app.componentKey to toUi(
+                app = app,
+                prefs = prefs,
+                pack = pack,
+                drawerAssignment = drawerAssignments[app.componentKey],
+            )
+        }
+        AppsUiState(
+            apps = appIcons.values.toList(),
+            loading = loading,
+            railApps = appIcons,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = AppsUiState(),
     )
 
-    val uiState: StateFlow<HomeUiState> = combine(
-        appsFlow, prefsRepository.prefs, loadingFlow, iconPackRepository.activePack,
-    ) { apps, prefs, loading, pack -> Core(apps, prefs, loading, pack) }
-        .combine(notesRepository.notes) { core, notes -> core to notes }
-        .combine(deviceStatusFlow) { (core, notes), status ->
-            val drawerAssignments = drawerAssignments(core.apps, core.prefs)
-            val appIcons = core.apps.associate { app ->
-                app.componentKey to toUi(
-                    app = app,
-                    prefs = core.prefs,
-                    pack = core.pack,
-                    drawerAssignment = drawerAssignments[app.componentKey],
-                )
-            }
-            HomeUiState(
-                apps = appIcons.values.toList(),
-                grid = core.prefs.grid,
-                loading = core.loading,
-                activePack = core.pack,
-                activePackName = core.pack?.name,
-                notes = notes.body,
-                deviceStatus = status,
-                homeRows = core.prefs.homeRows,
-                spacing = core.prefs.spacing,
-                themeMode = core.prefs.darkTheme,
-                railOrder = core.prefs.railOrder,
-                railItems = RailConfigLogic.sanitize(core.prefs.railItems),
-                railApps = appIcons,
+    // SPLIT FLOW 2: Prefs (only recomposes Settings panels + Theme)
+    val prefsState: StateFlow<PrefsUiState> = combine(
+        prefsRepository.prefs, iconPackRepository.activePack
+    ) { prefs, pack ->
+        PrefsUiState(
+            grid = prefs.grid,
+            spacing = prefs.spacing,
+            themeMode = prefs.darkTheme,
+            activePack = pack,
+            activePackName = pack?.name,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = PrefsUiState(),
+    )
+
+    // SPLIT FLOW 3: Notes (only recomposes Notes row)
+    val notesState: StateFlow<NotesUiState> = notesRepository.notes
+        .map { notes -> NotesUiState(notes = notes.body) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = NotesUiState(),
+        )
+
+    // SPLIT FLOW 4: Rail (only recomposes Rail)
+    val railState: StateFlow<RailUiState> = prefsRepository.prefs
+        .map { prefs ->
+            RailUiState(
+                railOrder = prefs.railOrder,
+                railItems = RailConfigLogic.sanitize(prefs.railItems),
             )
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HomeUiState(),
+            initialValue = RailUiState(),
         )
+
+    // SPLIT FLOW 5: DeviceStatus (only recomposes Status row)
+    val deviceStatusState: StateFlow<DeviceStatusUiState> = deviceStatusFlow
+        .map { status -> DeviceStatusUiState(deviceStatus = status) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = DeviceStatusUiState(),
+        )
+
+    // SPLIT FLOW 6: HomeRows (only recomposes Row visibility)
+    val homeRowsState: StateFlow<HomeRowsUiState> = prefsRepository.prefs
+        .map { prefs -> HomeRowsUiState(homeRows = prefs.homeRows) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = HomeRowsUiState(),
+        )
+
+    // Unified state for backward compatibility (low-priority subscribers only)
+    val uiState: StateFlow<HomeUiState> = combine(
+        appsState,
+        prefsState,
+        notesState,
+        railState,
+        deviceStatusState,
+        homeRowsState,
+    ) { args: Array<*> ->
+        @Suppress("UNCHECKED_CAST")
+        HomeUiState(
+            apps = args[0] as AppsUiState,
+            prefs = args[1] as PrefsUiState,
+            notes = args[2] as NotesUiState,
+            rail = args[3] as RailUiState,
+            deviceStatus = args[4] as DeviceStatusUiState,
+            homeRows = args[5] as HomeRowsUiState,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HomeUiState(),
+    )
 
     init {
         refreshApps()
@@ -177,31 +263,31 @@ class HomeViewModel @Inject constructor(
 
     fun toggleHomeRow(kind: HomeRowKind) {
         viewModelScope.launch {
-            val current = uiState.value.homeRows
+            val current = homeRowsState.value.homeRows
             prefsRepository.setHomeRows(HomeRowLogic.toggle(current, kind))
         }
     }
 
     fun moveHomeRowUp(kind: HomeRowKind) {
         viewModelScope.launch {
-            prefsRepository.setHomeRows(HomeRowLogic.moveUp(uiState.value.homeRows, kind))
+            prefsRepository.setHomeRows(HomeRowLogic.moveUp(homeRowsState.value.homeRows, kind))
         }
     }
 
     fun moveHomeRowDown(kind: HomeRowKind) {
         viewModelScope.launch {
-            prefsRepository.setHomeRows(HomeRowLogic.moveDown(uiState.value.homeRows, kind))
+            prefsRepository.setHomeRows(HomeRowLogic.moveDown(homeRowsState.value.homeRows, kind))
         }
     }
 
     /**
-     * P4a: drag a home row to [targetIndex] (a position in the resulting list). Same
-     * persistence path as the up/down buttons; the resolution is the pure
-     * [HomeRowLogic.move] (see `HomeRowDropResolver`).
-     */
+      * P4a: drag a home row to [targetIndex] (a position in the resulting list). Same
+      * persistence path as the up/down buttons; the resolution is the pure
+      * [HomeRowLogic.move] (see `HomeRowDropResolver`).
+      */
     fun reorderHomeRow(kind: HomeRowKind, targetIndex: Int) {
-        val next = HomeRowDropResolver.reorder(uiState.value.homeRows, kind, targetIndex)
-        if (next != uiState.value.homeRows) {
+        val next = HomeRowDropResolver.reorder(homeRowsState.value.homeRows, kind, targetIndex)
+        if (next != homeRowsState.value.homeRows) {
             viewModelScope.launch { prefsRepository.setHomeRows(next) }
         }
     }
@@ -213,8 +299,8 @@ class HomeViewModel @Inject constructor(
                 .firstOrNull { it.name == shortcutName }
                 ?.let(com.softhome.core.model.RailItemId::System)
         if (item != null) {
-            val next = RailConfigLogic.move(uiState.value.railItems, item, targetIndex)
-            if (next != uiState.value.railItems) {
+            val next = RailConfigLogic.move(railState.value.railItems, item, targetIndex)
+            if (next != railState.value.railItems) {
                 viewModelScope.launch { prefsRepository.setRailItems(next) }
             }
         }
