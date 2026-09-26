@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
+import com.softhome.feature.iconpack.R
 
 /**
  * The icon-pack import sheet (P1.5). Deliberately a *quiet utility* surface: it reuses
@@ -62,13 +64,19 @@ fun IconPackImportSheet(
         verticalArrangement = Arrangement.spacedBy(Spacing.lg),
     ) {
         Text(
-            text = "Icon pack",
+            text = stringResource(R.string.iconpack_title),
             style = MaterialTheme.typography.headlineSmall,
             color = colors.textPrimary,
         )
         Text(
-            text = state.activePack?.let { "Using ${it.name} - ${it.iconCount} icons (${it.displaySource})" }
-                ?: "No pack applied. Every app is masked to the soft monochrome tile.",
+            text = state.activePack?.let {
+                stringResource(
+                    R.string.iconpack_using,
+                    it.name,
+                    it.iconCount,
+                    sourceLabel(it.sourceKind),
+                )
+            } ?: stringResource(R.string.iconpack_no_pack),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.textBody,
         )
@@ -93,17 +101,20 @@ fun IconPackImportSheet(
         }
 
         PrimaryAction(
-            label = "Import a .zip file",
+            label = stringResource(R.string.iconpack_import_zip),
             enabled = !state.importing,
             onClick = { pickZip.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
         )
 
         if (state.activePack != null) {
-            SecondaryAction(label = "Remove icon pack", onClick = { viewModel.clearPack(); onApplied() })
+            SecondaryAction(
+                label = stringResource(R.string.iconpack_remove_pack),
+                onClick = { viewModel.clearPack(); onApplied() },
+            )
         }
 
         Text(
-            text = "Pack apps on this device",
+            text = stringResource(R.string.iconpack_pack_apps_on_device),
             style = MaterialTheme.typography.titleSmall,
             color = colors.textPrimary,
             modifier = Modifier.padding(top = Spacing.sm),
@@ -111,13 +122,13 @@ fun IconPackImportSheet(
 
         if (state.scanning) {
             Text(
-                text = "Looking for installed packs...",
+                text = stringResource(R.string.iconpack_scanning),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textMuted,
             )
         } else if (state.installed.isEmpty()) {
             Text(
-                text = "No icon pack apps found. Import a .zip above, or install a pack from the store and reopen this sheet.",
+                text = stringResource(R.string.iconpack_none_found),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textMuted,
             )
@@ -145,7 +156,11 @@ fun IconPackImportSheet(
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            text = if (pack.appFilterLocation != null) "appfilter found" else "no appfilter",
+                            text = if (pack.appFilterLocation != null) {
+                                stringResource(R.string.iconpack_appfilter_found)
+                            } else {
+                                stringResource(R.string.iconpack_no_appfilter)
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.textMuted,
                         )
@@ -216,9 +231,25 @@ private fun SecondaryAction(label: String, onClick: () -> Unit) {
     )
 }
 
-private fun progressLabel(progress: com.softhome.feature.iconpack.data.ImportProgress): String = when (progress) {
-    is com.softhome.feature.iconpack.data.ImportProgress.Validating -> "Checking ${progress.fileName}..."
-    is com.softhome.feature.iconpack.data.ImportProgress.Indexing -> "Reading icons ${progress.current} of ${progress.total}"
-    is com.softhome.feature.iconpack.data.ImportProgress.Done -> "Imported ${progress.pack.name}"
-    is com.softhome.feature.iconpack.data.ImportProgress.Failed -> "Import failed: ${progress.reason}"
-}
+/** Localized "where the pack came from" label for the active-pack line. */
+@Composable
+private fun sourceLabel(kind: com.softhome.core.model.IconPack.SourceKind): String = stringResource(
+    when (kind) {
+        com.softhome.core.model.IconPack.SourceKind.Zip -> R.string.iconpack_source_zip
+        com.softhome.core.model.IconPack.SourceKind.Installed -> R.string.iconpack_source_installed
+        com.softhome.core.model.IconPack.SourceKind.Assets -> R.string.iconpack_source_assets
+    },
+)
+
+@Composable
+private fun progressLabel(progress: com.softhome.feature.iconpack.data.ImportProgress): String =
+    when (progress) {
+        is com.softhome.feature.iconpack.data.ImportProgress.Validating ->
+            stringResource(R.string.iconpack_progress_checking, progress.fileName)
+        is com.softhome.feature.iconpack.data.ImportProgress.Indexing ->
+            stringResource(R.string.iconpack_progress_reading, progress.current, progress.total)
+        is com.softhome.feature.iconpack.data.ImportProgress.Done ->
+            stringResource(R.string.iconpack_progress_imported, progress.pack.name)
+        is com.softhome.feature.iconpack.data.ImportProgress.Failed ->
+            stringResource(R.string.iconpack_progress_failed, progress.reason)
+    }

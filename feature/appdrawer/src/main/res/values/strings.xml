@@ -17,6 +17,18 @@
     <string name="drawer_folder_close">Close</string>
     <string name="folder_default_name">New folder</string>
 
+    <!-- Drawer category tab labels -->
+    <string name="drawer_category_all">All</string>
+    <string name="drawer_category_communication">Communication</string>
+    <string name="drawer_category_social_entertainment">Social &amp; Entertainment</string>
+    <string name="drawer_category_productivity_tools">Productivity &amp; Tools</string>
+    <string name="drawer_category_browser_search">Browser &amp; Search</string>
+    <string name="drawer_category_camera_media">Camera &amp; Media</string>
+    <string name="drawer_category_maps_travel">Maps &amp; Travel</string>
+    <string name="drawer_category_finance_shopping">Finance &amp; Shopping</string>
+    <string name="drawer_category_food_lifestyle">Food &amp; Lifestyle</string>
+    <string name="drawer_category_other">Other</string>
+
     <!-- App long-press menu (order matters; see DrawerMenuLabelsTest) -->
     <string name="drawer_menu_open">Open</string>
     <string name="drawer_menu_app_info">App Info</string>

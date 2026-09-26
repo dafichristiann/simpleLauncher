@@ -629,10 +629,11 @@ private fun CategoryNav(
         items(categories.size) { i ->
             val category = categories[i]
             val active = category == selected
+            val categoryLabel = categoryLabel(category)
             val interactionSource = remember(category) { MutableInteractionSource() }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = category.label,
+                    text = categoryLabel,
                     style = if (active) MaterialTheme.typography.bodyLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     else MaterialTheme.typography.bodyMedium,
                     color = if (active) colors.textPrimary else colors.textMuted,
@@ -650,7 +651,7 @@ private fun CategoryNav(
                             onClick = { onSelect(category) },
                         )
                         .semantics {
-                            contentDescription = category.label
+                            contentDescription = categoryLabel
                             this.selected = active
                         }
                         .padding(vertical = Spacing.xs)
@@ -1049,3 +1050,20 @@ internal object DrawerMenuLabels {
     @androidx.annotation.StringRes val SHORTCUTS = R.string.drawer_menu_shortcuts
     val ALL = listOf(OPEN, APP_INFO, EDIT_ICON, REMOVE, UNINSTALL, SHORTCUTS)
 }
+
+/** Localized category tab label for [DrawerCategory]. */
+@Composable
+internal fun categoryLabel(category: DrawerCategory): String = stringResource(
+    when (category) {
+        DrawerCategory.All -> R.string.drawer_category_all
+        DrawerCategory.Communication -> R.string.drawer_category_communication
+        DrawerCategory.SocialEntertainment -> R.string.drawer_category_social_entertainment
+        DrawerCategory.ProductivityTools -> R.string.drawer_category_productivity_tools
+        DrawerCategory.BrowserSearch -> R.string.drawer_category_browser_search
+        DrawerCategory.CameraMedia -> R.string.drawer_category_camera_media
+        DrawerCategory.MapsTravel -> R.string.drawer_category_maps_travel
+        DrawerCategory.FinanceShopping -> R.string.drawer_category_finance_shopping
+        DrawerCategory.FoodLifestyle -> R.string.drawer_category_food_lifestyle
+        DrawerCategory.Other -> R.string.drawer_category_other
+    },
+)

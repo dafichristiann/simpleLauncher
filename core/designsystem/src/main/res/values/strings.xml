@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home widget rows (calendar / battery-storage / notes) -->
+    <string name="widget_calendar_no_events">No upcoming events</string>
+    <string name="widget_battery_label">Battery</string>
+    <string name="widget_battery_percent_placeholder">--</string>
+    <string name="widget_storage_line">Storage %1$d%%</string>
+    <string name="widget_storage_free">Storage %1$d%% · %2$s free</string>
+    <string name="widget_notes_title">Quick notes</string>
+    <string name="widget_notes_empty">Nothing yet</string>
+    <string name="widget_notes_editor_a11y">Notes editor</string>
+    <string name="widget_notes_hint">Write something…</string>
+
+    <!-- Long-press menu affordance -->
+    <string name="atom_options_a11y">Options</string>
+    <string name="atom_move_up_a11y">Move up</string>
+    <string name="atom_move_down_a11y">Move down</string>
+    <string name="atom_toggle_on">On</string>
+    <string name="atom_toggle_off">Off</string>
+
+    <!-- Folder tile -->
+    <string name="folder_tile_a11y">Folder %1$s</string>
+    <string name="folder_title_a11y">Folder title</string>
+</resources>

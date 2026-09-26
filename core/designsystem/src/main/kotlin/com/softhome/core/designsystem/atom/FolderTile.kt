@@ -16,12 +16,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.softhome.core.designsystem.R
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
@@ -43,6 +45,7 @@ fun FolderTile(
     miniIcons: @Composable () -> Unit,
 ) {
     val colors = MaterialTheme.softColors
+    val folderA11y = stringResource(R.string.folder_tile_a11y, name)
     val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     Column(
         modifier = modifier
@@ -62,7 +65,7 @@ fun FolderTile(
                     Modifier
                 },
             )
-            .semantics { contentDescription = "Folder $name" },
+            .semantics { contentDescription = folderA11y },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
@@ -102,13 +105,14 @@ fun FolderPopupBody(
     appGrid: @Composable () -> Unit,
 ) {
     val colors = MaterialTheme.softColors
+    val folderA11y = stringResource(R.string.folder_tile_a11y, title)
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Dimens.folderPopupRadius))
             .background(colors.card)
             .padding(Spacing.xxl)
-            .semantics { contentDescription = "Folder $title" },
+            .semantics { contentDescription = folderA11y },
         verticalArrangement = Arrangement.spacedBy(Spacing.xl),
     ) {
         if (onTitleChange != null) {
@@ -129,6 +133,7 @@ fun FolderPopupBody(
 @Composable
 private fun BasicFolderTitle(title: String, onTitleChange: (String) -> Unit) {
     val colors = MaterialTheme.softColors
+    val titleA11y = stringResource(R.string.folder_title_a11y)
     androidx.compose.foundation.text.BasicTextField(
         value = title,
         onValueChange = onTitleChange,
@@ -137,7 +142,7 @@ private fun BasicFolderTitle(title: String, onTitleChange: (String) -> Unit) {
         cursorBrush = androidx.compose.ui.graphics.SolidColor(colors.accent),
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Folder title" },
+            .semantics { contentDescription = titleA11y },
         decorationBox = { inner -> inner() },
     )
 }

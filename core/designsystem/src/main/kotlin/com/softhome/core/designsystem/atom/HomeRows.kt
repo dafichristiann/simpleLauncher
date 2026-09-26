@@ -35,10 +35,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.softhome.core.designsystem.R
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.RowDisplay
 import com.softhome.core.designsystem.theme.Spacing
@@ -144,6 +146,7 @@ fun RailIcon(
 ) {
     val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
+    val optionsLabel = stringResource(R.string.atom_options_a11y)
     Box(
         modifier = modifier
             .size(Dimens.railTouchTarget)
@@ -158,7 +161,7 @@ fun RailIcon(
                             role = Role.Button,
                             onClickLabel = contentDescription,
                             onClick = { onClick?.invoke() },
-                            onLongClickLabel = "Options",
+                            onLongClickLabel = optionsLabel,
                             onLongClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onLongClick?.invoke()

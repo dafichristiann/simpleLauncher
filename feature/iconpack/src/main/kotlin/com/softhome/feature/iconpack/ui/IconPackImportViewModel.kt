@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.softhome.core.model.DiscoveredIconPack
 import com.softhome.core.model.IconPack
 import com.softhome.core.model.IconPackParseResult
+import com.softhome.feature.iconpack.R
 import com.softhome.feature.iconpack.data.IconPackRepository
 import com.softhome.feature.iconpack.data.ImportProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -66,7 +67,9 @@ class IconPackImportViewModel @Inject constructor(
                 null
             }
             if (stream == null) {
-                _state.value = _state.value.copy(message = "Could not open that file.")
+                _state.value = _state.value.copy(
+                    message = context.getString(R.string.iconpack_msg_open_failed),
+                )
                 return@launch
             }
             repository.importZipStream(stream, name).collect { emitProgress(it) }
@@ -75,15 +78,31 @@ class IconPackImportViewModel @Inject constructor(
 
     fun applyInstalled(pack: DiscoveredIconPack) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(message = "Reading ${pack.label}...")
+            _state.value = _state.value.copy(
+                message = context.getString(R.string.iconpack_msg_reading, pack.label),
+            )
             val result = repository.applyInstalled(pack)
             _state.value = when (result) {
                 is IconPackParseResult.Success ->
-                    _state.value.copy(message = "Applied ${result.pack.name} (${result.pack.iconCount} icons)")
+                    _state.value.copy(
+                        message = context.getString(
+                            R.string.iconpack_msg_applied,
+                            result.pack.name,
+                            result.pack.iconCount,
+                        ),
+                    )
                 is IconPackParseResult.NoAppFilter ->
-                    _state.value.copy(message = "${pack.label} has no appfilter; icons will be masked.")
+                    _state.value.copy(
+                        message = context.getString(R.string.iconpack_msg_no_appfilter, pack.label),
+                    )
                 is IconPackParseResult.Invalid ->
-                    _state.value.copy(message = "Could not read ${pack.label}: ${result.reason}")
+                    _state.value.copy(
+                        message = context.getString(
+                            R.string.iconpack_msg_read_failed,
+                            pack.label,
+                            result.reason,
+                        ),
+                    )
             }
         }
     }
@@ -91,7 +110,9 @@ class IconPackImportViewModel @Inject constructor(
     fun clearPack() {
         viewModelScope.launch {
             repository.clearActive()
-            _state.value = _state.value.copy(message = "Icon pack cleared. Icons are masked.")
+            _state.value = _state.value.copy(
+                message = context.getString(R.string.iconpack_msg_cleared),
+            )
         }
     }
 
@@ -103,9 +124,19 @@ class IconPackImportViewModel @Inject constructor(
         val current = _state.value
         _state.value = when (progress) {
             is ImportProgress.Done ->
-                current.copy(progress = progress, message = "Imported ${progress.pack.name} (${progress.pack.drawableCount} icons)")
+                current.copy(
+                    progress = progress,
+                    message = context.getString(
+                        R.string.iconpack_msg_imported,
+                        progress.pack.name,
+                        progress.pack.drawableCount,
+                    ),
+                )
             is ImportProgress.Failed ->
-                current.copy(progress = null, message = "Import failed: ${progress.reason}")
+                current.copy(
+                    progress = null,
+                    message = context.getString(R.string.iconpack_msg_import_failed, progress.reason),
+                )
             else -> current.copy(progress = progress)
         }
     }

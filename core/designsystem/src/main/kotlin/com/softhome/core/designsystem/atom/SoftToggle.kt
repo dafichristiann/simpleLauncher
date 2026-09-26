@@ -20,11 +20,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.softhome.core.designsystem.R
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.MotionTokens
 import com.softhome.core.designsystem.theme.ToggleShape
@@ -48,6 +50,8 @@ fun SoftToggle(
 ) {
     val colors = MaterialTheme.softColors
     val haptics = LocalHapticFeedback.current
+    val onLabel = stringResource(R.string.atom_toggle_on)
+    val offLabel = stringResource(R.string.atom_toggle_off)
 
     // Track: charcoal (on) / warm track grey (off); dimmed when disabled.
     val trackColor = if (checked) colors.tile else colors.progressTrack
@@ -92,7 +96,7 @@ fun SoftToggle(
             )
             .semantics {
                 if (contentDescription != null) this.contentDescription = contentDescription
-                stateDescription = if (checked) "On" else "Off"
+                stateDescription = if (checked) onLabel else offLabel
             },
         contentAlignment = Alignment.CenterStart,
     ) {

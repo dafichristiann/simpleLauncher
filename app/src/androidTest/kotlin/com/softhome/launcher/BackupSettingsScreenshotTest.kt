@@ -61,7 +61,7 @@ class BackupSettingsScreenshotTest {
             override suspend fun getInstalledApps(): List<com.softhome.core.model.AppInfo> = emptyList()
             override fun launchApp(app: com.softhome.core.model.AppInfo) = Unit
         }
-        val vm = SettingsViewModel(prefs, iconPack, appRepository, backup, folders, notes)
+        val vm = SettingsViewModel(prefs, iconPack, appRepository, backup, folders, notes, context)
 
         composeRule.setContent {
             SoftHomeTheme {

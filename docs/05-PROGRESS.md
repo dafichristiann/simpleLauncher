@@ -3,6 +3,17 @@
 > Living changelog. Updated at **every checkpoint** (start, end of each build step
 > group, and at each priority boundary). Newest entry on top.
 
+**Session 26: Audit Batch 2 — string localization (i18n) DONE (2026-09-26).** All user-facing
+UI strings were moved from Kotlin literals into per-module `strings.xml` and resolved with
+`stringResource(...)` / `context.getString(...)`. New `strings.xml` created for
+`core:designsystem` and `feature:iconpack`; expanded in `app`, `feature:home`,
+`feature:appdrawer`. ViewModels that build messages (`SettingsViewModel`, `AppDrawerViewModel`)
+gained `@ApplicationContext Context`; `DrawerMenuLabels` became `@StringRes` ids (its test now
+asserts the id order). `DrawerCategory.label` / `IconPack.displaySource` stay as model-level
+English fallbacks while the UI resolves localized equivalents. Build + JVM suites green
+(`--rerun-tasks`); the only red test is the **pre-existing** `IconPackPersistenceTest` Robolectric
+flake (verified identical on the pre-change HEAD). No behaviour change — text only. See D-065.
+
 **Session 25: Audit Batch 1 — functional gaps (QW1 live package monitoring + QW2 Home-press)
 DONE (2026-09-26).** Following a full technical + Nielsen audit (baseline ~3.0–3.4/5), the two
 highest-priority functional gaps were fixed and verified on a real Android runtime (emulator;

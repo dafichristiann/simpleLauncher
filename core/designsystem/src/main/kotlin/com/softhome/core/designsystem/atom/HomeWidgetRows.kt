@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.softhome.core.designsystem.R
 import com.softhome.core.designsystem.theme.ClockLarge
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.MotionTokens
@@ -80,7 +82,7 @@ fun CalendarRowContent(
             Text(text = month, style = TweakLabelLean, color = colors.textMuted)
             if (events.isEmpty()) {
                 Text(
-                    text = "No upcoming events",
+                    text = stringResource(R.string.widget_calendar_no_events),
                     style = TweakLabelLean,
                     color = colors.textMuted,
                     maxLines = 1,
@@ -130,13 +132,14 @@ fun BatteryStorageRowContent(
             )
             Spacer(Modifier.width(Spacing.md))
             Text(
-                text = "Battery",
+                text = stringResource(R.string.widget_battery_label),
                 style = RowDisplay,
                 color = colors.statusText,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = batteryPercent?.let { "$it%" } ?: "--",
+                text = batteryPercent?.let { "$it%" }
+                    ?: stringResource(R.string.widget_battery_percent_placeholder),
                 style = RowDisplay,
                 color = colors.textPrimary,
             )
@@ -154,11 +157,10 @@ fun BatteryStorageRowContent(
                 )
                 Spacer(Modifier.width(Spacing.sm))
                 Text(
-                    text = buildString {
-                        append("Storage ").append(storageUsedPercent).append("%")
-                        if (!storageFreeLabel.isNullOrBlank()) {
-                            append(" \u00B7 ").append(storageFreeLabel).append(" free")
-                        }
+                    text = if (storageFreeLabel.isNullOrBlank()) {
+                        stringResource(R.string.widget_storage_line, storageUsedPercent)
+                    } else {
+                        stringResource(R.string.widget_storage_free, storageUsedPercent, storageFreeLabel)
                     },
                     style = TweakLabelLean,
                     color = colors.textMuted,
@@ -183,9 +185,11 @@ fun NotesRowContent(
     onTextChange: (String) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Quick notes",
+    placeholder: String? = null,
 ) {
     val colors = MaterialTheme.softColors
+    val title = placeholder ?: stringResource(R.string.widget_notes_title)
+    val notesEditorA11y = stringResource(R.string.widget_notes_editor_a11y)
     val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
@@ -198,7 +202,7 @@ fun NotesRowContent(
                             interactionSource = interactionSource,
                             indication = null,
                             role = Role.Button,
-                            onClickLabel = placeholder,
+                            onClickLabel = title,
                             onClick = onClick,
                         )
                 } else {
@@ -217,7 +221,7 @@ fun NotesRowContent(
             )
             Spacer(Modifier.width(Spacing.md))
             Text(
-                text = placeholder,
+                text = title,
                 style = RowDisplay,
                 color = colors.statusText,
                 modifier = Modifier.weight(1f),
@@ -226,7 +230,8 @@ fun NotesRowContent(
 
         if (!expanded) {
             Text(
-                text = text.replace('\n', ' ').trim().ifBlank { "Nothing yet" },
+                text = text.replace('\n', ' ').trim()
+                    .ifBlank { stringResource(R.string.widget_notes_empty) },
                 style = TweakLabelLean,
                 color = colors.textMuted,
                 maxLines = 1,
@@ -239,7 +244,7 @@ fun NotesRowContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(96.dp)
-                    .semantics { contentDescription = "Notes editor" },
+                    .semantics { contentDescription = notesEditorA11y },
                 textStyle = TextStyle(
                     color = colors.textBody,
                     fontSize = 14.sp,
@@ -250,7 +255,7 @@ fun NotesRowContent(
                     Box {
                         if (text.isBlank()) {
                             Text(
-                                text = "Write something\u2026",
+                                text = stringResource(R.string.widget_notes_hint),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colors.textMuted,
                             )

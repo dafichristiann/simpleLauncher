@@ -22,10 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.softhome.core.designsystem.R
 import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
@@ -108,8 +110,18 @@ fun SettingsRow(
         // Inline reorder buttons (Q5): shown when requested, else nothing.
         if (onMoveUp != null || onMoveDown != null) {
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                ReorderButton(icon = LineIcon.ArrowUp, label = "Move up", enabled = enabled, onClick = onMoveUp)
-                ReorderButton(icon = LineIcon.ArrowDown, label = "Move down", enabled = enabled, onClick = onMoveDown)
+                ReorderButton(
+                    icon = LineIcon.ArrowUp,
+                    label = stringResource(R.string.atom_move_up_a11y),
+                    enabled = enabled,
+                    onClick = onMoveUp,
+                )
+                ReorderButton(
+                    icon = LineIcon.ArrowDown,
+                    label = stringResource(R.string.atom_move_down_a11y),
+                    enabled = enabled,
+                    onClick = onMoveDown,
+                )
             }
             Spacer(Modifier.width(Spacing.sm))
         }

@@ -5,6 +5,33 @@ Append-only.
 
 ---
 
+### D-065 - Audit Batch 2: user-facing string localization (all UI strings → resources)
+- **What:** Every user-visible string in the launcher UI is moved out of Kotlin literals into
+  per-module `res/values/strings.xml` and read with `stringResource(...)` / `context.getString(...)`:
+  - new `strings.xml` in `core:designsystem`, `feature:iconpack` (the module had none);
+    expanded ones in `app`, `feature:home`, `feature:appdrawer`.
+  - Composables now resolve text (labels, supporting text, content descriptions, menu rows,
+    progress labels, byte/percent/storage formats, weather fallback, theme-toggle a11y).
+  - ViewModels that produce messages got `@ApplicationContext Context` injected
+    (`SettingsViewModel`, `AppDrawerViewModel` already had it in `IconPackImportViewModel`).
+  - `DrawerMenuLabels` changed from English `const val`s to `@StringRes val`s; its test now
+    asserts the **resource ids** in order (no Context needed).
+  - `DrawerCategory` keeps its English `.label` (model-level, unit-tested + used by the dead
+    `DrawerPage.label`); the drawer UI uses a new `categoryLabel(category)` resource resolver.
+    `IconPack.displaySource` likewise stays as the model fallback; the import sheet resolves a
+    localized `sourceLabel(sourceKind)`.
+- **Why:** The audit found ~108 hardcoded user-facing strings; a launcher should be localizable
+  (and `strings.xml` is the Android norm). No behaviour change intended — text only.
+- **Impact:** Text output is unchanged in English; the app is now translation-ready. Build green;
+  `:core:model`, `:core:data`, `:core:designsystem`, `:feature:home`, `:feature:appdrawer` unit
+  suites pass with `--rerun-tasks`. Deep **data-layer** diagnostic reasons in `AppFilterParser`
+  / `IconPackImporter` were intentionally left as literals to keep those classes pure and
+  unit-testable off-device (they surface only inside the import sheet's failure detail).
+  The known pre-existing `IconPackPersistenceTest` Robolectric flake is unchanged (fails
+  identically on the pre-change HEAD, verified via `git stash`).
+
+---
+
 ### D-064 - Audit Batch 1: live package monitoring + Home-press returns to Home
 - **What:** Two functional gaps from the audit are closed.
   (1) **QW1** — `PackageEventMonitor` (`core:data/packages`) wraps

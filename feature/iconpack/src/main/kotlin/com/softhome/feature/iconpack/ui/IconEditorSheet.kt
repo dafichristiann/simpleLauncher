@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ import com.softhome.core.designsystem.theme.Spacing
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.DrawerIconTokenName
 import com.softhome.core.model.IconPack
+import com.softhome.feature.iconpack.R
 import com.softhome.feature.iconpack.data.IconPackDrawableLoader
 import com.softhome.feature.iconpack.domain.IconCompositor
 import com.softhome.feature.iconpack.domain.IconEditor
@@ -72,8 +74,13 @@ fun IconEditorSheet(
     val colors = MaterialTheme.softColors
     val glyphs = remember { LineIcon.entries.toList() }
     val tokens = remember { DrawerIconTokenName.entries.toList() }
+    val packDrawablesA11y = stringResource(R.string.iconeditor_pack_drawables_a11y)
+    val glyphChoicesA11y = stringResource(R.string.iconeditor_glyph_choices_a11y)
 
-    IconEditorCard(title = "Edit icon \u00B7 $appLabel", onDismiss = onDismiss) {
+    IconEditorCard(
+        title = stringResource(R.string.iconeditor_title, appLabel),
+        onDismiss = onDismiss,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -96,13 +103,13 @@ fun IconEditorSheet(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 ) {
                     ModeTab(
-                        label = "Pack icon",
+                        label = stringResource(R.string.iconeditor_tab_pack),
                         active = state.mode == IconEditor.Mode.Pack,
                         onClick = { onSelectMode(IconEditor.Mode.Pack) },
                         modifier = Modifier.weight(1f),
                     )
                     ModeTab(
-                        label = "Glyph",
+                        label = stringResource(R.string.iconeditor_tab_glyph),
                         active = state.mode == IconEditor.Mode.Glyph,
                         onClick = { onSelectMode(IconEditor.Mode.Glyph) },
                         modifier = Modifier.weight(1f),
@@ -112,10 +119,10 @@ fun IconEditorSheet(
 
             when (state.mode) {
                 IconEditor.Mode.Pack -> {
-                    EditorSectionLabel("Choose from the active pack")
+                    EditorSectionLabel(stringResource(R.string.iconeditor_choose_from_pack))
                     if (state.packDrawables.isEmpty()) {
                         Text(
-                            text = "This app has no pack artwork to choose from.",
+                            text = stringResource(R.string.iconeditor_no_artwork),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.textMuted,
                         )
@@ -125,7 +132,9 @@ fun IconEditorSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp)
-                                .semantics { contentDescription = "Pack drawables" },
+                                .semantics {
+                                    contentDescription = packDrawablesA11y
+                                },
                             verticalArrangement = Arrangement.spacedBy(Spacing.md),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                         ) {
@@ -143,13 +152,13 @@ fun IconEditorSheet(
                 }
 
                 IconEditor.Mode.Glyph -> {
-                    EditorSectionLabel("Choose a glyph")
+                    EditorSectionLabel(stringResource(R.string.iconeditor_choose_glyph))
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(6),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(184.dp)
-                            .semantics { contentDescription = "Glyph choices" },
+                            .semantics { contentDescription = glyphChoicesA11y },
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     ) {
@@ -164,7 +173,7 @@ fun IconEditorSheet(
                         }
                     }
 
-                    EditorSectionLabel("Color")
+                    EditorSectionLabel(stringResource(R.string.iconeditor_color))
                     ColorSwatchRow(
                         swatches = tokens.map { tokenColor(colors, it) },
                         selectedIndex = tokens.indexOf(state.selectedColor),
@@ -180,13 +189,13 @@ fun IconEditorSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ActionPill(
-                    label = "Reset",
+                    label = stringResource(R.string.iconeditor_reset),
                     enabled = true,
                     onClick = onReset,
                 )
                 Box(Modifier.weight(1f))
                 ActionPill(
-                    label = "Save",
+                    label = stringResource(R.string.iconeditor_save),
                     enabled = state.changed,
                     onClick = onSave,
                 )
@@ -220,7 +229,7 @@ private fun EditorPreview(
         symbolTint = tokenColor(colors, state.selectedColor),
         painter = painter,
         painterTint = null,
-        contentDescription = "Preview",
+        contentDescription = stringResource(R.string.iconeditor_preview_a11y),
     )
 }
 

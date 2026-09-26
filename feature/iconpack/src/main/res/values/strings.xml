@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Icon pack import sheet -->
+    <string name="iconpack_title">Icon pack</string>
+    <string name="iconpack_using">Using %1$s - %2$d icons (%3$s)</string>
+    <string name="iconpack_no_pack">No pack applied. Every app is masked to the soft monochrome tile.</string>
+    <string name="iconpack_import_zip">Import a .zip file</string>
+    <string name="iconpack_remove_pack">Remove icon pack</string>
+    <string name="iconpack_pack_apps_on_device">Pack apps on this device</string>
+    <string name="iconpack_scanning">Looking for installed packs...</string>
+    <string name="iconpack_none_found">No icon pack apps found. Import a .zip above, or install a pack from the store and reopen this sheet.</string>
+    <string name="iconpack_appfilter_found">appfilter found</string>
+    <string name="iconpack_no_appfilter">no appfilter</string>
+    <string name="iconpack_source_zip">Imported .zip</string>
+    <string name="iconpack_source_installed">Installed app</string>
+    <string name="iconpack_source_assets">Bundled</string>
+
+    <!-- Import progress labels -->
+    <string name="iconpack_progress_checking">Checking %1$s…</string>
+    <string name="iconpack_progress_reading">Reading icons %1$d of %2$d</string>
+    <string name="iconpack_progress_imported">Imported %1$s</string>
+    <string name="iconpack_progress_failed">Import failed: %1$s</string>
+
+    <!-- Icon pack status messages (ViewModel) -->
+    <string name="iconpack_msg_open_failed">Could not open that file.</string>
+    <string name="iconpack_msg_reading">Reading %1$s…</string>
+    <string name="iconpack_msg_applied">Applied %1$s (%2$d icons)</string>
+    <string name="iconpack_msg_no_appfilter">%1$s has no appfilter; icons will be masked.</string>
+    <string name="iconpack_msg_read_failed">Could not read %1$s: %2$s</string>
+    <string name="iconpack_msg_cleared">Icon pack cleared. Icons are masked.</string>
+    <string name="iconpack_msg_imported">Imported %1$s (%2$d icons)</string>
+    <string name="iconpack_msg_import_failed">Import failed: %1$s</string>
+
+    <!-- Icon editor sheet -->
+    <string name="iconeditor_title">Edit icon · %1$s</string>
+    <string name="iconeditor_tab_pack">Pack icon</string>
+    <string name="iconeditor_tab_glyph">Glyph</string>
+    <string name="iconeditor_choose_from_pack">Choose from the active pack</string>
+    <string name="iconeditor_no_artwork">This app has no pack artwork to choose from.</string>
+    <string name="iconeditor_pack_drawables_a11y">Pack drawables</string>
+    <string name="iconeditor_choose_glyph">Choose a glyph</string>
+    <string name="iconeditor_glyph_choices_a11y">Glyph choices</string>
+    <string name="iconeditor_color">Color</string>
+    <string name="iconeditor_reset">Reset</string>
+    <string name="iconeditor_save">Save</string>
+    <string name="iconeditor_preview_a11y">Preview</string>
+</resources>
