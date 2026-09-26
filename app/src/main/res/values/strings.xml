@@ -28,9 +28,17 @@
 
     <!-- Settings rows: appearance -->
     <string name="settings_theme">Theme</string>
+    <!-- Theme value labels (ThemeMode) -->
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">Follow system</string>
     <string name="settings_drawer_grid_size">Drawer grid size</string>
     <string name="settings_grid_columns">%1$d columns</string>
     <string name="settings_spacing">Spacing</string>
+    <!-- Spacing value labels (SpacingScale) -->
+    <string name="spacing_compact">Compact</string>
+    <string name="spacing_normal">Normal</string>
+    <string name="spacing_roomy">Roomy</string>
     <string name="settings_system_settings">System settings</string>
     <string name="settings_system_settings_support">Open Android settings</string>
     <string name="settings_hidden_apps">Hidden apps</string>

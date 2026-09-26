@@ -5,6 +5,40 @@ Append-only.
 
 ---
 
+### D-066 - Audit Batch 2 (cont.): friendly settings labels, drag-throttle correctness,
+### weather-visibility guard, HomeViewModel memoization
+- **What:** Four audit quick-wins:
+  1. **Friendly labels** — the Appearance rows no longer show raw enum `.name`s. `ThemeMode`
+     prints "Light / Dark / **Follow system**" and `SpacingScale` prints "Compact / Normal /
+     Roomy" via new `theme_*` / `spacing_*` resources (`SettingsPanel.themeModeLabel` /
+     `spacingLabel`).
+  2. **Drag-throttle correctness** — `DragController` previously skipped the *whole* pointer
+     update when <16ms since the last one, so the **hovered drop target** could be stale at
+     release (drop onto the wrong target / accidental snap-back). Now the *logical* state
+     (hovered target + `didMove`) is **always** recomputed; only the *visual* preview position
+     is throttled. `DragController.end()` returns the finalized state (flushing the latest
+     pointer) and `dragSource` reads hover/pointer from it.
+  3. **Weather-visibility guard** — the weather row's ambient icon pulse now runs only while
+     the host lifecycle is RESUMED (`HomeScreen.rememberIsResumed()`); it no longer animates in
+     the background. `HomeRowSlot` takes an `isResumed` flag instead of a hardcoded
+     `isVisible = true`.
+  4. **HomeViewModel memoization** — `appsState` recomputed `drawerAssignments` + re-resolved
+     **every** app icon whenever *any* pref changed (theme / spacing / rail order / rows).
+     The pipeline now projects prefs to just the icon-affecting fields (`iconOverrides`,
+     `maskUnsupportedApps`, `hiddenApps`) via `IconInputs` + `distinctUntilChanged()`, so
+     unrelated pref edits no longer invalidate icon resolution.
+- **Why:** Directly from the audit's Batch-2 list (label readability, drag correctness, battery
+  from background animation, and avoidable recomposition/allocation work on every pref write).
+- **Impact:** No behavior change to drops except that the target is now always correct. Also
+  fixed a **pre-existing** warning-as-error that only surfaced under a full `--rerun-tasks`
+  build: `SettingsStubActivity` was annotated `@ExperimentalMaterial3Api` at class level, which
+  propagated the opt-in requirement to every caller (`SettingsIntents`, `HomeActivity`); the
+  opt-in now lives locally on a small `IconPackSheet` wrapper. Build + full JVM suite green
+  under `--rerun-tasks` (only the known `IconPackPersistenceTest` Robolectric flake remains,
+  unchanged and pre-existing).
+
+---
+
 ### D-065 - Audit Batch 2: user-facing string localization (all UI strings → resources)
 - **What:** Every user-visible string in the launcher UI is moved out of Kotlin literals into
   per-module `res/values/strings.xml` and read with `stringResource(...)` / `context.getString(...)`:

@@ -42,6 +42,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.softhome.core.designsystem.atom.AppContextMenu
@@ -158,6 +161,9 @@ fun HomeScreen(
     val date = remember(minuteKey) { homeDate(Date(minuteKey * 60_000L)) }
     val reducedMotion = rememberReducedMotion()
     val weather = remember { WeatherUiState() }
+    // Batch 2: true only while the host lifecycle is RESUMED, so ambient row animations
+    // (weather icon pulse) stop when the launcher is not visible.
+    val isResumed = rememberIsResumed()
 
 
     val railResolver = rememberRailResolver(context)
@@ -262,6 +268,7 @@ fun HomeScreen(
                         homeState = homeState,
                         weather = weather,
                         reducedMotion = reducedMotion,
+                        isResumed = isResumed,
                         onNotesChange = onNotesChange,
                         onTapRow = { homeState = homeState.onTapRow(it) },
                         onLaunchRow = launchRow,
@@ -374,6 +381,7 @@ private fun HomeRowSlot(
     homeState: HomeState,
     weather: WeatherUiState,
     reducedMotion: Boolean,
+    isResumed: Boolean,
     onNotesChange: (String) -> Unit,
     onTapRow: (HomeRowId) -> Unit,
     onLaunchRow: (HomeRowKind) -> Unit,
@@ -384,7 +392,14 @@ private fun HomeRowSlot(
             // P3: each of these rows **taps to launch** its related app.
             HomeRowKind.Time -> TimeRow(time, reducedMotion, onLaunch = { onLaunchRow(kind) })
             HomeRowKind.Date -> DateRow(date, onLaunch = { onLaunchRow(kind) })
-            HomeRowKind.Weather -> WeatherRow(weather, reducedMotion, isVisible = true, onLaunch = { onLaunchRow(kind) })
+            // Batch 2: weather-visibility guard -- the ambient icon animation only runs
+            // while the host is actually resumed (visible), never in the background.
+            HomeRowKind.Weather -> WeatherRow(
+                weather = weather,
+                reducedMotion = reducedMotion,
+                isVisible = isResumed,
+                onLaunch = { onLaunchRow(kind) },
+            )
             // Q2: tap launches; the in-place expand moves to **long-press**.
             HomeRowKind.Search -> SearchRow(
                 focused = homeState.isSearching,
@@ -953,6 +968,32 @@ private fun RailShortcut.label(): String = stringResource(
         RailShortcut.Phone -> R.string.rail_label_phone
     },
 )
+
+// --- lifecycle --------------------------------------------------------------
+
+/**
+ * Batch 2 (weather-visibility guard): true only while the host lifecycle is at least
+ * RESUMED. Ambient, continuously-running row animations read this so they never burn
+ * frames (or battery) while the launcher is backgrounded.
+ */
+@Composable
+private fun rememberIsResumed(): Boolean {
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val lifecycle = lifecycleOwner.lifecycle
+    var resumed by remember { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> resumed = true
+                Lifecycle.Event.ON_PAUSE -> resumed = false
+                else -> Unit
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
+    return resumed
+}
 
 // --- date helpers -----------------------------------------------------------
 

@@ -85,10 +85,16 @@ class DragController internal constructor() {
         internal set
 
     private val targets = mutableMapOf<String, Rect>()
-    
-    // P7.2: throttle drag state updates to 16ms (1 frame at 60 FPS) to reduce recomposition storm
-    private var lastUpdateTimeMs = 0L
-    private val throttleIntervalMs = 16L
+
+    // Batch 2 (audit): the *visual* preview position is throttled to 16ms (~1 frame at
+    // 60fps) to avoid a recomposition storm while the finger moves. The *logical* state
+    // (hovered target + didMove) is ALWAYS recomputed, so a drop can never land on a
+    // stale target when the last movement event was skipped by the throttle.
+    private var lastPreviewUpdateMs = 0L
+    private val previewThrottleMs = 16L
+
+    /** Latest pointer position seen, even between throttled visual updates. */
+    private var latestPointerWindowPx: Offset = Offset.Zero
 
     internal fun registerTarget(id: String, bounds: Rect) {
         targets[id] = bounds
@@ -100,24 +106,45 @@ class DragController internal constructor() {
 
     internal fun begin(id: String, originWindow: Offset) {
         state = DragUiState(draggingId = id, originWindowPx = originWindow, pointerWindowPx = originWindow)
-        lastUpdateTimeMs = System.currentTimeMillis()
+        latestPointerWindowPx = originWindow
+        lastPreviewUpdateMs = System.currentTimeMillis()
     }
 
     internal fun drag(newPointerWindow: Offset) {
-        // P7.2: throttle to 16ms to avoid recomposition storm during scroll/swipe
-        val currentTimeMs = System.currentTimeMillis()
-        if (currentTimeMs - lastUpdateTimeMs < throttleIntervalMs) {
-            return  // Skip this update; pointer moved too soon after last update
-        }
-        lastUpdateTimeMs = currentTimeMs
-        
+        val s = state
+        if (s.draggingId == null) return
+
+        // Always record + resolve the logical drop target (cheap; correctness-critical).
+        latestPointerWindowPx = newPointerWindow
         val hovered = targets.entries.firstOrNull { (_, r) -> r.contains(newPointerWindow) }?.key
-        val moved = state.didMove || (newPointerWindow - state.originWindowPx).getDistance() > 8f
-        state = state.copy(pointerWindowPx = newPointerWindow, hoveredTargetId = hovered, didMove = moved)
+        val moved = s.didMove || (newPointerWindow - s.originWindowPx).getDistance() > 8f
+
+        // Throttle only the visual pointer position that drives the floating preview.
+        val now = System.currentTimeMillis()
+        val updatePreview = now - lastPreviewUpdateMs >= previewThrottleMs
+        if (updatePreview) lastPreviewUpdateMs = now
+
+        state = s.copy(
+            pointerWindowPx = if (updatePreview) newPointerWindow else s.pointerWindowPx,
+            hoveredTargetId = hovered,
+            didMove = moved,
+        )
     }
 
-    internal fun end() {
+    /**
+     * Flushes the pending (throttled) pointer position so the preview and the resolved
+     * drop target agree at the moment of release, then returns the final state.
+     */
+    internal fun end(): DragUiState {
+        val s = state
+        val finalHovered = targets.entries
+            .firstOrNull { (_, r) -> r.contains(latestPointerWindowPx) }?.key
+        val finalized = s.copy(
+            pointerWindowPx = latestPointerWindowPx,
+            hoveredTargetId = finalHovered,
+        )
         state = DragUiState()
+        return finalized
     }
 }
 
@@ -202,10 +229,10 @@ fun Modifier.dragSource(
                         val event = awaitPointerEvent()
                         val ch = event.changes.firstOrNull { it.id == down.id } ?: continue
                         if (ch.changedToUpIgnoreConsumed()) {
-                            val didMove = controller.state.didMove
-                            val finalPointer = controller.state.pointerWindowPx
-                            val hovered = controller.state.hoveredTargetId
-                            controller.end()
+                            val finalState = controller.end()
+                            val didMove = finalState.didMove
+                            val finalPointer = finalState.pointerWindowPx
+                            val hovered = finalState.hoveredTargetId
                             interactionSource?.tryEmit(PressInteraction.Release(press))
                             if (didMove) currentOnDrop(hovered, finalPointer)
                             else currentOnLongPress?.invoke()

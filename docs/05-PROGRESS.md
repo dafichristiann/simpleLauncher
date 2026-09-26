@@ -3,6 +3,19 @@
 > Living changelog. Updated at **every checkpoint** (start, end of each build step
 > group, and at each priority boundary). Newest entry on top.
 
+**Session 27: Audit Batch 2 (cont.) — friendly labels, drag-throttle fix, weather guard,
+HomeViewModel memoization DONE (2026-09-26).** Four more quick-wins: (1) Appearance rows show
+friendly localized labels ("Follow system" for System theme, "Compact/Normal/Roomy" spacing)
+instead of raw enum names; (2) `DragController` now always resolves the hovered drop target and
+throttles only the *visual* preview position — a fast last-movement frame can no longer cause a
+drop on a stale target (`end()` flushes + returns the final state); (3) the weather row's ambient
+pulse runs only while the host lifecycle is RESUMED (`rememberIsResumed()` guard); (4)
+`HomeViewModel.appsState` projects prefs to the icon-affecting fields only (`distinctUntilChanged`),
+so theme/spacing/rail/row edits stop re-resolving every app icon. Also fixed a pre-existing
+experimental-API warning-as-error (`SettingsStubActivity` class-level opt-in leaking to callers).
+Full JVM suite green under `--rerun-tasks` (only the pre-existing `IconPackPersistenceTest`
+Robolectric flake remains). See D-066.
+
 **Session 26: Audit Batch 2 — string localization (i18n) DONE (2026-09-26).** All user-facing
 UI strings were moved from Kotlin literals into per-module `strings.xml` and resolved with
 `stringResource(...)` / `context.getString(...)`. New `strings.xml` created for

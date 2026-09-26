@@ -8,6 +8,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -36,7 +37,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * light, which left a dark panel with light status-bar icons.
  */
 @AndroidEntryPoint
-@androidx.compose.material3.ExperimentalMaterial3Api
 class SettingsStubActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,14 +69,25 @@ class SettingsStubActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 )
                 if (iconPackOpen) {
-                    ModalBottomSheet(
-                        onDismissRequest = { iconPackOpen = false },
-                        containerColor = MaterialTheme.colorScheme.background,
-                    ) {
-                        IconPackImportSheet(onApplied = { iconPackOpen = false })
-                    }
+                    IconPackSheet(onDismiss = { iconPackOpen = false })
                 }
             }
         }
+    }
+}
+
+/**
+ * Localized opt-in wrapper for the experimental Material 3 [ModalBottomSheet]. Keeping the
+ * `@OptIn` here (not on the Activity) means callers of [SettingsStubActivity] do not inherit
+ * the experimental-API requirement.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun IconPackSheet(onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.background,
+    ) {
+        IconPackImportSheet(onApplied = onDismiss)
     }
 }

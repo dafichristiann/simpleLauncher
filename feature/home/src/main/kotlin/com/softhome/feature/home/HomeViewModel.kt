@@ -35,10 +35,31 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+/**
+ * Batch 2 (memoization): the *only* preference fields that affect icon resolution + the
+ * per-app glyph/color assignment. Projecting [LauncherPrefs] onto this and applying
+ * `distinctUntilChanged()` lets the app-icon pipeline skip work when an unrelated
+ * preference (theme / spacing / rail order / home rows) changes.
+ */
+private data class IconInputs(
+    val iconOverrides: Map<String, com.softhome.core.model.IconOverride>,
+    val maskUnsupportedApps: Boolean,
+    val hiddenApps: Set<String>,
+) {
+    companion object {
+        fun from(prefs: LauncherPrefs) = IconInputs(
+            iconOverrides = prefs.iconOverrides,
+            maskUnsupportedApps = prefs.maskUnsupportedApps,
+            hiddenApps = prefs.hiddenApps,
+        )
+    }
+}
 
 /** One icon slot on the home grid (or the drawer). */
 data class AppIconUi(
@@ -119,14 +140,24 @@ class HomeViewModel @Inject constructor(
     private val deviceStatusFlow = MutableStateFlow(DeviceStatusSnapshot.EMPTY)
 
     // SPLIT FLOW 1: Apps (only recomposes Home grid + Rail)
+    //
+    // Batch 2 (memoization): icon resolution is the most expensive part of this
+    // pipeline (`iconResolver.resolve` + per-app glyph/color assignment over the whole
+    // app list). It only depends on `iconOverrides`, `maskUnsupportedApps` and
+    // `hiddenApps` -- NOT on unrelated prefs (theme / spacing / rail order / rows).
+    // So we project prefs to just those three fields and `distinctUntilChanged()`, which
+    // means editing an unrelated preference no longer re-resolves every icon.
     val appsState: StateFlow<AppsUiState> = combine(
-        appsFlow, loadingFlow, iconPackRepository.activePack, prefsRepository.prefs
-    ) { apps, loading, pack, prefs ->
-        val drawerAssignments = drawerAssignments(apps, prefs)
+        appsFlow,
+        loadingFlow,
+        iconPackRepository.activePack,
+        prefsRepository.prefs.map { IconInputs.from(it) }.distinctUntilChanged(),
+    ) { apps, loading, pack, iconInputs ->
+        val drawerAssignments = drawerAssignments(apps, iconInputs)
         val appIcons = apps.associate { app ->
             app.componentKey to toUi(
                 app = app,
-                prefs = prefs,
+                iconInputs = iconInputs,
                 pack = pack,
                 drawerAssignment = drawerAssignments[app.componentKey],
             )
@@ -319,15 +350,15 @@ class HomeViewModel @Inject constructor(
 
     private fun toUi(
         app: AppInfo,
-        prefs: LauncherPrefs,
+        iconInputs: IconInputs,
         pack: IconPack?,
         drawerAssignment: DrawerIconAssignment.Assignment? = null,
     ): AppIconUi {
         val source = iconResolver.resolve(
             app = app,
             activePack = pack,
-            overrides = prefs.iconOverrides,
-            maskUnsupported = prefs.maskUnsupportedApps,
+            overrides = iconInputs.iconOverrides,
+            maskUnsupported = iconInputs.maskUnsupportedApps,
         )
         // All Apps is the source of truth for application glyphs. The assignment is
         // deterministic over the complete visible app list, so the same component gets
@@ -369,9 +400,9 @@ class HomeViewModel @Inject constructor(
     /** Mirrors AppDrawerViewModel's assignment inputs exactly. */
     private fun drawerAssignments(
         apps: List<AppInfo>,
-        prefs: LauncherPrefs,
+        iconInputs: IconInputs,
     ): Map<String, DrawerIconAssignment.Assignment> {
-        val visibleApps = apps.filterNot { it.componentKey in prefs.hiddenApps }
+        val visibleApps = apps.filterNot { it.componentKey in iconInputs.hiddenApps }
         val byPackage = visibleApps.associateBy { it.packageName }
         return DrawerIconAssignment.assign(
             identities = visibleApps.map { it.componentKey to it.packageName },

@@ -240,7 +240,7 @@ private fun AppearanceSection(
         // Theme: cycle Light -> Dark -> System on tap (3-way control).
         SettingsRow(
             label = stringResource(R.string.settings_theme),
-            supporting = themeMode.name,
+            supporting = themeModeLabel(themeMode),
             onClick = { onTheme(SettingsCycles.nextTheme(themeMode)) },
         )
 
@@ -254,7 +254,7 @@ private fun AppearanceSection(
         // Spacing preset (Q3): Compact / Normal / Roomy multiplier.
         SettingsRow(
             label = stringResource(R.string.settings_spacing),
-            supporting = spacing.name,
+            supporting = spacingLabel(spacing),
             onClick = { onSpacing(SettingsCycles.nextSpacing(spacing)) },
         )
 
@@ -489,6 +489,26 @@ private fun HomeRowKind.displayLabel(): String = stringResource(
         HomeRowKind.Calendar -> R.string.row_label_calendar
         HomeRowKind.BatteryStorage -> R.string.row_label_battery
         HomeRowKind.Notes -> R.string.row_label_notes
+    },
+)
+
+/** Friendly, localized label for the current [ThemeMode] value. */
+@Composable
+private fun themeModeLabel(mode: ThemeMode): String = stringResource(
+    when (mode) {
+        ThemeMode.Light -> R.string.theme_light
+        ThemeMode.Dark -> R.string.theme_dark
+        ThemeMode.System -> R.string.theme_system
+    },
+)
+
+/** Friendly, localized label for the current [SpacingScale] value. */
+@Composable
+private fun spacingLabel(scale: SpacingScale): String = stringResource(
+    when (scale) {
+        SpacingScale.Compact -> R.string.spacing_compact
+        SpacingScale.Normal -> R.string.spacing_normal
+        SpacingScale.Roomy -> R.string.spacing_roomy
     },
 )
 
