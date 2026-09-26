@@ -259,11 +259,14 @@ private fun AppearanceSection(
         )
 
         SettingsRow(
-            label = "Customize Sidebar",
-            supporting = "Choose apps and shortcuts for the right rail.",
+            label = stringResource(R.string.settings_customize_sidebar),
+            supporting = stringResource(R.string.settings_customize_sidebar_support),
             showChevron = true,
             onClick = onCustomizeSidebar,
-            onClickLabel = "Open Customize Sidebar",
+            onClickLabel = stringResource(
+                R.string.settings_generic_open,
+                stringResource(R.string.settings_customize_sidebar),
+            ),
         )
 
         // System settings entry (Q1).
@@ -318,7 +321,10 @@ private fun WidgetsSection(
                         checked = pref.visible || locked,
                         onCheckedChange = { onToggle(pref.kind) },
                         enabled = !locked,
-                        contentDescription = "${pref.kind.displayLabel()} visible",
+                        contentDescription = stringResource(
+                            R.string.settings_row_visible_a11y,
+                            pref.kind.displayLabel(),
+                        ),
                     )
                 },
                 onMoveUp = { onUp(pref.kind) },

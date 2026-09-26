@@ -1,5 +1,6 @@
 package com.softhome.launcher.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.softhome.core.data.repository.AppRepository
@@ -23,7 +24,9 @@ import com.softhome.core.model.RailItemId
 import com.softhome.core.model.RailItemIdCodec
 import com.softhome.core.model.RailShortcutId
 import com.softhome.feature.iconpack.data.IconPackRepository
+import com.softhome.launcher.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -62,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val backupRepository: BackupRepository,
     private val folderRepository: com.softhome.core.data.repository.FolderRepository,
     private val notesRepository: com.softhome.core.data.repository.NotesRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val appsFlow = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -136,7 +140,7 @@ class SettingsViewModel @Inject constructor(
         folderRepository.save(
             current + Folder(
                 id = UUID.randomUUID().toString(),
-                name = "New folder",
+                name = context.getString(R.string.folder_default_name),
                 apps = emptyList(),
             ),
         )
@@ -170,8 +174,8 @@ class SettingsViewModel @Inject constructor(
                 }.getOrNull()
             }
             backupMessage.value = when (result) {
-                is BackupResult.Success -> "Backup saved."
-                else -> "Could not write the backup file."
+                is BackupResult.Success -> context.getString(R.string.settings_backup_saved)
+                else -> context.getString(R.string.settings_backup_write_failed)
             }
         }
 
@@ -193,11 +197,11 @@ class SettingsViewModel @Inject constructor(
                     backupMessage.value = null
                 }
                 is BackupDecodeResult.NotABackup ->
-                    backupMessage.value = "That file is not a SOFT / HOME backup."
+                    backupMessage.value = context.getString(R.string.settings_backup_not_a_backup)
                 is BackupDecodeResult.UnsupportedVersion ->
-                    backupMessage.value = "This backup was made by a newer version."
+                    backupMessage.value = context.getString(R.string.settings_backup_newer_version)
                 is BackupDecodeResult.Malformed ->
-                    backupMessage.value = "Could not read that file."
+                    backupMessage.value = context.getString(R.string.settings_backup_unreadable)
             }
         }
 
@@ -211,7 +215,7 @@ class SettingsViewModel @Inject constructor(
         notesRepository.setBody(doc.notes)
         pendingDocument = null
         pendingRestore.value = false
-        backupMessage.value = "Backup restored."
+        backupMessage.value = context.getString(R.string.settings_backup_restored)
     }
 
     /** Dismisses a pending restore without applying it. */

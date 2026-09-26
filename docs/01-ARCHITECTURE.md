@@ -90,6 +90,13 @@ fallback**. See [08-ICONPACK-FORMAT](08-ICONPACK-FORMAT.md).
 > `NotesRepository` (DataStore key `quick_notes`), `FolderRepository` (DataStore,
 > JSON via `FoldersCodec`), and `DeviceStatusRepository` (`BatteryManager` +
 > `StatFs`, pure Android, no permission). Bindings live in `RepositoryModule`.
+>
+> **D-064 (audit Batch 1):** `core:data/packages` adds two `@Singleton`
+> constructor-injected providers (no `@Binds` needed): `PackageEventMonitor`
+> (`LauncherApps.registerCallback` → `Flow<PackageChange>`) and
+> `AppInventoryCoordinator` (reload launchable apps + prune dead per-app keys). Both
+> are observed by `HomeViewModel` / `AppDrawerViewModel`; the coordinator depends on
+> the `AppRepository` **interface** so tests can inject a fake app source.
 
 ---
 

@@ -3,6 +3,32 @@
 > Living changelog. Updated at **every checkpoint** (start, end of each build step
 > group, and at each priority boundary). Newest entry on top.
 
+**Session 25: Audit Batch 1 — functional gaps (QW1 live package monitoring + QW2 Home-press)
+DONE (2026-09-26).** Following a full technical + Nielsen audit (baseline ~3.0–3.4/5), the two
+highest-priority functional gaps were fixed and verified on a real Android runtime (emulator;
+Tecno manual pass pending device connection).
+
+- **QW1 — live install/uninstall monitoring.** New `PackageEventMonitor`
+  (`core:data/packages`) wraps `LauncherApps.registerCallback` (API 21+, no extra permission)
+  and exposes a `Flow<PackageChange>`. New `AppInventoryCoordinator` reloads the launchable
+  app list **and** prunes dead `componentKey`s from `hiddenApps`, `iconOverrides`, folder
+  membership and rail slots via the new pure `LauncherPrefsCleanup` (unit-tested; no-op writes
+  skipped). `HomeViewModel` + `AppDrawerViewModel` observe the monitor; the drawer no longer
+  lags behind installs/uninstalls until process restart.
+  *On-device evidence (emulator):* `[MONITOR] registered LauncherApps callback`,
+  `[MONITOR] removed com.softhome.launcher.debug.test` and `[MONITOR] added …` — captured live
+  with the launcher foregrounded.
+- **QW2 — press HOME while already on Home.** `HomeActivity` overrides `onNewIntent`, bumping a
+  `homeIntentToken`; `LauncherRoot` observes it to close the drawer and `HomeScreen` collapses
+  any expanded row back to Idle. *On-device evidence (emulator, real `KEYCODE_HOME`):*
+  `[HOME] onNewIntent -> reset token=1`.
+- **Test hygiene fix (pre-existing).** The `app/src/androidTest` sources did not compile
+  (`HomeScreen(state = …)` stale API); fixed, so the instrumented suite now builds. Added a
+  `HomeScreenTest` case for the QW2 collapse + 10 JVM tests (`LauncherPrefsCleanupTest`).
+- **Backlog (pre-existing, not introduced here):** `IconPackPersistenceTest` "stored id … is
+  cleared" flaky under Robolectric DataStore state-sharing; `HomeRowDragTest` drag-position
+  assertion is device-geometry-sensitive (passes on the reference Tecno, off on the AVD).
+
 **Overall:** P1.5 decode works; Session 4 corrected an over-claimed verification and
 hardened glyph uniqueness (D-016). **Session 5 redesigned the home + drawer into the
 "Warm Right Rail" system.** **Session 6 delivered P2: custom widgets (calendar /

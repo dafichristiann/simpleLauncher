@@ -221,6 +221,7 @@ fun AppDrawerScreen(
                 modifier = Modifier
                     .weight(1f)
                     .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
+                    .windowInsetsPadding(WindowInsets.ime.only(WindowInsetsSides.Bottom))
                     // Preserve the grid-first static geometry from before P6. The category
                     // transition is allowed to move its content, but never changes the
                     // resting position of tabs, grid, or search chrome.
@@ -243,6 +244,12 @@ fun AppDrawerScreen(
                         }
                     },
                     tabListState = tabListState,
+                )
+
+                DrawerSearchPill(
+                    query = state.query,
+                    onQueryChange = viewModel::onQueryChange,
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Box(
@@ -366,11 +373,6 @@ fun AppDrawerScreen(
                         }
                     }
                 }
-                DrawerSearchPill(
-                    query = state.query,
-                    onQueryChange = viewModel::onQueryChange,
-                    modifier = Modifier.fillMaxWidth(),
-                )
             }
 
             // Alphabet index rail (czxh4). P6: scoped to the selected category (which now
@@ -519,20 +521,20 @@ private fun AppMenu(
     onDismiss: () -> Unit,
 ) {
     val items = buildList {
-        add(ContextMenuItem(DrawerMenuLabels.OPEN, LineIcon.ArrowUpRight, onClick = onOpen))
-        add(ContextMenuItem(DrawerMenuLabels.APP_INFO, LineIcon.Info, onClick = onAppInfo))
-        add(ContextMenuItem(DrawerMenuLabels.EDIT_ICON, LineIcon.PenLine, onClick = onEditIcon))
-        add(ContextMenuItem(DrawerMenuLabels.REMOVE, LineIcon.X, onClick = onRemove))
+        add(ContextMenuItem(stringResource(DrawerMenuLabels.OPEN), LineIcon.ArrowUpRight, onClick = onOpen))
+        add(ContextMenuItem(stringResource(DrawerMenuLabels.APP_INFO), LineIcon.Info, onClick = onAppInfo))
+        add(ContextMenuItem(stringResource(DrawerMenuLabels.EDIT_ICON), LineIcon.PenLine, onClick = onEditIcon))
+        add(ContextMenuItem(stringResource(DrawerMenuLabels.REMOVE), LineIcon.X, onClick = onRemove))
         add(
             ContextMenuItem(
-                DrawerMenuLabels.UNINSTALL,
+                stringResource(DrawerMenuLabels.UNINSTALL),
                 LineIcon.Trash2,
                 enabled = canUninstall,
                 destructive = true,
                 onClick = onUninstall,
             ),
         )
-        add(ContextMenuItem(DrawerMenuLabels.SHORTCUTS, LineIcon.AppWindow, onClick = onOpen))
+        add(ContextMenuItem(stringResource(DrawerMenuLabels.SHORTCUTS), LineIcon.AppWindow, onClick = onOpen))
     }
     AppContextMenu(items = items, onDismiss = onDismiss)
 }
@@ -934,7 +936,7 @@ private fun FolderPopup(
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
                     if (members.isEmpty()) {
                         Text(
-                            text = "Empty folder \u2014 add an app below.",
+                            text = stringResource(R.string.drawer_folder_empty),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.textMuted,
                         )
@@ -979,7 +981,7 @@ private fun FolderPopup(
 
                     if (addable.isNotEmpty()) {
                         Text(
-                            text = "Add app",
+                            text = stringResource(R.string.drawer_folder_add_app),
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.textMuted,
                         )
@@ -1017,7 +1019,7 @@ private fun FolderPopup(
                     }
 
                     Text(
-                        text = "Close",
+                        text = stringResource(R.string.drawer_folder_close),
                         style = MaterialTheme.typography.labelMedium,
                         color = colors.accent,
                         textAlign = TextAlign.Center,
@@ -1034,15 +1036,16 @@ private fun FolderPopup(
 }
 
 /**
- * Drawer long-press menu labels (P3 / F3). Single source so the menu rows and the
- * tests cannot drift.
+ * Drawer long-press menu labels (P3 / F3) as string resources. Single source so the
+ * menu rows and the tests cannot drift; the composable resolves each id with
+ * `stringResource`.
  */
 internal object DrawerMenuLabels {
-    const val OPEN = "Open"
-    const val APP_INFO = "App Info"
-    const val EDIT_ICON = "Edit Icon"
-    const val REMOVE = "Remove"
-    const val UNINSTALL = "Uninstall"
-    const val SHORTCUTS = "Shortcuts"
+    @androidx.annotation.StringRes val OPEN = R.string.drawer_menu_open
+    @androidx.annotation.StringRes val APP_INFO = R.string.drawer_menu_app_info
+    @androidx.annotation.StringRes val EDIT_ICON = R.string.drawer_menu_edit_icon
+    @androidx.annotation.StringRes val REMOVE = R.string.drawer_menu_remove
+    @androidx.annotation.StringRes val UNINSTALL = R.string.drawer_menu_uninstall
+    @androidx.annotation.StringRes val SHORTCUTS = R.string.drawer_menu_shortcuts
     val ALL = listOf(OPEN, APP_INFO, EDIT_ICON, REMOVE, UNINSTALL, SHORTCUTS)
 }

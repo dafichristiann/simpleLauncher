@@ -143,6 +143,13 @@ fun HomeScreen(
      * assert the tap/long-press split (Q2) without a device.
      */
     onLaunchRow: ((HomeRowKind) -> Unit)? = null,
+    /**
+     * QW2: a monotonic token incremented by the host when the user presses Home while
+     * already on the launcher. Each new value (after the initial 0) collapses any active
+     * row state (Search / Notes expand) back to Idle — the "Home returns you to Home"
+     * behavior. A no-op the rest of the time.
+     */
+    homeIntentToken: Int = 0,
 ) {
     val context = LocalContext.current
     val colors = MaterialTheme.softColors
@@ -191,6 +198,12 @@ fun HomeScreen(
 
     // Back / tapping outside a row returns to Idle.
     BackHandler(enabled = homeState != HomeState.Idle) { homeState = homeState.reset() }
+
+    // QW2: pressing Home while already here collapses any expanded row back to Idle.
+    // Skips the initial value so the very first composition is untouched.
+    LaunchedEffect(homeIntentToken) {
+        if (homeIntentToken > 0) homeState = HomeState.Idle
+    }
 
     Box(
         modifier = modifier
@@ -306,22 +319,26 @@ fun HomeScreen(
 
         // Floating drag preview (a compact row chip).
         DragPreviewLayer(controller = dragController, windowOrigin = surfaceOriginInWindow) { draggingId ->
-            val label = rows.firstOrNull { "row:${it.name}" == draggingId }?.let(::homeRowLabel).orEmpty()
+            val draggingKind = rows.firstOrNull { "row:${it.name}" == draggingId }
+            val label = if (draggingKind != null) homeRowLabel(draggingKind) else ""
             DragRowChip(label = label)
         }
     }
 }
 
 /** Human label for a row's drag chip. */
-private fun homeRowLabel(kind: HomeRowKind): String = when (kind) {
-    HomeRowKind.Time -> "Time"
-    HomeRowKind.Date -> "Date"
-    HomeRowKind.Weather -> "Weather"
-    HomeRowKind.Search -> "Search"
-    HomeRowKind.Calendar -> "Calendar"
-    HomeRowKind.BatteryStorage -> "Battery & Storage"
-    HomeRowKind.Notes -> "Quick notes"
-}
+@Composable
+private fun homeRowLabel(kind: HomeRowKind): String = stringResource(
+    when (kind) {
+        HomeRowKind.Time -> R.string.home_row_label_time
+        HomeRowKind.Date -> R.string.home_row_label_date
+        HomeRowKind.Weather -> R.string.home_row_label_weather
+        HomeRowKind.Search -> R.string.home_row_label_search
+        HomeRowKind.Calendar -> R.string.home_row_label_calendar
+        HomeRowKind.BatteryStorage -> R.string.home_row_label_battery
+        HomeRowKind.Notes -> R.string.home_row_label_notes
+    },
+)
 
 /**
  * The insertion index for a pointer at [pointerWindowY] given per-row window
@@ -380,11 +397,14 @@ private fun HomeRowSlot(
                 month = date.month,
                 events = emptyList(),
             )
-            HomeRowKind.BatteryStorage -> BatteryStorageRowContent(
-                batteryPercent = deviceStatusState.deviceStatus.batteryPercent,
-                storageUsedPercent = deviceStatusState.deviceStatus.storageUsedPercent,
-                storageFreeLabel = deviceStatusState.deviceStatus.storageFreeBytes?.let(::formatBytes),
-            )
+            HomeRowKind.BatteryStorage -> {
+                val freeBytes = deviceStatusState.deviceStatus.storageFreeBytes
+                BatteryStorageRowContent(
+                    batteryPercent = deviceStatusState.deviceStatus.batteryPercent,
+                    storageUsedPercent = deviceStatusState.deviceStatus.storageUsedPercent,
+                    storageFreeLabel = if (freeBytes != null) formatBytes(freeBytes) else null,
+                )
+            }
             HomeRowKind.Notes -> NotesRow(
                 text = notesState.notes,
                 expanded = homeState.isNotesOpen,
@@ -508,7 +528,13 @@ private fun WeatherRow(weather: WeatherUiState, reducedMotion: Boolean, isVisibl
                 )
             }
             Spacer(Modifier.width(Spacing.md))
-            Text(text = weather.temperatureLabel, style = RowDisplay, color = colors.statusText)
+            Text(
+                text = weather.temperatureLabel.ifBlank {
+                    stringResource(R.string.home_weather_placeholder)
+                },
+                style = RowDisplay,
+                color = colors.statusText,
+            )
         }
     }
 }
@@ -605,15 +631,16 @@ private fun NotesRow(
 }
 
 /** "1.5 GB" / "780 MB" from a byte count (for the storage meta line). */
+@Composable
 private fun formatBytes(bytes: Long): String {
     val kb = 1024.0
     val mb = kb * 1024
     val gb = mb * 1024
     return when {
-        bytes >= gb -> String.format(Locale.US, "%.1f GB", bytes / gb)
-        bytes >= mb -> String.format(Locale.US, "%.0f MB", bytes / mb)
-        bytes >= kb -> String.format(Locale.US, "%.0f KB", bytes / kb)
-        else -> "$bytes B"
+        bytes >= gb -> stringResource(R.string.home_bytes_gb, bytes / gb)
+        bytes >= mb -> stringResource(R.string.home_bytes_mb, bytes / mb)
+        bytes >= kb -> stringResource(R.string.home_bytes_kb, bytes / kb)
+        else -> stringResource(R.string.home_bytes_b, bytes)
     }
 }
 
@@ -782,7 +809,8 @@ private fun HomeRightRail(
                                         icon = shortcut?.lineIcon()
                                             ?: app?.let { LineIcon.fromLucide(it.resolved.symbolName) }
                                             ?: LineIcon.AppWindow,
-                                        contentDescription = shortcut?.label() ?: app?.app?.label ?: "Unavailable app",
+                                        contentDescription = shortcut?.label() ?: app?.app?.label
+                                            ?: stringResource(R.string.home_unavailable_app),
                                     )
                                 }
                             }
@@ -824,7 +852,8 @@ private fun HomeRightRail(
                             icon = shortcut?.lineIcon()
                                 ?: app?.let { LineIcon.fromLucide(it.resolved.symbolName) }
                                 ?: LineIcon.AppWindow,
-                            contentDescription = shortcut?.label() ?: app?.app?.label ?: "Unavailable app",
+                            contentDescription = shortcut?.label() ?: app?.app?.label
+                                ?: stringResource(R.string.home_unavailable_app),
                         )
                     }
                 }
@@ -869,12 +898,30 @@ private fun RailContextMenu(
 ) {
     val items = buildList {
         if (resolver.intentFor(shortcut) != null) {
-            add(ContextMenuItem("Open", LineIcon.ArrowUpRight, onClick = onLaunch))
+            add(
+                ContextMenuItem(
+                    stringResource(R.string.home_menu_open),
+                    LineIcon.ArrowUpRight,
+                    onClick = onLaunch,
+                ),
+            )
         }
         if (shortcut == RailShortcut.PanelLeft) {
-            add(ContextMenuItem("Settings", LineIcon.Settings, onClick = onOpenSettings))
+            add(
+                ContextMenuItem(
+                    stringResource(R.string.home_menu_settings),
+                    LineIcon.Settings,
+                    onClick = onOpenSettings,
+                ),
+            )
         }
-        add(ContextMenuItem("App Info", LineIcon.Info, onClick = onOpenSettings))
+        add(
+            ContextMenuItem(
+                stringResource(R.string.home_menu_app_info),
+                LineIcon.Info,
+                onClick = onOpenSettings,
+            ),
+        )
     }
     AppContextMenu(items = items, onDismiss = onDismiss)
 }
@@ -893,16 +940,19 @@ private fun RailShortcut.lineIcon(): LineIcon = when (this) {
 private fun toRailShortcut(id: RailShortcutId): RailShortcut =
     RailShortcut.entries.first { it.name == id.name }
 
-private fun RailShortcut.label(): String = when (this) {
-    RailShortcut.Sparkles -> "More"
-    RailShortcut.CircleDot -> "Web"
-    RailShortcut.MessageCircle -> "Messages"
-    RailShortcut.Send -> "Mail"
-    RailShortcut.Camera -> "Camera"
-    RailShortcut.Wind -> "Weather"
-    RailShortcut.PanelLeft -> "Settings"
-    RailShortcut.Phone -> "Phone"
-}
+@Composable
+private fun RailShortcut.label(): String = stringResource(
+    when (this) {
+        RailShortcut.Sparkles -> R.string.rail_label_more
+        RailShortcut.CircleDot -> R.string.rail_label_web
+        RailShortcut.MessageCircle -> R.string.rail_label_messages
+        RailShortcut.Send -> R.string.rail_label_mail
+        RailShortcut.Camera -> R.string.rail_label_camera
+        RailShortcut.Wind -> R.string.rail_label_weather
+        RailShortcut.PanelLeft -> R.string.rail_label_settings
+        RailShortcut.Phone -> R.string.rail_label_phone
+    },
+)
 
 // --- date helpers -----------------------------------------------------------
 

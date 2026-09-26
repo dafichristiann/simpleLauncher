@@ -10,5 +10,9 @@ enum class WeatherCondition {
 
 data class WeatherUiState(
     val condition: WeatherCondition = WeatherCondition.Clear,
-    val temperatureLabel: String = "Current 8°C",
+    /**
+     * Localized temperature text. Blank until a real weather source is wired in
+     * (the UI falls back to the placeholder string `home_weather_placeholder`).
+     */
+    val temperatureLabel: String = "",
 )

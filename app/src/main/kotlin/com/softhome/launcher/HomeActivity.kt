@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +62,14 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class HomeActivity : ComponentActivity() {
 
+    /**
+     * QW2: incremented every time a HOME intent reaches an already-running launcher
+     * (i.e. the user pressed Home while already on Home). Observed by [LauncherRoot] to
+     * close the drawer / overlays and collapse to the home idle state. Starts at 0 so the
+     * first composition is a no-op.
+     */
+    private val homeIntentToken = kotlinx.coroutines.flow.MutableStateFlow(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -70,7 +79,20 @@ class HomeActivity : ComponentActivity() {
         requestHighRefreshRate()
         
         setContent {
-            LauncherRoot()
+            LauncherRoot(homeIntentToken = homeIntentToken)
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        // A launcher is singleTask: pressing Home while it is already foregrounded
+        // re-delivers ACTION_MAIN/CATEGORY_HOME here instead of recreating the activity.
+        // Treat it as "return to Home": bump the token so the UI resets.
+        if (intent.hasCategory(android.content.Intent.CATEGORY_HOME) ||
+            intent.action == android.content.Intent.ACTION_MAIN
+        ) {
+            homeIntentToken.value += 1
+            android.util.Log.d("SOFTHOME_PIPELINE", "[HOME] onNewIntent -> reset token=${homeIntentToken.value}")
         }
     }
     
@@ -93,7 +115,10 @@ class HomeActivity : ComponentActivity() {
 }
 
 @Composable
-private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
+private fun LauncherRoot(
+    homeIntentToken: kotlinx.coroutines.flow.MutableStateFlow<Int> = kotlinx.coroutines.flow.MutableStateFlow(0),
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
     var drawerOpen by remember { mutableStateOf(false) }
     val appsState by viewModel.appsState.collectAsStateWithLifecycle()
     val prefsState by viewModel.prefsState.collectAsStateWithLifecycle()
@@ -101,6 +126,12 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
     val railState by viewModel.railState.collectAsStateWithLifecycle()
     val deviceStatusState by viewModel.deviceStatusState.collectAsStateWithLifecycle()
     val homeRowsState by viewModel.homeRowsState.collectAsStateWithLifecycle()
+    // QW2: pressing Home while already here closes the drawer; a token > 0 also collapses
+    // the home rows via HomeScreen.
+    val homeIntentTick by homeIntentToken.collectAsStateWithLifecycle()
+    LaunchedEffect(homeIntentTick) {
+        if (homeIntentTick > 0) drawerOpen = false
+    }
     
     val systemDark = isSystemInDarkTheme()
     // P3 (G): the app theme follows ThemeMode from settings (Light/Dark/System).
@@ -181,6 +212,7 @@ private fun LauncherRoot(viewModel: HomeViewModel = hiltViewModel()) {
                     onLaunchApp = viewModel::launchApp,
                     onSetThemeMode = viewModel::setThemeMode,
                     drawerDrawableLoader = viewModel.drawableLoader,
+                    homeIntentToken = homeIntentTick,
                 )
             }
 

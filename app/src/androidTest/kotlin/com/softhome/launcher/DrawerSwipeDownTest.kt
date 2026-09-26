@@ -72,7 +72,7 @@ class DrawerSwipeDownTest {
                 AnimatedVisibility(visible = drawerOpen, enter = fadeIn(), exit = fadeOut()) {
                     val context = LocalContext.current
                     val viewModel = remember {
-                        AppDrawerViewModel(
+                    AppDrawerViewModel(
                             appRepository = SwipeFakeAppRepository,
                             prefsRepository = SwipeFakePrefsRepository,
                             appActionsRepository = SwipeFakeAppActionsRepository,
@@ -81,6 +81,14 @@ class DrawerSwipeDownTest {
                             drawableLoader = IconPackDrawableLoader(context),
                             bitmapProvider = IconBitmapProvider(context),
                             iconResolver = IconResolver(),
+                            packageEventMonitor = com.softhome.core.data.packages.PackageEventMonitor(context),
+                            appInventory = com.softhome.core.data.packages.AppInventoryCoordinator(
+                                SwipeFakeAppRepository,
+                                SwipeFakePrefsRepository,
+                                SwipeFakeFolderRepository,
+                                com.softhome.core.common.DefaultDispatcherProvider(),
+                            ),
+                            context = context,
                         )
                     }
                     AppDrawerScreen(
@@ -155,6 +163,7 @@ private object SwipeFakePrefsRepository : PrefsRepository {
         override: com.softhome.core.model.IconOverride?,
     ) = Unit
     override suspend fun applyAll(prefs: LauncherPrefs) = Unit
+    override suspend fun applyPruned(prefs: LauncherPrefs) = Unit
 }
 
 private object SwipeFakeAppActionsRepository : AppActionsRepository {

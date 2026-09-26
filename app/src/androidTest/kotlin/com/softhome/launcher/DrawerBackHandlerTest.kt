@@ -79,6 +79,14 @@ class DrawerBackHandlerTest {
                             drawableLoader = IconPackDrawableLoader(context),
                             bitmapProvider = IconBitmapProvider(context),
                             iconResolver = IconResolver(),
+                            packageEventMonitor = com.softhome.core.data.packages.PackageEventMonitor(context),
+                            appInventory = com.softhome.core.data.packages.AppInventoryCoordinator(
+                                FakeAppRepository,
+                                FakePrefsRepository,
+                                FakeFolderRepository,
+                                com.softhome.core.common.DefaultDispatcherProvider(),
+                            ),
+                            context = context,
                         )
                     }
                     AppDrawerScreen(
@@ -151,6 +159,7 @@ private object FakePrefsRepository : PrefsRepository {
         override: com.softhome.core.model.IconOverride?,
     ) = Unit
     override suspend fun applyAll(prefs: LauncherPrefs) = Unit
+    override suspend fun applyPruned(prefs: LauncherPrefs) = Unit
 }
 
 private object FakeAppActionsRepository : AppActionsRepository {

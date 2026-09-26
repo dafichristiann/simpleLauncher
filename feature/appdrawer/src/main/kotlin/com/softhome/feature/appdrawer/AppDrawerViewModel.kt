@@ -1,5 +1,6 @@
 package com.softhome.feature.appdrawer
 
+import android.content.Context
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +27,7 @@ import com.softhome.feature.iconpack.domain.DrawerIconColor
 import com.softhome.feature.iconpack.domain.IconMasker
 import com.softhome.feature.iconpack.domain.IconResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -132,6 +134,9 @@ class AppDrawerViewModel @Inject constructor(
     val drawableLoader: IconPackDrawableLoader,
     val bitmapProvider: IconBitmapProvider,
     private val iconResolver: IconResolver,
+    private val packageEventMonitor: com.softhome.core.data.packages.PackageEventMonitor,
+    private val appInventory: com.softhome.core.data.packages.AppInventoryCoordinator,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val appsFlow = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -401,12 +406,19 @@ class AppDrawerViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             loadingFlow.value = true
-            appsFlow.value = appRepository.getInstalledApps()
+            appsFlow.value = appInventory.refreshAndPrune()
             loadingFlow.value = false
         }
         // Load persisted folders into the in-memory mirror.
         viewModelScope.launch {
             folderRepository.folders.collect { foldersFlow.value = it }
+        }
+        // QW1: keep the grid in sync with installs / uninstalls while the drawer is alive.
+        packageEventMonitor.start()
+        viewModelScope.launch {
+            packageEventMonitor.changes.collect {
+                appsFlow.value = appInventory.refreshAndPrune()
+            }
         }
     }
 
@@ -501,7 +513,7 @@ class AppDrawerViewModel @Inject constructor(
     fun createFolder() {
         val folder = FolderLogic.createFolder(
             id = "folder_${System.currentTimeMillis()}",
-            name = "New folder",
+            name = context.getString(R.string.folder_default_name),
             keys = emptyList(),
         )
         persist(foldersFlow.value + folder)
@@ -534,7 +546,14 @@ class AppDrawerViewModel @Inject constructor(
      */
     fun createFolderWith(componentKey: String) {
         val id = "folder_${System.currentTimeMillis()}"
-        persist(FolderDropResolver.createWith(foldersFlow.value, componentKey, id, "New folder"))
+        persist(
+            FolderDropResolver.createWith(
+                foldersFlow.value,
+                componentKey,
+                id,
+                context.getString(R.string.folder_default_name),
+            ),
+        )
     }
 
     /** App dragged out of an open folder (P4a): removed from that folder. */

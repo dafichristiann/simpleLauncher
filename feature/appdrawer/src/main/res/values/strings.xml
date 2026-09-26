@@ -10,4 +10,18 @@
     <string name="drawer_categories_a11y">Categories</string>
     <string name="drawer_alphabet_a11y">Alphabet index</string>
     <string name="drawer_jump_to_letter">Jump to letter %1$s</string>
+
+    <!-- Folder popup -->
+    <string name="drawer_folder_empty">Empty folder — add an app below.</string>
+    <string name="drawer_folder_add_app">Add app</string>
+    <string name="drawer_folder_close">Close</string>
+    <string name="folder_default_name">New folder</string>
+
+    <!-- App long-press menu (order matters; see DrawerMenuLabelsTest) -->
+    <string name="drawer_menu_open">Open</string>
+    <string name="drawer_menu_app_info">App Info</string>
+    <string name="drawer_menu_edit_icon">Edit Icon</string>
+    <string name="drawer_menu_remove">Remove</string>
+    <string name="drawer_menu_uninstall">Uninstall</string>
+    <string name="drawer_menu_shortcuts">Shortcuts</string>
 </resources>

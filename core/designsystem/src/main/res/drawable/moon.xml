@@ -3,6 +3,7 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- Crescent moon shape - more distinctive -->
     <path
         android:pathData="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
         android:strokeColor="#4A4A4A"
@@ -10,4 +11,11 @@
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000" />
+    <!-- Add stars for night theme -->
+    <path
+        android:pathData="M3 8 L3.5 9 L4.5 9 L3.75 9.5 L4.25 10.5 L3 9.75 L1.75 10.5 L2.25 9.5 L1.5 9 L2.5 9 Z"
+        android:fillColor="#4A4A4A" />
+    <path
+        android:pathData="M19 6 L19.3 6.7 L20.1 6.9 L19.5 7.4 L19.7 8.2 L19 7.8 L18.3 8.2 L18.5 7.4 L17.9 6.9 L18.7 6.7 Z"
+        android:fillColor="#4A4A4A" />
 </vector>

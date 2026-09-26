@@ -55,6 +55,12 @@ interface PrefsRepository {
     suspend fun setIconOverride(componentKey: String, override: IconOverride?)
     /** P4d: replace ALL persisted prefs in a single write (used by backup restore). */
     suspend fun applyAll(prefs: LauncherPrefs)
+    /**
+     * Rewrite only the fields that carry a per-app `componentKey` (hidden set, icon
+     * overrides, rail items) in a single write. Used by the dead-reference prune when an
+     * app is uninstalled; other fields are left untouched.
+     */
+    suspend fun applyPruned(prefs: LauncherPrefs)
     /** P7: persist the user-defined right-rail order. */
     suspend fun setRailOrder(order: List<String>) { }
     /** Unified rail configuration; this is the canonical write path. */
@@ -274,6 +280,25 @@ class PrefsRepositoryImpl @Inject constructor(
                 if (prefs.railItems != RailConfigLogic.DEFAULT_ITEMS) prefs.railItems
                 else RailConfigLogic.fromLegacyShortcutNames(prefs.railOrder),
             )
+            p[Keys.RAIL_ITEMS_V2] = RailItemIdCodec.encode(railItems)
+            p[Keys.RAIL_ORDER] = legacyShortcutNames(railItems).joinToString(",")
+        }
+    }
+
+    /**
+     * Rewrite only the per-app-keyed fields (hidden set, icon overrides, rail items) in a
+     * single `edit` — used by the dead-reference prune when an app is uninstalled. All
+     * other keys are intentionally left as-is.
+     */
+    override suspend fun applyPruned(prefs: LauncherPrefs) {
+        context.launcherDataStore.edit { p ->
+            if (prefs.hiddenApps.isEmpty()) p.remove(Keys.HIDDEN_APPS)
+            else p[Keys.HIDDEN_APPS] = prefs.hiddenApps
+
+            if (prefs.iconOverrides.isEmpty()) p.remove(Keys.ICON_OVERRIDES)
+            else p[Keys.ICON_OVERRIDES] = IconOverridesCodec.encode(prefs.iconOverrides)
+
+            val railItems = RailConfigLogic.sanitize(prefs.railItems)
             p[Keys.RAIL_ITEMS_V2] = RailItemIdCodec.encode(railItems)
             p[Keys.RAIL_ORDER] = legacyShortcutNames(railItems).joinToString(",")
         }

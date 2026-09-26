@@ -17,4 +17,42 @@
     <!-- Search (the spaced-letter design is applied in code so translation stays clean) -->
     <string name="home_search_placeholder">find something</string>
     <string name="home_searching">searching</string>
+
+    <!-- Home row drag-chip labels -->
+    <string name="home_row_label_time">Time</string>
+    <string name="home_row_label_date">Date</string>
+    <string name="home_row_label_weather">Weather</string>
+    <string name="home_row_label_search">Search</string>
+    <string name="home_row_label_calendar">Calendar</string>
+    <string name="home_row_label_battery">Battery &amp; Storage</string>
+    <string name="home_row_label_notes">Quick notes</string>
+
+    <!-- Rail shortcut labels -->
+    <string name="rail_label_more">More</string>
+    <string name="rail_label_web">Web</string>
+    <string name="rail_label_messages">Messages</string>
+    <string name="rail_label_mail">Mail</string>
+    <string name="rail_label_camera">Camera</string>
+    <string name="rail_label_weather">Weather</string>
+    <string name="rail_label_settings">Settings</string>
+    <string name="rail_label_phone">Phone</string>
+
+    <!-- Rail icon / context menu -->
+    <string name="home_unavailable_app">Unavailable app</string>
+    <string name="home_menu_open">Open</string>
+    <string name="home_menu_settings">Settings</string>
+    <string name="home_menu_app_info">App Info</string>
+
+    <!-- Weather fallback (no live provider yet) -->
+    <string name="home_weather_placeholder">Soft light</string>
+
+    <!-- Storage/byte formatting -->
+    <string name="home_bytes_gb">%.1f GB</string>
+    <string name="home_bytes_mb">%.0f MB</string>
+    <string name="home_bytes_kb">%.0f KB</string>
+    <string name="home_bytes_b">%1$d B</string>
+
+    <!-- Theme toggle -->
+    <string name="home_switch_to_dark">Switch to dark mode</string>
+    <string name="home_switch_to_light">Switch to light mode</string>
 </resources>

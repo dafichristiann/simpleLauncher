@@ -10,7 +10,6 @@ import androidx.compose.ui.test.performTouchInput
 import com.softhome.core.designsystem.theme.SoftHomeTheme
 import com.softhome.core.model.HomeRowKind
 import com.softhome.feature.home.HomeScreen
-import com.softhome.feature.home.HomeUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -35,7 +34,6 @@ class HomeRowDragTest {
                 HomeScreen(
                     onOpenDrawer = {},
                     onVoiceSearch = {},
-                    state = HomeUiState(),
                     onReorderRow = { kind, index -> reordered = kind to index },
                 )
             }
@@ -58,7 +56,6 @@ class HomeRowDragTest {
                 HomeScreen(
                     onOpenDrawer = {},
                     onVoiceSearch = {},
-                    state = HomeUiState(),
                     onReorderRow = { kind, index -> reordered = kind to index },
                 )
             }

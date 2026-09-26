@@ -5,6 +5,31 @@ Append-only.
 
 ---
 
+### D-064 - Audit Batch 1: live package monitoring + Home-press returns to Home
+- **What:** Two functional gaps from the audit are closed.
+  (1) **QW1** — `PackageEventMonitor` (`core:data/packages`) wraps
+  `LauncherApps.registerCallback(…, Handler(mainLooper))` and exposes `Flow<PackageChange>`.
+  `AppInventoryCoordinator` (data layer, depends on the `AppRepository` **interface**) owns
+  reload + prune: it loads the launchable list and drops dead `componentKey`s from
+  `hiddenApps` / `iconOverrides` / folder membership / rail slots via the pure
+  `LauncherPrefsCleanup` (new, unit-tested). `PrefsRepository.applyPruned` writes only the
+  keyed fields in one `edit`. `HomeViewModel` + `AppDrawerViewModel` observe the monitor.
+  (2) **QW2** — `HomeActivity.onNewIntent` bumps `homeIntentToken`; `LauncherRoot` collects it
+  to close the drawer; `HomeScreen(homeIntentToken)` collapses any expanded row to Idle.
+- **Why:** The launcher previously refreshed its app list only at ViewModel construction, so a
+  freshly installed app did not appear (and an uninstalled one lingered, with dead keys stuck
+  in prefs/folders/rail) until process restart — a basic-daily-use gap vs Nova/Lawnchair/Pixel.
+  Pressing Home while already on Home also did nothing.
+- **Impact:** Install/uninstall now reflect live; removal self-heals persistence. Verified on a
+  real Android runtime: `[MONITOR] added/removed …` and `[HOME] onNewIntent -> reset token=1`.
+  `LauncherPrefsCleanup` is a no-op (same instance, no write) when nothing is dead. Chose
+  `LauncherApps` over `PACKAGE_ADDED` broadcast (filters to launchable apps, delivers the
+  package names, platform-blessed, no permission). Chose to keep the **write** in the data
+  layer — the monitor is a pure signal so ViewModels remain the state owners (docs/01 layer
+  rule). Also fixed a pre-existing androidTest compile break (`HomeScreen(state = …)`).
+
+---
+
 ### D-062 - The Music player row is removed from the home (P8 music reverted)
 - **What:** The home Music player row is removed entirely (per user request). Deleted:
   `PlaybackController.kt` / `PlaybackControllerTest.kt`, the `MusicPlayerRow` +

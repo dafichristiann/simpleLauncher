@@ -25,39 +25,7 @@ class AppRepositoryImpl @Inject constructor(
 ) : AppRepository {
 
     override suspend fun getInstalledApps(): List<AppInfo> = withContext(dispatchers.io) {
-        val pm = context.packageManager
-        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        val resolved: List<ResolveInfo> = pm.queryIntentActivities(
-            intent,
-            // Launcher activities do not have to advertise CATEGORY_DEFAULT. Using
-            // MATCH_DEFAULT_ONLY silently drops many real apps on Tecno (ChatGPT,
-            // Instagram, Discord, Gojek, etc.). The drawer must enumerate every
-            // launchable activity, not only the system's preferred/default handlers.
-            PackageManager.MATCH_ALL or PackageManager.GET_META_DATA,
-        )
-        resolved.asSequence()
-            .mapNotNull { ri ->
-                val ai = ri.activityInfo ?: return@mapNotNull null
-                val label = ri.loadLabel(pm).toString().ifBlank { ai.packageName }
-                AppInfo(
-                    packageName = ai.packageName,
-                    className = ai.name,
-                    label = label,
-                    componentKey = "${ai.packageName}/${ai.name}",
-                    isSystem = (ai.applicationInfo?.flags ?: 0) and
-                        android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0,
-                    category = (ai.applicationInfo?.category ?: 0)
-                        .takeIf { it != android.content.pm.ApplicationInfo.CATEGORY_UNDEFINED },
-                )
-            }
-            .distinctBy { it.componentKey }
-            // Keep alphabet/index positions stable when labels differ only by case or
-            // multiple activities expose the same label.
-            .sortedWith(
-                compareBy<AppInfo> { it.label.trim().lowercase(Locale.ROOT) }
-                    .thenBy { it.componentKey.lowercase(Locale.ROOT) },
-            )
-            .toList()
+        queryLaunchableApps(context)
     }
 
     override fun launchApp(app: AppInfo) {
@@ -74,6 +42,49 @@ class AppRepositoryImpl @Inject constructor(
                 it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 runCatching { context.startActivity(it) }
             }
+        }
+    }
+
+    companion object {
+        /**
+         * Enumerate every launchable activity. Shared with the inventory coordinator so
+         * the "present component keys" set is derived from exactly the same query the
+         * drawer renders.
+         */
+        fun queryLaunchableApps(context: Context): List<AppInfo> {
+            val pm = context.packageManager
+            val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+            val resolved: List<ResolveInfo> = pm.queryIntentActivities(
+                intent,
+                // Launcher activities do not have to advertise CATEGORY_DEFAULT. Using
+                // MATCH_DEFAULT_ONLY silently drops many real apps on Tecno (ChatGPT,
+                // Instagram, Discord, Gojek, etc.). The drawer must enumerate every
+                // launchable activity, not only the system's preferred/default handlers.
+                PackageManager.MATCH_ALL or PackageManager.GET_META_DATA,
+            )
+            return resolved.asSequence()
+                .mapNotNull { ri ->
+                    val ai = ri.activityInfo ?: return@mapNotNull null
+                    val label = ri.loadLabel(pm).toString().ifBlank { ai.packageName }
+                    AppInfo(
+                        packageName = ai.packageName,
+                        className = ai.name,
+                        label = label,
+                        componentKey = "${ai.packageName}/${ai.name}",
+                        isSystem = (ai.applicationInfo?.flags ?: 0) and
+                            android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0,
+                        category = (ai.applicationInfo?.category ?: 0)
+                            .takeIf { it != android.content.pm.ApplicationInfo.CATEGORY_UNDEFINED },
+                    )
+                }
+                .distinctBy { it.componentKey }
+                // Keep alphabet/index positions stable when labels differ only by case or
+                // multiple activities expose the same label.
+                .sortedWith(
+                    compareBy<AppInfo> { it.label.trim().lowercase(Locale.ROOT) }
+                        .thenBy { it.componentKey.lowercase(Locale.ROOT) },
+                )
+                .toList()
         }
     }
 }

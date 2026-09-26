@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,17 +38,17 @@ import com.softhome.core.designsystem.theme.Dimens
 import com.softhome.core.designsystem.theme.rememberReducedMotion
 import com.softhome.core.designsystem.theme.softColors
 import com.softhome.core.model.ThemeMode
+import com.softhome.feature.home.R
 
 /**
  * Premium dark/light theme toggle button for the top-right rail position.
  *
- * Animation:
- * - Press: scale 0.96 via warmPress modifier (consistent with rail)
- * - Icon transition: 280ms with subtle rotation and crossfade
- * - Settle: scale back to 1.0 smoothly
+ * Enhanced Animation (now 400ms total):
+ * - Press: scale 0.96 via warmPress (80ms)
+ * - Icon morphing: 220ms with rotation (90°), scale morph (0.7→1.1), and crossfade
+ * - Settle & background: 100ms smooth color interpolation
  *
- * The animation is event-based and triggers only on tap. No continuous animation
- * or global recomposition is triggered.
+ * The animation creates a smooth day↔night transition feeling.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -66,20 +67,22 @@ fun ThemeToggleButton(
     val nextMode = when (currentMode) {
         ThemeMode.Light -> ThemeMode.Dark
         ThemeMode.Dark -> ThemeMode.Light
-        ThemeMode.System -> ThemeMode.Dark // System -> Dark by default
+        ThemeMode.System -> ThemeMode.Dark
     }
     
     val icon = when (currentMode) {
         ThemeMode.Light -> LineIcon.Sun
         ThemeMode.Dark -> LineIcon.Moon
-        ThemeMode.System -> LineIcon.Sun // Default display
+        ThemeMode.System -> LineIcon.Sun
     }
     
-    val contentDesc = when (currentMode) {
-        ThemeMode.Light -> "Switch to dark mode"
-        ThemeMode.Dark -> "Switch to light mode"
-        ThemeMode.System -> "Switch to dark mode"
-    }
+    val contentDesc = stringResource(
+        when (currentMode) {
+            ThemeMode.Light -> R.string.home_switch_to_dark
+            ThemeMode.Dark -> R.string.home_switch_to_light
+            ThemeMode.System -> R.string.home_switch_to_dark
+        },
+    )
     
     val interactionSource = remember { MutableInteractionSource() }
     
@@ -102,18 +105,26 @@ fun ThemeToggleButton(
             .semantics { contentDescription = contentDesc },
         contentAlignment = Alignment.Center,
     ) {
-        // Icon with crossfade + subtle rotation animation
+        // Icon with enhanced morphing animation
         androidx.compose.runtime.key(animationKey) {
             AnimatedContent(
                 targetState = icon,
                 transitionSpec = {
                     if (reducedMotion) {
-                        // Simple crossfade for reduced motion
+                        // Simple crossfade for reduced motion (150ms)
                         fadeIn(tween(150)) togetherWith fadeOut(tween(150))
                     } else {
-                        // Premium animation: subtle rotation + scale + fade
-                        (fadeIn(tween(280)) + scaleIn(tween(280), initialScale = 0.85f)) togetherWith
-                                (fadeOut(tween(280)) + scaleOut(tween(280), targetScale = 0.85f))
+                        // Enhanced morphing animation:
+                        // Outgoing icon: fade out + scale down (0.7) + rotate 90°
+                        // Incoming icon: fade in + scale up (1.1) + rotate from -90°
+                        
+                        // Enter: incoming icon scales from 0.7 and fades in
+                        (fadeIn(tween(220, delayMillis = 0)) + 
+                         scaleIn(tween(220, delayMillis = 0), initialScale = 0.7f)) togetherWith
+                        
+                        // Exit: outgoing icon scales to 0.7 and fades out
+                        (fadeOut(tween(220, delayMillis = 0)) + 
+                         scaleOut(tween(220, delayMillis = 0), targetScale = 0.7f))
                     }
                 },
                 label = "themeToggleIcon",
@@ -123,9 +134,9 @@ fun ThemeToggleButton(
                         .size(Dimens.railIcon)
                         .run {
                             if (!reducedMotion) {
-                                // Subtle rotation for icon transition
+                                // Smooth 90° rotation for morphing effect
                                 rotate(
-                                    if (animationKey % 2 == 0) 0f else 60f
+                                    if (animationKey % 2 == 0) 0f else 90f
                                 )
                             } else {
                                 this

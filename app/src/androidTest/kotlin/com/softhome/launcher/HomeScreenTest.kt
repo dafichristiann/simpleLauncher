@@ -17,6 +17,7 @@ import com.softhome.feature.home.NotesUiState
 import com.softhome.feature.home.RailUiState
 import com.softhome.feature.home.DeviceStatusUiState
 import com.softhome.feature.home.HomeRowsUiState
+import com.softhome.feature.home.HomeScreen
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -212,6 +213,43 @@ class HomeScreenTest {
         composeRule.onNodeWithContentDescription("Settings").performTouchInput { longClick() }
         // The row-style menu appears with an "App Info" row.
         composeRule.onNodeWithText("App Info").assertExists()
+    }
+
+    // --- QW2: pressing Home returns to the home idle state --------------------
+
+    @Test
+    fun home_intent_token_collapses_an_expanded_row() {
+        // The token models a HOME press while already on the launcher: it must collapse
+        // the search row's in-place expand (HomeState.Search) back to Idle.
+        val token = androidx.compose.runtime.mutableStateOf(0)
+        composeRule.setContent {
+            SoftHomeTheme {
+                HomeScreen(
+                    onOpenDrawer = {},
+                    onVoiceSearch = {},
+                    appsState = AppsUiState(),
+                    prefsState = PrefsUiState(),
+                    notesState = NotesUiState(),
+                    railState = RailUiState(),
+                    deviceStatusState = DeviceStatusUiState(),
+                    homeRowsState = HomeRowsUiState(),
+                    onLaunchRow = { },
+                    homeIntentToken = token.value,
+                )
+            }
+        }
+        // Expand the search row via long-press.
+        composeRule.onNodeWithContentDescription("Find something").performTouchInput { longClick() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("s e a r c h i n g").assertExists()
+
+        // Simulate pressing Home while already on Home.
+        token.value = 1
+        composeRule.waitForIdle()
+
+        // The row is back to its idle placeholder, not the focused "searching" text.
+        composeRule.onNodeWithText("f i n d  s o m e t h i n g").assertExists()
+        composeRule.onNodeWithText("s e a r c h i n g").assertDoesNotExist()
     }
 
     // --- P3 (G/Widgets): row visibility + order -------------------------------

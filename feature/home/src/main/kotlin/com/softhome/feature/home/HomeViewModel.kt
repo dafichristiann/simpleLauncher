@@ -110,6 +110,8 @@ class HomeViewModel @Inject constructor(
     val drawableLoader: IconPackDrawableLoader,
     val bitmapProvider: IconBitmapProvider,
     private val iconResolver: IconResolver,
+    private val packageEventMonitor: com.softhome.core.data.packages.PackageEventMonitor,
+    private val appInventory: com.softhome.core.data.packages.AppInventoryCoordinator,
 ) : ViewModel() {
 
     private val appsFlow = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -225,12 +227,18 @@ class HomeViewModel @Inject constructor(
     init {
         refreshApps()
         refreshDeviceStatus()
+        // QW1: reflect installs / uninstalls live instead of only at process start.
+        packageEventMonitor.start()
+        viewModelScope.launch {
+            packageEventMonitor.changes.collect { refreshApps() }
+        }
     }
 
     fun refreshApps() {
         viewModelScope.launch {
             loadingFlow.value = true
-            appsFlow.value = appRepository.getInstalledApps()
+            // reload + prune dead component keys (uninstalled apps) in one pass.
+            appsFlow.value = appInventory.refreshAndPrune()
             loadingFlow.value = false
         }
     }

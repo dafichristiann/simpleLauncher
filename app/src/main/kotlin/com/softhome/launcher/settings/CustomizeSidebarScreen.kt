@@ -23,9 +23,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.softhome.launcher.R
 import com.softhome.core.designsystem.atom.DragPreviewLayer
 import com.softhome.core.designsystem.atom.LineIcon
 import com.softhome.core.designsystem.atom.LineIconImage
@@ -74,27 +76,28 @@ fun CustomizeSidebarScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
+            val backA11y = stringResource(R.string.customize_sidebar_back_a11y)
             Text(
-                text = "Customize Sidebar",
+                text = stringResource(R.string.customize_sidebar_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = colors.textPrimary,
             )
             Text(
-                text = "Back",
+                text = stringResource(R.string.customize_sidebar_back),
                 color = colors.accent,
                 modifier = Modifier
-                    .semantics { contentDescription = "Back to Settings" }
+                    .semantics { contentDescription = backA11y }
                     .clickable(onClick = onBack)
                     .padding(Spacing.sm),
             )
         }
         Text(
-            text = "Choose which apps and shortcuts appear in your sidebar.",
+            text = stringResource(R.string.customize_sidebar_body),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.textMuted,
         )
 
-        SectionTitle("CURRENT RAIL")
+        SectionTitle(stringResource(R.string.customize_sidebar_current_rail))
         CurrentRailEditor(
             items = active,
             apps = state.installedApps.associateBy { it.componentKey },
@@ -102,21 +105,24 @@ fun CustomizeSidebarScreen(
             onMove = onMove,
         )
         Text(
-            text = "${active.count { it != RailConfigLogic.LOCKED_SETTINGS }} / " +
-                "${RailConfigLogic.MAX_CONFIGURABLE_ITEMS} configurable slots used",
+            text = stringResource(
+                R.string.customize_sidebar_slots_used,
+                active.count { it != RailConfigLogic.LOCKED_SETTINGS },
+                RailConfigLogic.MAX_CONFIGURABLE_ITEMS,
+            ),
             style = MaterialTheme.typography.labelSmall,
             color = colors.textMuted,
         )
 
-        SectionTitle("AVAILABLE APPS")
+        SectionTitle(stringResource(R.string.customize_sidebar_available_apps))
         if (availableApps.isEmpty()) {
-            Text("All installed apps are already configured.", color = colors.textMuted)
+            Text(stringResource(R.string.customize_sidebar_no_apps), color = colors.textMuted)
         } else {
             availableApps.forEach { app ->
                 AddableRow(
                     label = app.label,
                     icon = LineIcon.fromName(IconMasker.symbolFor(app)),
-                    actionLabel = "Add ${app.label} to sidebar",
+                    actionLabel = stringResource(R.string.customize_sidebar_add_app_a11y, app.label),
                     enabled = active.count { it != RailConfigLogic.LOCKED_SETTINGS } <
                         RailConfigLogic.MAX_CONFIGURABLE_ITEMS,
                     onAdd = { onAddApp(app.componentKey) },
@@ -124,12 +130,13 @@ fun CustomizeSidebarScreen(
             }
         }
 
-        SectionTitle("AVAILABLE SYSTEM SHORTCUTS")
+        SectionTitle(stringResource(R.string.customize_sidebar_available_shortcuts))
         availableShortcuts.forEach { shortcut ->
+            val shortcutLabel = shortcutLabel(shortcut)
             AddableRow(
-                label = shortcutLabel(shortcut),
+                label = shortcutLabel,
                 icon = shortcutIcon(shortcut),
-                actionLabel = "Add ${shortcutLabel(shortcut)} to sidebar",
+                actionLabel = stringResource(R.string.customize_sidebar_add_shortcut_a11y, shortcutLabel),
                 enabled = active.count { it != RailConfigLogic.LOCKED_SETTINGS } <
                     RailConfigLogic.MAX_CONFIGURABLE_ITEMS,
                 onAdd = { onAddShortcut(shortcut) },
@@ -137,10 +144,10 @@ fun CustomizeSidebarScreen(
         }
 
         SettingsRow(
-            label = "Reset to default",
-            supporting = "Restore the original system shortcut order.",
+            label = stringResource(R.string.customize_sidebar_reset),
+            supporting = stringResource(R.string.customize_sidebar_reset_support),
             onClick = onReset,
-            onClickLabel = "Reset sidebar to default",
+            onClickLabel = stringResource(R.string.customize_sidebar_reset_a11y),
         )
         Spacer(Modifier.height(Spacing.md))
     }
@@ -183,13 +190,24 @@ private fun CurrentRailEditor(
             ) {
                 SettingsRow(
                     label = title,
-                    supporting = if (locked) "Always available" else "In sidebar",
+                    supporting = if (locked) {
+                        stringResource(R.string.customize_sidebar_always_available)
+                    } else {
+                        stringResource(R.string.customize_sidebar_in_sidebar)
+                    },
                     enabled = !locked,
                     onClick = if (locked) null else ({ onRemove(item) }),
-                    onClickLabel = if (locked) null else "Remove $title from sidebar",
+                    onClickLabel = if (locked) {
+                        null
+                    } else {
+                        stringResource(R.string.customize_sidebar_remove_a11y, title)
+                    },
                     trailing = {
                         if (locked) {
-                            Text("LOCKED", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                stringResource(R.string.customize_sidebar_locked),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
                         } else {
                             Text("−", style = MaterialTheme.typography.headlineSmall)
                         }
@@ -253,8 +271,10 @@ private fun SectionTitle(text: String) {
     )
 }
 
+@Composable
 private fun railItemLabel(item: RailItemId, apps: Map<String, AppInfo>): String = when (item) {
-    is RailItemId.App -> apps[item.componentKey]?.label ?: "Unavailable app"
+    is RailItemId.App -> apps[item.componentKey]?.label
+        ?: stringResource(R.string.customize_sidebar_unavailable_app)
     is RailItemId.System -> shortcutLabel(item.shortcut)
 }
 
@@ -264,16 +284,19 @@ private fun railItemIcon(item: RailItemId, apps: Map<String, AppInfo>): LineIcon
     is RailItemId.System -> shortcutIcon(item.shortcut)
 }
 
-private fun shortcutLabel(shortcut: RailShortcutId): String = when (shortcut) {
-    RailShortcutId.Sparkles -> "More"
-    RailShortcutId.CircleDot -> "Web"
-    RailShortcutId.MessageCircle -> "Messages"
-    RailShortcutId.Send -> "Mail"
-    RailShortcutId.Camera -> "Camera"
-    RailShortcutId.Wind -> "Weather"
-    RailShortcutId.PanelLeft -> "Settings"
-    RailShortcutId.Phone -> "Phone"
-}
+@Composable
+private fun shortcutLabel(shortcut: RailShortcutId): String = stringResource(
+    when (shortcut) {
+        RailShortcutId.Sparkles -> R.string.rail_label_more
+        RailShortcutId.CircleDot -> R.string.rail_label_web
+        RailShortcutId.MessageCircle -> R.string.rail_label_messages
+        RailShortcutId.Send -> R.string.rail_label_mail
+        RailShortcutId.Camera -> R.string.rail_label_camera
+        RailShortcutId.Wind -> R.string.rail_label_weather
+        RailShortcutId.PanelLeft -> R.string.rail_label_settings
+        RailShortcutId.Phone -> R.string.rail_label_phone
+    },
+)
 
 private fun shortcutIcon(shortcut: RailShortcutId): LineIcon = when (shortcut) {
     RailShortcutId.Sparkles -> LineIcon.Sparkles
